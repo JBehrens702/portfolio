@@ -1,0 +1,210 @@
+[
+  {
+    "type": "img",
+    "src": "https://sites.google.com/sitesv-images-rt/AMxu72st5ztrStN8JvJtofr_2ZLgLC79hwTTDCZnyuvePvvYTWNA1nv_OgktgKYrA710tOTaudA7qXt8dHQKPaphTraph_gtay466Xb4E3Wa5SjX2vMhyRXDK-MFj6-sWK_qpztg3aF8cxqat_JB6EVVHyrDN8WCh3ewGmSb84qn1hgjMpTX2SXzzrgv-GDgmew=w16383"
+  },
+  {
+    "type": "link",
+    "text": "Jonathan Behrens' Portfolio",
+    "label": "",
+    "href": "/view/jonathan-behrens-portfolio/home"
+  },
+  {
+    "type": "h1",
+    "text": "Thermocouple Reader (TCR) System",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.cnnp8pvlqpge"
+      }
+    ]
+  },
+  {
+    "type": "h2",
+    "text": "From August 2024 to present, I have been working with Dr. Tim Burdett (Messiah University Engineering) to design a thermocouple data acquisition system for Messiah University's Heat Transfer labs.",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.c30m3vqq10qx"
+      }
+    ]
+  },
+  {
+    "type": "h2",
+    "text": "Project Overview:",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.pew94zsa3njy"
+      }
+    ]
+  },
+  {
+    "type": "img",
+    "src": "https://sites.google.com/sitesv-images-rt/AMxu72v7um-O7yq0nAdxw_7tZOtYEBj-ezCyELlQ4erlRl_vBUHzVndA8tE-vtzdGSwZ6bz4iaVPwXW38iiWxZt9-cm_q_ug04PFx6hqxcYcnW5Ch13OH2UUyQBXp28ghOtqAiQ_Wy1p55lfYe5bhiTY3VipuOV8K6Lzw8YJJ1ZTAta6WDXCqap5a8LrsxCI0b9-Mg06j6Y4gG_rRdWA3ykbsK8__V4zxaxkuzINUzuwRyA=w1280"
+  },
+  {
+    "type": "h3",
+    "text": "Skills Demonstrated",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.csa6goyuk11y"
+      }
+    ]
+  },
+  {
+    "type": "p",
+    "text": "Project Management, Electronics Design, Product Development, Validation, Arduino (Coding Language)"
+  },
+  {
+    "type": "img",
+    "src": "https://sites.google.com/sitesv-images-rt/AMxu72sDn5KMwrYOARndshuSsnyLNGeUNVZs6QIH6pgU_nGRitv35dpEnB9kDdeBViuvUFfs9aeMjdLjBGMpvwaXSeLcois06FNIJZhHnw_5t7M3PA6-uAfXpFX5TNtOO5_SAswU6NV07KoNCO1_z1K80NgOWUXJ2lEqd0PbIYuRPTOCdkrKvUT00u-XC2SHb_19q6a51660mHP0GXoZIM8Fo4yoFRW_jgVzhDOt_ygs0qU=w1280"
+  },
+  {
+    "type": "h3",
+    "text": "Client",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.5urqkaz2luge"
+      }
+    ]
+  },
+  {
+    "type": "p",
+    "text": "Dr. Tim Burdett"
+  },
+  {
+    "type": "p",
+    "text": "Professor, Messiah University"
+  },
+  {
+    "type": "h3",
+    "text": " Problem Statement ",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.6truw0gva6od"
+      }
+    ]
+  },
+  {
+    "type": "p",
+    "text": "\"In the past, the Heat Transfer class has used National Instruments DAQs with LabVIEW to take measurements from thermocouples over time. However, the hardware and software are expensive (~$2,000 per unit for hardware and ~$3,000 for multiple licenses for students), and the class wants a more affordable solution. One alternative is to use an Arduino with the thermocouple reader attachment, but this alternative is not plug-and-play – further design work is needed.\""
+  },
+  {
+    "type": "img",
+    "src": "https://sites.google.com/sitesv-images-rt/AMxu72tViRTrHHsOqNr4Nqyr4XVsnRtI6vKyrLY-u_Tg-E-xi6rvgCr_iDRzXMyJ3dHljOuOWXnEJdqEy9KET79vBiKe2gbws7v1lt5zoRClEfQ9760FIeVFEn4heT3E9gpxfI5jTUGi3Fe4KYOPJ2B2cSkqrekAtLHYalGTM0bUFej82NdKUntArRTECGzMMn_oR8Kdh4XfP58sHopAf11gW4BPdE1QFRCp3g0d9l7YpDU=w1280"
+  },
+  {
+    "type": "img",
+    "src": "https://sites.google.com/sitesv-images-rt/AMxu72u_zPpP0-U-HvAtmtRFBQaLQt_o1AJImY0_aOcB7DLTyLVoodErHxLEpEvfzC4zRYor7KhkbF6EG2RcH_Nj8qX6eunwqjlEW_tpDUcfjaL0F6BYMTR2FOw6arRmbvZNJDke8go3zjR3O4Sao3MTzsKFgQi3J1azV3ABru4Q1JDrhAf8JMkfPEJe1qm9TtfZD8DlxhMTcEkp5HQJ2X1CPDujRfrSzMN2jr3YczyO=w1280"
+  },
+  {
+    "type": "img",
+    "src": "https://sites.google.com/sitesv-images-rt/AMxu72tJSI-RnWAb8znMqiKSHs8BweZyNKjXTc8k0eoJ_1UxL67X3YPbHtjNAHlX3bqdP9Y5xnUNA3Tybi3RIOwmvQM0p-dOW0NqRjB17FgK6sN8YKm_gEOtuG5O0F5u7CCguRUseElutKKKyvVpxjF_l3TOf0BobXDvVlNZHH4Hg1K7Eg852OLWDHXI2Usd2fAqf7TG_uImpa1rp0SzoH_89OM-4rOra35n22KwH-Bt=w1280"
+  },
+  {
+    "type": "h3",
+    "text": "Above, the completed TCR Version 1 is shown, both the physical model, its electrical schematic, and a depiction of one of the validation methods. Read the Version 1 report below!",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.xg3k0e73pg8o"
+      }
+    ]
+  },
+  {
+    "type": "embed",
+    "src": "https://drive.google.com/file/d/1sla1NECZdUWzd0ajH7C-Cu0_IBlOzcTq/preview",
+    "title": ""
+  },
+  {
+    "type": "img",
+    "src": "https://sites.google.com/sitesv-images-rt/AMxu72vlz1vcc6eFOpzm8rEPkdfDlCEq4bcJcOoSpEYraezI7qAGE3PMI1WRKAc36d1VZoMGlTnJjhqWOsATVvuecOEibuwfHGiuME9SAj7CsemrsmH3mNVBMXVFstIekbMVbITvVj3qeZbPGZDrOe1Mum_aY0N8TeVxUyxXQeVBhI0cLI_BXGipxmAq7wyiFd_h3Ia0YuDD1fQy_20fwGwnQR0FZKEmBRDRKzxlhinqLi4=w1280"
+  },
+  {
+    "type": "img",
+    "src": "https://sites.google.com/sitesv-images-rt/AMxu72uvLkj5LZz6-iTF2pUT84UtdkzgKutCEcU3PQWchOG07eqHxE-W0tKqpV9csroZbc5pEU7i605Deo3LKTzRjQt-JG9O6vJuGUI7USf7o07p7IAEMYb8AKtEEgPir7yTAXegqlg-dUcyY5xSs1ZVqkEXoAtsStki6PDAacPelN1uJm_4WP1e-wLNXt-Do9nDYPgL5M6cOha3qAcQVIGjyQL3MMQlGIieAuILgBbRXRQ=w1280"
+  },
+  {
+    "type": "small",
+    "text": " These images compare a previous transient conduction experiment, completed with data logged by hand using a multimeter, versus our data when running a similar test."
+  },
+  {
+    "type": "h2",
+    "text": "During the first work cycle (Version 1), I served as the student project manager for a group of five. We took the project from a statement of need to a finished product in the first image within a semester (Fall 2024), or approximately three months. To achieve this, I employed Monday.com to track and assign tasks, and stepped into all roles and subgroups to assist where possible. As such, I ended up doing the complete soldering of the electronics, as well as a handful of edits to the code.",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.jb12dhlsuj7x"
+      }
+    ]
+  },
+  {
+    "type": "h2",
+    "text": " Unfortunately, this device had some issues discussed in the report, so for the next semester (Spring 2025) and moving forward, I have been working individually with Dr. Burdett, our client, to develop TCR Version 2.",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.qyrokgtx2j5b"
+      }
+    ]
+  },
+  {
+    "type": "h3",
+    "text": " Read my project record from the Version 1 system:",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.vc05f2gemwcq"
+      }
+    ]
+  },
+  {
+    "type": "embed",
+    "src": "https://drive.google.com/file/d/1710D29KAjFCI4owhwsv3XN8YxfCeL1Kv/preview",
+    "title": ""
+  },
+  {
+    "type": "h2",
+    "text": "The Version 2 TCR system will feature improved accuracy through the incorporation of a real-time clock circuit. This will also improve the Excel stream to limit data errors. ",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.hrgdcv5r0cac"
+      }
+    ]
+  },
+  {
+    "type": "h2",
+    "text": "The system will also include serious hardware reliability improvements to make a more robust system by switching to SPI-communicating boards. This change also decreases the unit cost by upwards of 5%. Finally, the new system will natively support writing to an SD card and feature status indicators so the user will know immediately if data transmission has failed or if the sensors are attached incorrectly. ",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.w9baqgjovbvu"
+      }
+    ]
+  },
+  {
+    "type": "h2",
+    "text": "The Version 2 system is expected to begin validation in late Fall 2025.",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.31f25oz8z4t0"
+      }
+    ]
+  },
+  {
+    "type": "p",
+    "text": "Next Experience"
+  },
+  {
+    "type": "link",
+    "text": "",
+    "label": "Next Experience",
+    "href": "/view/jonathan-behrens-portfolio/turbine-testing-stand"
+  }
+]

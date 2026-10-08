@@ -1,0 +1,113 @@
+[
+  {
+    "type": "img",
+    "src": "https://sites.google.com/sitesv-images-rt/AMxu72st5ztrStN8JvJtofr_2ZLgLC79hwTTDCZnyuvePvvYTWNA1nv_OgktgKYrA710tOTaudA7qXt8dHQKPaphTraph_gtay466Xb4E3Wa5SjX2vMhyRXDK-MFj6-sWK_qpztg3aF8cxqat_JB6EVVHyrDN8WCh3ewGmSb84qn1hgjMpTX2SXzzrgv-GDgmew=w16383"
+  },
+  {
+    "type": "link",
+    "text": "Jonathan Behrens' Portfolio",
+    "label": "",
+    "href": "/view/jonathan-behrens-portfolio/home"
+  },
+  {
+    "type": "h1",
+    "text": "Personal SolidWorks Projects",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.p6bkt2psvw61"
+      }
+    ]
+  },
+  {
+    "type": "h2",
+    "text": "A breif overview of some of my Solidworks projects I have done beyond the scope of dedicated work shown on my other experiences.",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.qzi9182grrpv"
+      }
+    ]
+  },
+  {
+    "type": "img",
+    "src": "https://sites.google.com/sitesv-images-rt/AMxu72trp_bjvxe4LiuUhdKXLRvEt54eyLCsPRTxoBVIdZ9MaZqzCSZ-3u6Ml-sgeT5pbjL-MrNRZBMGTB2EGGJfyvSXL3ObCdiPTunky4EVdIuzAR8EdzTQRHyVCXOkyzODtOEBc-LwymO67jtZrZF3DsDjtRG6bDuBG8vm46CJBHICEReqWd8bI8zfbW58H9Xjo-r4SQw4PYZisiqCwLY85TUC3zLqlK9p-gB-xDiK=w1280"
+  },
+  {
+    "type": "h2",
+    "text": "GD&T Drawing Example",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.9fpgi3uup613"
+      }
+    ]
+  },
+  {
+    "type": "p",
+    "text": "To demonstrate the power of General Dimensioning and Tolerancing, as prescribed by ASME Y14.5, I put together this manufacturing drawing for an aluminum spacer that could have been used in the design of the Turbine Testing Stand. The part file was made during the project cycle, but I built this drawing in front of some friends later in a matter of minutes. It shows how geometric tolerancing makes it easy to identify and process critical areas while leaving more room for error in noncritical ones.",
+    "links": [
+      {
+        "text": "Turbine Testing Stand",
+        "href": "/view/jonathan-behrens-portfolio/turbine-testing-stand"
+      }
+    ]
+  },
+  {
+    "type": "h2",
+    "text": "ENGR111 SolidWorks Tutorials",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.swe5enth4g3i"
+      }
+    ]
+  },
+  {
+    "type": "p",
+    "text": "While in ENGR111 at Messiah (my freshman year), I created a short series of tutorials breaking down a few of our homework assignments to demonstrate the power of SolidWorks and some helpful tricks for making the assigned parts. This really doesn't go beyond basic parametric modeling skills, but should be helpful to someone new to SolidWorks or CAD in general."
+  },
+  {
+    "type": "embed",
+    "src": "https://www.youtube.com/embed/lXUrrETXG5M?embed_config=%7B%22enc%22:%22AXH1eznm5x2FJCYZzbsxdONbKs272-N5O0dsKjbUrBmQRRdCBJtFhbJBGMcSbgEPJxqPmafnf4WU712GeA5sqObiZ22m9XRm_EBhfSa8Q6gZcds5U9LEnleVcc3_2jqldGu4AkSilAG0MQf4XAslyUWOM-wGq3dd2ox8azpZZ5lexrGU%22%7D&enablejsapi=1&errorlinks=1&origin=https://sites.google.com&vl=1",
+    "title": ""
+  },
+  {
+    "type": "img",
+    "src": "https://sites.google.com/sitesv-images-rt/AMxu72swpE6HayBVYpzAPy5lWuWmNK8N0bDMcdOimEqyuKolUcoukNXX0bZN_OOXXUnDGiFYOAL_kM53qLHnrfuc1XNO7eIdwVO0wSe6_RlQPhSM6h25bZqNteJxcRx-z6UoS6acOBEEvUt0kT7Ib3Wo-qDr1UZu0eC8xmC9QVESX1X9w9OkNOMXxEZMu3VEcIz0kC9Aeh9a0tjt2oxp4iKUHSoFpXQMuZitBjuw3jMC-Zk=w1280"
+  },
+  {
+    "type": "h2",
+    "text": "Desktop 3D Prints",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.69rylo7ajr5a"
+      }
+    ]
+  },
+  {
+    "type": "p",
+    "text": "I have a love for tangible models, in large part why I chose mechanical engineering as opposed to more theoretical fields, so I have a long history of using TinkerCad, then Fusion 360, and now SolidWorks to make physical models of things I am working on. These always present a fun design challenge to design parts that work as intended when being 3D printed, which involves a lot of tolerancing tables and jumping between CAD and Ultimaker Cura, my slicer of choice."
+  },
+  {
+    "type": "h2",
+    "text": "I have a wealth of experience in SolidWorks for personal projects, predominantly for 3D printing. I have used the product for the development of parts, assemblies, and drawings of car components, desktop models, and tests of different physics phenomena.",
+    "links": [
+      {
+        "text": "",
+        "href": "#h.uevtxe761okx"
+      }
+    ]
+  },
+  {
+    "type": "p",
+    "text": "Next Experience"
+  },
+  {
+    "type": "link",
+    "text": "",
+    "label": "Next Experience",
+    "href": "/view/jonathan-behrens-portfolio/volunteer-experience"
+  }
+]
