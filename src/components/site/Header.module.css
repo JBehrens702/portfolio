@@ -1,0 +1,148 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: color-mix(in srgb, var(--color-bg) 92%, transparent);
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: var(--header-height);
+}
+
+.logoLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+  flex-shrink: 0;
+}
+
+.logo {
+  width: auto;
+  height: 40px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+}
+
+.menuButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-size);
+  height: var(--tap-size);
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.menuIcon {
+  display: grid;
+  gap: 5px;
+  width: 20px;
+}
+
+.menuIcon > span {
+  display: block;
+  height: 2px;
+  background: var(--color-text);
+  border-radius: 1px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.menuButton[aria-expanded="true"] .menuIcon > span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.menuButton[aria-expanded="true"] .menuIcon > span:nth-child(2) {
+  opacity: 0;
+}
+
+.menuButton[aria-expanded="true"] .menuIcon > span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Phone: the links fold into a panel below the bar. */
+.list {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-2) var(--gutter) var(--space-4);
+  list-style: none;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.list[data-open="true"] {
+  display: flex;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-size);
+  padding-inline: var(--space-3);
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--radius);
+}
+
+.link:hover {
+  color: var(--color-lavender);
+  text-decoration: underline;
+}
+
+.resume {
+  justify-content: center;
+  background: var(--color-purple-deep);
+  color: var(--color-text);
+}
+
+.resume:hover {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-purple-deep) 85%, black);
+}
+
+@media (min-width: 640px) {
+  .logo {
+    height: 44px;
+  }
+
+  .menuButton {
+    display: none;
+  }
+
+  .list,
+  .list[data-open="true"] {
+    display: flex;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    padding: 0;
+    background: none;
+    border: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menuIcon > span {
+    transition: none;
+  }
+}
