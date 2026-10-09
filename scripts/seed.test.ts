@@ -98,9 +98,19 @@ const plain = (markdown: string) => markdown.replace(/\[([^\]]*)\]\([^)]*\)/g, "
 const VIDEO_LINK = /^<(https:\/\/www\.youtube\.com\/watch\?v=([A-Za-z0-9_-]{11}))>$/;
 const DRIVE_FILES = [
   "2024 12 16-ProjectReport-V3.0.pdf",
-  "2024 11 05-ProjectRecord-JB.docx",
   "Test Stand Design Record.pdf",
 ];
+
+/**
+ * Google Site items that the owner removed on 2026-10-09 to give the other
+ * content more space (docs/text-fixes.md, "Removed by the owner"): the
+ * Version 1 project record file and its heading on the Thermocouple page.
+ */
+const OWNER_REMOVED: Partial<Record<string, string[]>> = {
+  "thermocouple-reader-system": ["Read my project record from the Version 1 system:", "2024 11 05-ProjectRecord-JB.docx"],
+};
+const removedByOwner = (page: string, text: string) => (OWNER_REMOVED[page] ?? []).includes(text.trim());
+const removedFiles = (page: string) => (OWNER_REMOVED[page] ?? []).filter((t) => /\.(pdf|docx)$/.test(t)).length;
 
 /** Every owner text of an experience, one entry per Google Site text block. */
 function experienceTexts(e: Experience): string[] {
@@ -181,8 +191,8 @@ describe("seed document", () => {
       const e = experience(page);
       const files = e.blocks.filter((b) => b.type === "file");
       const videos = e.blocks.filter((b) => b.type === "text" && VIDEO_LINK.test(b.text));
-      expect(files.length + videos.length, page).toBe(embeds.length);
-      expect(files.length, page).toBe(embeds.filter((b) => b.src?.includes("drive.google.com")).length);
+      expect(files.length + videos.length, page).toBe(embeds.length - removedFiles(page));
+      expect(files.length, page).toBe(embeds.filter((b) => b.src?.includes("drive.google.com")).length - removedFiles(page));
       for (const file of files) {
         if (file.type !== "file") continue;
         expect(file.file).toBeUndefined();
@@ -228,7 +238,7 @@ describe("word for word (1.2.2, 1.2.4)", () => {
   for (const page of PAGES) {
     it(`${page}: every text equals a Google Site text, and every Google Site text is in the seed`, () => {
       const e = experience(page);
-      const want = expected(page).filter((t) => t !== "Next Experience");
+      const want = expected(page).filter((t) => t !== "Next Experience" && !removedByOwner(page, t));
       const have = experienceTexts(e).filter((t) => t !== "");
       expect([...have].sort()).toEqual([...want].sort());
       // The home text and the skills are copies of the page's own texts.
@@ -388,7 +398,10 @@ describe("inventory note openings (1.2.1)", () => {
 
   for (const [page, openings] of Object.entries(OPENINGS) as [Page, string[]][]) {
     it(`${page}: every opening appears in the seed (with the listed fixes)`, () => {
-      const missing = openings.map((o) => applyFixes(page, o)).filter((o) => !allSeedText.includes(o));
+      const missing = openings
+        .filter((o) => !removedByOwner(page, o))
+        .map((o) => applyFixes(page, o))
+        .filter((o) => !allSeedText.includes(o));
       expect(missing).toEqual([]);
     });
   }

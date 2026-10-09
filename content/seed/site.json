@@ -96,8 +96,6 @@
           "type": "text",
           "text": "Unfortunately, this device had some issues discussed in the report, so for the next semester (Spring 2025) and moving forward, I have been working individually with Dr. Burdett, our client, to develop TCR Version 2."
         },
-        { "id": "project-record", "type": "heading", "text": "Read my project record from the Version 1 system:", "level": 3 },
-        { "id": "project-record-file", "type": "file", "label": "2024 11 05-ProjectRecord-JB.docx" },
         {
           "id": "version-2-accuracy",
           "type": "text",

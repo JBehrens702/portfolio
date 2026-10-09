@@ -25,6 +25,12 @@ Not changed:
 - Spaces at the start and the end of a text were removed. They do not show on a page.
 - "Victaulic Co" (no full stop), "300W", "travelling", "Arduino (Coding Language)", and the text inside quotation marks stay as you wrote them. These are style, not errors.
 
+## Removed by the owner
+
+On 2026-10-09 the owner removed these Google Site items, to give the other content more space. The seed test `scripts/seed.test.ts` knows them (`OWNER_REMOVED`).
+
+- Thermocouple Reader System page: the heading "Read my project record from the Version 1 system:" and the file `2024 11 05-ProjectRecord-JB.docx` under it.
+
 ## Changes of form (no words changed)
 
 The new site stores the content in a different form from the Google Site. These changes move your words, but do not change them:
@@ -38,7 +44,7 @@ The new site stores the content in a different form from the Google Site. These 
 - The home text of each experience is the first paragraph of its page: the subtitle, or on the Victaulic page the first paragraph after the job description.
 - The link "Turbine Testing Stand" in the GD&T paragraph now goes to the new Turbine Testing Stand page.
 - The embedded ENGR111 tutorial video is now a link to the video on YouTube: https://www.youtube.com/watch?v=lXUrrETXG5M. The site has no video player.
-- The three Google Drive files are file blocks with your file names. They have no file yet, so they stay hidden until you upload each file in the admin page.
+- The two remaining Google Drive files are file blocks with your file names. They have no file yet, so they stay hidden until each file is uploaded.
 - The "Summary" heading on the Victaulic page has an empty paragraph under it. Both stay hidden until you write the summary.
 - No image has alt text. Alt text describes an image for people who cannot see it. Write it in the admin page.
 
