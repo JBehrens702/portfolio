@@ -181,31 +181,48 @@ export function createMemoryContentStore(
 // ---- Vercel Blob ----
 
 /**
- * The Blob token for this environment. A Production deployment uses the
- * Production store (BLOB_READ_WRITE_TOKEN); every other place - Preview
- * deployments, local work, tests - uses the development store
- * (DEV_READ_WRITE_TOKEN), so nothing outside Production can change the live site.
+ * How to reach this environment's Blob store. A Production deployment uses the
+ * Production store (prefix BLOB); every other place - Preview deployments,
+ * local work, tests - uses the development store (prefix DEV), so nothing
+ * outside Production can change the live site. A fixed read-write token wins
+ * when one exists; otherwise the store ID is used, and the Blob SDK signs in
+ * with Vercel's short-lived OIDC token (VERCEL_OIDC_TOKEN).
  */
-export function blobTokenFromEnv(env: Record<string, string | undefined> = process.env): string | undefined {
-  const name = env.VERCEL_ENV === "production" ? "BLOB_READ_WRITE_TOKEN" : "DEV_READ_WRITE_TOKEN";
-  return env[name]?.trim() || undefined;
+export type BlobCredentials = { token: string } | { storeId: string };
+
+export function blobCredentialsFromEnv(
+  env: Record<string, string | undefined> = process.env,
+): BlobCredentials | undefined {
+  const prefix = env.VERCEL_ENV === "production" ? "BLOB" : "DEV";
+  const token = env[`${prefix}_READ_WRITE_TOKEN`]?.trim();
+  if (token) return { token };
+  const storeId = env[`${prefix}_STORE_ID`]?.trim();
+  if (storeId) return { storeId };
+  return undefined;
 }
 
 export interface BlobBackendOptions {
-  /** Defaults to blobTokenFromEnv(). Always passed to the SDK, which would otherwise read BLOB_READ_WRITE_TOKEN by itself. */
-  token?: string;
+  /**
+   * Defaults to blobCredentialsFromEnv(). Always passed to the SDK, which
+   * would otherwise pick BLOB_READ_WRITE_TOKEN or BLOB_STORE_ID by itself.
+   */
+  credentials?: BlobCredentials;
   /** Must match the access of the Blob store. Defaults to "public", so media files can be shown to visitors. */
   access?: BlobAccessType;
 }
 
 export function createBlobBackend(options: BlobBackendOptions = {}): JsonBackend {
   const access = options.access ?? "public";
-  const token = options.token ?? blobTokenFromEnv();
-  if (!token) throw new Error("No Blob token for this environment: set DEV_READ_WRITE_TOKEN (or BLOB_READ_WRITE_TOKEN on Production).");
+  const auth = options.credentials ?? blobCredentialsFromEnv();
+  if (!auth) {
+    throw new Error(
+      "No Blob store for this environment: set DEV_STORE_ID or DEV_READ_WRITE_TOKEN (BLOB_STORE_ID or BLOB_READ_WRITE_TOKEN on Production).",
+    );
+  }
   return {
     async read(pathname) {
       // Uncached: the Blob CDN can return the version from before an overwrite (KTD2).
-      const result = await get(pathname, { access, useCache: false, token });
+      const result = await get(pathname, { access, useCache: false, ...auth });
       if (result === null || result.statusCode !== 200) return null;
       const text = await new Response(result.stream).text();
       return JSON.parse(text);
@@ -213,7 +230,7 @@ export function createBlobBackend(options: BlobBackendOptions = {}): JsonBackend
     async write(pathname, value) {
       await put(pathname, JSON.stringify(value), {
         access,
-        token,
+        ...auth,
         contentType: "application/json",
         addRandomSuffix: false,
         allowOverwrite: true,
@@ -225,7 +242,7 @@ export function createBlobBackend(options: BlobBackendOptions = {}): JsonBackend
       const pathnames: string[] = [];
       let cursor: string | undefined;
       do {
-        const page = await list({ prefix, cursor, token });
+        const page = await list({ prefix, cursor, ...auth });
         pathnames.push(...page.blobs.map((blob) => blob.pathname));
         cursor = page.hasMore ? page.cursor : undefined;
       } while (cursor);
@@ -308,7 +325,7 @@ export type ContentSource = { kind: "file"; folder: string } | { kind: "blob" } 
 /**
  * Reads CONTENT_SOURCE. "file:<folder>" selects local JSON files (local
  * development and tests). "blob", or no value while this environment's Blob
- * token is set (blobTokenFromEnv), selects Vercel Blob. With neither, no content is configured: the site
+ * store is configured (blobCredentialsFromEnv), selects Vercel Blob. With neither, no content is configured: the site
  * then renders no content, and `next build` still passes.
  */
 export function contentSourceFromEnv(env: Record<string, string | undefined> = process.env): ContentSource {
@@ -320,7 +337,7 @@ export function contentSourceFromEnv(env: Record<string, string | undefined> = p
   }
   if (source === "blob") return { kind: "blob" };
   if (source !== "") throw new Error(`CONTENT_SOURCE must be "blob" or "file:<folder>", not "${source}".`);
-  return blobTokenFromEnv(env) ? { kind: "blob" } : { kind: "none" };
+  return blobCredentialsFromEnv(env) ? { kind: "blob" } : { kind: "none" };
 }
 
 /** The content store that the environment selects, or null when no content source is configured. */
@@ -332,5 +349,5 @@ export function createContentStoreFromEnv(
   if (source.kind === "none") return null;
   const config = contentConfigFromEnv(env);
   if (source.kind === "file") return createContentStore(createFileBackend(source.folder), config, options);
-  return createBlobContentStore(config, { ...options, token: blobTokenFromEnv(env) });
+  return createBlobContentStore(config, { ...options, credentials: blobCredentialsFromEnv(env) });
 }

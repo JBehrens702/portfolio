@@ -83,12 +83,12 @@ describe("content source from the environment", () => {
     });
   });
 
-  it("selects Blob when this environment's token exists, or when CONTENT_SOURCE=blob", () => {
-    expect(contentSourceFromEnv({ DEV_READ_WRITE_TOKEN: "vercel_blob_rw_x" })).toEqual({ kind: "blob" });
+  it("selects Blob when this environment's store is configured, or when CONTENT_SOURCE=blob", () => {
+    expect(contentSourceFromEnv({ DEV_STORE_ID: "store_dev" })).toEqual({ kind: "blob" });
     expect(contentSourceFromEnv({ CONTENT_SOURCE: "blob" })).toEqual({ kind: "blob" });
   });
 
-  it("selects no source without a token, so the build passes with no content", () => {
+  it("selects no source without a store, so the build passes with no content", () => {
     expect(contentSourceFromEnv({})).toEqual({ kind: "none" });
     expect(createContentStoreFromEnv({})).toBeNull();
   });
