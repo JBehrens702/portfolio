@@ -1,4 +1,4 @@
-import { get, list, put, type BlobAccessType } from "@vercel/blob";
+import { BlobNotFoundError, get, head, list, put, type BlobAccessType } from "@vercel/blob";
 import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { assertSite, parseSite, type ParseResult, type Site } from "./schema";
@@ -211,6 +211,17 @@ export interface BlobBackendOptions {
   access?: BlobAccessType;
 }
 
+/**
+ * How long a read waits for the Blob CDN to serve the current version. Waits of
+ * up to 73 s were measured on the development store (U6, 2026-10-09).
+ */
+const STALE_READ_TIMEOUT_MS = 120_000;
+
+/** An ETag without quotes or the weak prefix, so the API's and the CDN's forms compare equal. */
+function normalizeEtag(etag: string | null | undefined): string {
+  return (etag ?? "").replace(/^W\//, "").replace(/"/g, "");
+}
+
 export function createBlobBackend(options: BlobBackendOptions = {}): JsonBackend {
   const access = options.access ?? "public";
   const auth = options.credentials ?? blobCredentialsFromEnv();
@@ -221,11 +232,38 @@ export function createBlobBackend(options: BlobBackendOptions = {}): JsonBackend
   }
   return {
     async read(pathname) {
-      // Uncached: the Blob CDN can return the version from before an overwrite (KTD2).
-      const result = await get(pathname, { access, useCache: false, ...auth });
-      if (result === null || result.statusCode !== 200) return null;
-      const text = await new Response(result.stream).text();
-      return JSON.parse(text);
+      // The Blob CDN can return the version from before an overwrite (KTD2), and
+      // `useCache: false` bypasses it only for PRIVATE blobs; this store is public.
+      // Measured on the development store (U6): a read right after an overwrite
+      // sometimes returned the old version, and a path that was deleted and then
+      // written again read as missing for more than 20 s. So the Blob API (head,
+      // not cached) names the current version by its ETag, and only that version
+      // is accepted from the CDN.
+      let current: string;
+      try {
+        current = normalizeEtag((await head(pathname, auth)).etag);
+      } catch (error) {
+        if (error instanceof BlobNotFoundError) return null;
+        throw error;
+      }
+      const deadline = Date.now() + STALE_READ_TIMEOUT_MS;
+      for (let attempt = 0; ; attempt++) {
+        const result = await get(pathname, { access, useCache: false, ...auth });
+        if (result !== null && result.statusCode === 200) {
+          if (normalizeEtag(result.blob.etag) === current) {
+            if (attempt > 0) {
+              const waited = Date.now() - (deadline - STALE_READ_TIMEOUT_MS);
+              console.warn(`Blob read of ${pathname} waited ${waited} ms for the current version.`);
+            }
+            return JSON.parse(await new Response(result.stream).text());
+          }
+          await result.stream.cancel();
+        }
+        if (Date.now() > deadline) {
+          throw new Error(`Blob still returns an old version of ${pathname}; try again in a minute.`);
+        }
+        await new Promise((resolve) => setTimeout(resolve, Math.min(250 * 2 ** attempt, 2000)));
+      }
     },
     async write(pathname, value) {
       await put(pathname, JSON.stringify(value), {
