@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { contrastRatio, parseHex, relativeLuminance } from "./contrast";
-import { contrastRules, themeColors } from "./theme";
+import { contrastRules, themeColors, type ThemeColorName } from "./theme";
 
 const globalsCss = readFileSync(fileURLToPath(new URL("../../app/globals.css", import.meta.url)), "utf8");
 
@@ -89,5 +89,35 @@ describe("theme colours", () => {
     const ratio = contrastRatio(themeColors["--color-orange"], themeColors["--color-purple-deep"]);
     expect(ratio).toBeLessThan(3);
     expect(contrastRules.some((r) => r.fg === "--color-orange" && r.bg === "--color-purple-deep")).toBe(false);
+  });
+});
+
+// The decorative technical markings (src/components/site/markings.ts) use theme
+// colours at full strength, except the zone indices of the sheet border:
+// muted lavender at 62 % (globals.css, .sheet-cols and .sheet-rows). They are
+// decoration, so 3:1 on the page is the target.
+describe("technical markings", () => {
+  function over(fg: string, alpha: number, bg: string): string {
+    const f = parseHex(fg);
+    const b = parseHex(bg);
+    const mix = f.map((c, i) => Math.round(c * alpha + b[i] * (1 - alpha)));
+    return `#${mix.map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+  }
+
+  it("keeps the zone indices at 3:1 or more on the page", () => {
+    const zone = over(themeColors["--color-text-muted"], 0.62, themeColors["--color-bg"]);
+    expect(contrastRatio(zone, themeColors["--color-bg"])).toBeGreaterThanOrEqual(3);
+  });
+
+  it("keeps the readouts at 3:1 or more where they sit", () => {
+    const pairs: [ThemeColorName, ThemeColorName][] = [
+      ["--color-text-muted", "--color-surface-raised"], // REF on a card
+      ["--color-orange", "--color-bg"], // section numbers and ruler numbers
+      ["--color-on-purple-muted", "--color-purple-deep"], // hero, band, featured card, title block
+    ];
+    for (const [fg, bg] of pairs) {
+      const ratio = contrastRatio(themeColors[fg], themeColors[bg]);
+      expect(ratio, `${fg} on ${bg}`).toBeGreaterThanOrEqual(3);
+    }
   });
 });

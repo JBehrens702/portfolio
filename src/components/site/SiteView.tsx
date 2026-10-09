@@ -10,7 +10,9 @@ import { Hero } from "./Hero";
 import { ArrowIcon } from "./icons";
 import { homeHref, navLinks, resumeLink, SECTION_IDS } from "./links";
 import { Markdown } from "./Markdown";
+import { sectionMark, type Sheet } from "./markings";
 import { MotionObserver } from "./MotionObserver";
+import { Readout, RulerNumbers, SheetZones } from "./Readout";
 import { SkillsMarquee } from "./SkillsMarquee";
 import { SoftwareCard } from "./SoftwareCard";
 import styles from "./Site.module.css";
@@ -24,8 +26,14 @@ export interface ViewProps {
   linkBase: string;
 }
 
-/** Header, page content, and the contact footer. */
-export function SiteChrome({ site, linkBase, onHome, children }: ViewProps & { onHome: boolean; children: ReactNode }) {
+/** Header, page content, the contact footer, and the zone indices of the sheet border. */
+export function SiteChrome({
+  site,
+  linkBase,
+  onHome,
+  sheet,
+  children,
+}: ViewProps & { onHome: boolean; sheet?: Sheet; children: ReactNode }) {
   return (
     <>
       <Header
@@ -34,8 +42,9 @@ export function SiteChrome({ site, linkBase, onHome, children }: ViewProps & { o
         links={navLinks(site, linkBase, onHome)}
         resume={resumeLink(site)}
       />
+      <SheetZones />
       {children}
-      <ContactLinks site={site} />
+      <ContactLinks site={site} sheet={sheet} />
       <MotionObserver />
     </>
   );
@@ -44,16 +53,21 @@ export function SiteChrome({ site, linkBase, onHome, children }: ViewProps & { o
 /**
  * An orange section heading after design A: a small square with a cut corner,
  * the heading, and a rule with tick marks that fades out to the right. The
- * square and the rule are aria-hidden graphics without text. Hidden without its label.
+ * square and the rule are aria-hidden graphics; their only text is the section
+ * number ("N°01", from the order of the headings) and the ruler numbers (see
+ * markings.ts). Hidden without its label.
  */
-function SectionHeading({ id, text }: { id: string; text: string | null }) {
+function SectionHeading({ id, text, index }: { id: string; text: string | null; index: number }) {
   return text ? (
     <div className={styles.sectionHead} data-reveal="">
+      <Readout text={sectionMark(index)} className={styles.sectionNo} />
       <span className={styles.sectionMark} aria-hidden="true" />
       <h2 id={id} className={styles.sectionHeading}>
         {text}
       </h2>
-      <span className={styles.sectionRule} aria-hidden="true" />
+      <span className={styles.sectionRule} aria-hidden="true">
+        <RulerNumbers className={styles.rulerNo} />
+      </span>
     </div>
   ) : null;
 }
@@ -68,9 +82,16 @@ export function HomeView({ site, linkBase }: ViewProps) {
   const aboutHeading = labelText(site, "aboutHeading");
   const readMore = labelText(site, "readMore");
   const intro = site.profile.introParagraphs;
+  // Section numbers follow the headings that show, in page order.
+  const shown = [
+    site.experiences.length > 0 && workHeading,
+    site.software.length > 0 && softwareHeading,
+    intro.length > 0 && aboutHeading,
+  ];
+  const sectionIndex = (i: number) => shown.slice(0, i).filter(Boolean).length;
 
   return (
-    <SiteChrome site={site} linkBase={linkBase} onHome>
+    <SiteChrome site={site} linkBase={linkBase} onHome sheet={{ index: 0, count: site.experiences.length + 1 }}>
       <main id="main">
         <Hero site={site} linkBase={linkBase} />
         <SkillsMarquee experiences={site.experiences} />
@@ -82,7 +103,7 @@ export function HomeView({ site, linkBase }: ViewProps) {
             aria-labelledby={workHeading ? "work-heading" : undefined}
           >
             <div className="container">
-              <SectionHeading id="work-heading" text={workHeading} />
+              <SectionHeading id="work-heading" text={workHeading} index={sectionIndex(0)} />
               <div className={styles.summaries}>
                 {site.experiences.map((experience, i) => (
                   <ExperienceSummary
@@ -91,6 +112,8 @@ export function HomeView({ site, linkBase }: ViewProps) {
                     linkBase={linkBase}
                     readMore={readMore}
                     featured={i === 0}
+                    index={i}
+                    count={site.experiences.length}
                   />
                 ))}
               </div>
@@ -105,10 +128,16 @@ export function HomeView({ site, linkBase }: ViewProps) {
             aria-labelledby={softwareHeading ? "software-heading" : undefined}
           >
             <div className="container">
-              <SectionHeading id="software-heading" text={softwareHeading} />
+              <SectionHeading id="software-heading" text={softwareHeading} index={sectionIndex(1)} />
               <div className={styles.cards}>
                 {site.software.map((card, i) => (
-                  <SoftwareCard key={card.id} card={card} linkBase={linkBase} index={i} />
+                  <SoftwareCard
+                    key={card.id}
+                    card={card}
+                    linkBase={linkBase}
+                    index={i}
+                    count={site.software.length}
+                  />
                 ))}
               </div>
             </div>
@@ -122,7 +151,7 @@ export function HomeView({ site, linkBase }: ViewProps) {
             aria-labelledby={aboutHeading ? "about-heading" : undefined}
           >
             <div className="container">
-              <SectionHeading id="about-heading" text={aboutHeading} />
+              <SectionHeading id="about-heading" text={aboutHeading} index={sectionIndex(2)} />
               <div className={styles.about} data-reveal="">
                 <div className={styles.aboutAside} aria-hidden="true">
                   <div className={styles.aboutMarkTurn}>
@@ -151,8 +180,10 @@ export function HomeView({ site, linkBase }: ViewProps) {
 
 /** One full experience page. */
 export function ExperienceView({ site, linkBase, experience }: ViewProps & { experience: Experience }) {
+  const index = site.experiences.findIndex((e) => e.slug === experience.slug);
+  const sheet = index >= 0 ? { index: index + 1, count: site.experiences.length + 1 } : undefined;
   return (
-    <SiteChrome site={site} linkBase={linkBase} onHome={false}>
+    <SiteChrome site={site} linkBase={linkBase} onHome={false} sheet={sheet}>
       <main id="main">
         <ExperiencePage site={site} experience={experience} linkBase={linkBase} />
       </main>

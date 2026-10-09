@@ -89,6 +89,15 @@
   position: relative;
 }
 
+/* The reference number of the experience ("REF 03/05"), beside the lower-right crop mark. */
+.bandRef {
+  --readout-color: var(--color-on-purple-muted);
+  position: absolute;
+  right: calc(0.875rem + 1.5rem + 0.625rem);
+  bottom: 0.875rem;
+  font-size: 0.6875rem;
+}
+
 .title {
   max-width: 22ch;
   margin-bottom: var(--space-6);
@@ -184,6 +193,16 @@
   -webkit-mask-image: linear-gradient(90deg, #000 10%, transparent 95%);
   mask-image: linear-gradient(90deg, #000 10%, transparent 95%);
   transform-origin: left center;
+}
+
+/* The section number ("N°01"), at the end of the ruler. */
+.railNo {
+  --readout-color: var(--color-orange);
+  position: absolute;
+  top: 0;
+  left: 14rem;
+  line-height: 0.875rem;
+  letter-spacing: 0.2em;
 }
 
 .subsegment .railSticky {

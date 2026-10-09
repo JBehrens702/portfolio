@@ -2,6 +2,8 @@ import type { CSSProperties } from "react";
 import { Aperture } from "./Aperture";
 import type { NavLink } from "./Header";
 import { ExternalIcon, GlobeIcon, MailIcon, ProfileIcon } from "./icons";
+import { sheetMark, type Sheet } from "./markings";
+import { Readout } from "./Readout";
 import styles from "./Footer.module.css";
 
 export interface FooterProps {
@@ -11,6 +13,8 @@ export interface FooterProps {
   heading?: string;
   /** Optional element id, so a header link such as "#contact" can point here. */
   id?: string;
+  /** The sheet number of the page, for the title block (a decorative marking). */
+  sheet?: Sheet;
 }
 
 /** The decorative icon for a contact address. */
@@ -23,9 +27,11 @@ function LinkIcon({ href }: { href: string }) {
 /**
  * The site footer (design A): a dark purple band with cut corners and the
  * contact links as rows with an orange edge. It renders nothing when no link
- * is supplied (0.1.8). Every decoration is aria-hidden and holds no text.
+ * is supplied (0.1.8). Every decoration is aria-hidden. The title block in the
+ * lower corner holds only drafting markings: the sheet number of the page
+ * (from its order), the scale, and the revision (see markings.ts).
  */
-export function Footer({ links, heading, id }: FooterProps) {
+export function Footer({ links, heading, id, sheet }: FooterProps) {
   if (links.length === 0) return null;
   const headingId = id ? `${id}-heading` : undefined;
   return (
@@ -35,6 +41,13 @@ export function Footer({ links, heading, id }: FooterProps) {
           <Aperture id="footer-aperture" tone="ghost" className={styles.mark} />
         </div>
         <span className={`corner-marks ${styles.ticks}`} aria-hidden="true" />
+        {sheet && (
+          <span className={styles.titleBlock} aria-hidden="true">
+            <Readout text={sheetMark(sheet.index, sheet.count)} />
+            <Readout text="SCALE 1:1" />
+            <Readout text="REV A" />
+          </span>
+        )}
         <div className={styles.inner}>
           {heading && (
             <h2 id={headingId} className={styles.heading} data-reveal="">

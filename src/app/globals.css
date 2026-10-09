@@ -320,6 +320,89 @@ ol[role="list"] {
 }
 
 /* ---------------------------------------------------------------------------
+ * Technical markings (owner decision, 2026-10-09): reference numbers, grid
+ * coordinates, zone indices, and ruler numbers, like the border and title
+ * block of a technical drawing. Only derived values and drafting tokens
+ * (src/components/site/markings.ts). Each one is aria-hidden, carries
+ * data-marking, and cannot be selected or copied with the owner's text.
+ * Set --readout-color on the element or a parent: muted lavender on the dark
+ * page by default, white tones on purple.
+ * ------------------------------------------------------------------------- */
+
+.readout {
+  display: inline-block;
+  color: var(--readout-color, var(--color-text-muted));
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-transform: none;
+  white-space: nowrap;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* The zone indices of the sheet border: letters across the top of the page,
+   numbers down both sides, one per coarse cell of the graph paper. Only where
+   the gutter leaves room for them; they sit behind every panel. */
+.sheet-cols,
+.sheet-rows {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .sheet-cols,
+  .sheet-rows {
+    display: block;
+    z-index: -1;
+    pointer-events: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .sheet-cols {
+    position: absolute;
+    top: var(--header-height);
+    left: 0;
+    right: 0;
+    height: 2.5rem;
+    overflow: hidden;
+  }
+
+  .sheet-cols > .readout {
+    position: absolute;
+    top: 0.75rem;
+    left: calc(var(--n) * var(--grid-coarse));
+    width: var(--grid-coarse);
+    text-align: center;
+    color: rgb(184 174 196 / 0.62);
+  }
+
+  /* The same box as the graph paper (body::before), so the numbers stay on its rows as it drifts. */
+  .sheet-rows {
+    position: fixed;
+    inset: calc(-1 * var(--grid-coarse)) 0;
+    overflow: hidden;
+  }
+
+  .sheet-rows > .readout {
+    position: absolute;
+    left: 0.375rem;
+    top: calc(var(--n) * var(--grid-coarse) + var(--grid-coarse) / 2);
+    translate: 0 -50%;
+    color: rgb(184 174 196 / 0.62);
+  }
+
+  .sheet-rows > .sheet-rows-end {
+    left: auto;
+    right: 0.375rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
  * Motion. Every animation below runs only without prefers-reduced-motion; with
  * it, each element shows in its final state at once.
  *
@@ -388,7 +471,8 @@ ol[role="list"] {
 
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: scroll()) {
-    body::before {
+    body::before,
+    .sheet-rows {
       animation: grid-drift linear both;
       animation-timeline: scroll(root);
     }

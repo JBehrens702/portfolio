@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import type { Site } from "@/lib/content/schema";
 import { isBlank, labelText } from "@/lib/content/visibility";
 import { Aperture } from "./Aperture";
+import { CoordReadout, PointerReadout } from "./GridReadouts";
 import { resumeLink, sectionHref, SECTION_IDS } from "./links";
 import { MediaImage } from "./MediaImage";
 import styles from "./Site.module.css";
@@ -17,7 +18,9 @@ function words(text: string) {
  * over a turning aperture ring. An orange hazard stripe runs along the lower
  * edge. The heading is the owner's tagline when one exists (the Google Site
  * heading "Hi, I'm Jonathan Behrens"), else the owner's name. Every decoration
- * is aria-hidden and holds no text. Pass a site from visibleSite().
+ * is aria-hidden; the only text in a decoration is a grid coordinate (the
+ * photo corners, the panel extent, and the live pointer; see markings.ts).
+ * Pass a site from visibleSite().
  */
 export function Hero({ site, linkBase = "/" }: { site: Site; linkBase?: string }) {
   const { profile } = site;
@@ -29,9 +32,11 @@ export function Hero({ site, linkBase = "/" }: { site: Site; linkBase?: string }
   return (
     <section className={styles.hero} aria-labelledby="hero-heading">
       <div className="container">
-        <div className={styles.heroPanel}>
+        <div className={styles.heroPanel} data-grid-origin="">
           <span className={styles.heroGrid} aria-hidden="true" />
+          <PointerReadout className={styles.heroPointer} crosshairClassName={styles.heroCrosshair} />
           <span className={`corner-marks ${styles.heroTicks}`} aria-hidden="true" />
+          <CoordReadout corner="end" className={styles.heroExtent} />
           <div className={styles.heroLayout}>
             <div className={styles.heroText}>
               <h1 id="hero-heading" className={styles.heroName}>
@@ -83,6 +88,8 @@ export function Hero({ site, linkBase = "/" }: { site: Site; linkBase?: string }
                   />
                 </div>
                 <span className={`corner-marks ${styles.heroMarks}`} aria-hidden="true" />
+                <CoordReadout corner="start" className={styles.photoStart} />
+                <CoordReadout corner="end" className={styles.photoEnd} />
               </div>
             )}
           </div>

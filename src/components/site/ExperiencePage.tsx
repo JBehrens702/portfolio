@@ -7,7 +7,9 @@ import { Aperture } from "./Aperture";
 import { Block } from "./Block";
 import { ArrowIcon } from "./icons";
 import { experienceHref } from "./links";
+import { refMark, sectionMark } from "./markings";
 import { MediaImage } from "./MediaImage";
+import { Readout } from "./Readout";
 import { segmentBlocks, type BodyItem } from "./segments";
 import styles from "./Experience.module.css";
 
@@ -42,12 +44,19 @@ function Item({ item, linkBase, downloadLabel }: { item: BodyItem; linkBase: str
  * segments, then the next-experience link (0.1.2, 0.1.10). On wide screens each
  * heading sits in a sticky column beside its blocks; a fact list sits in
  * a light panel beside the image before it. The block order never changes.
+ * Decorative markings (aria-hidden, see markings.ts): the reference number in
+ * the band ("REF 03/05", from the order of the experiences) and a section
+ * number beside each level-2 heading ("N°01", from the order of the sections).
  */
 export function ExperiencePage({ site, experience, linkBase }: ExperiencePageProps) {
   const next = nextExperience(site, experience.slug);
   const nextLabel = labelText(site, "nextExperience");
   const downloadLabel = labelText(site, "downloadFile");
   const segments = segmentBlocks(experience.blocks);
+  const index = site.experiences.findIndex((e) => e.slug === experience.slug);
+  // The section number of each segment that starts with a level-2 heading, else null.
+  let sections = 0;
+  const sectionNumbers = segments.map((segment) => (segment.headings[0]?.level === 2 ? sections++ : null));
   return (
     <article className={styles.page}>
       <header className={`container ${styles.band}`}>
@@ -72,6 +81,7 @@ export function ExperiencePage({ site, experience, linkBase }: ExperiencePagePro
               </ul>
             )}
           </div>
+          {index >= 0 && <Readout text={refMark(index, site.experiences.length)} className={styles.bandRef} />}
           <span className="hazard" aria-hidden="true" />
         </div>
       </header>
@@ -85,6 +95,9 @@ export function ExperiencePage({ site, experience, linkBase }: ExperiencePagePro
             {segment.headings.length > 0 && (
               <div className={styles.rail}>
                 <div className={styles.railSticky} data-reveal="">
+                  {sectionNumbers[s] !== null && (
+                    <Readout text={sectionMark(sectionNumbers[s])} className={styles.railNo} />
+                  )}
                   {segment.headings.map((heading) => (
                     <Block key={heading.id} block={heading} linkBase={linkBase} downloadLabel={downloadLabel} />
                   ))}

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { isAllowedMarking } from "../src/components/site/markings";
 
 // U4 scenarios. The dev server reads e2e/fixtures/content through the file
 // backend: CONTENT_SOURCE=file:e2e/fixtures/content CONTENT_ROOT=e2e.
@@ -226,6 +227,36 @@ test("the Tab key moves through the home page links in reading order, each with 
     expect(focused?.outline).not.toBe("none");
     expect(focused?.width).toBeGreaterThanOrEqual(2);
   }
+});
+
+// The decorative technical markings (owner decision, 2026-10-09): every one is
+// aria-hidden, cannot be selected, sits outside headings and links, and holds
+// only derived numbers, grid letters, and the drafting tokens of markings.ts.
+test("every technical marking is aria-hidden, unselectable, and holds no words", async ({ page }) => {
+  for (const url of ["/", ...SLUGS.map((slug) => `/experiences/${slug}`), "/experiences/no-such-experience"]) {
+    await page.goto(url);
+    const markings = await page.locator("[data-marking]").evaluateAll((els) =>
+      els.map((el) => ({
+        text: el.textContent ?? "",
+        hidden: el.closest('[aria-hidden="true"]') !== null,
+        selectable: getComputedStyle(el).userSelect !== "none",
+        inNamed: el.closest("h1, h2, h3, h4, h5, h6, a, button, label") !== null,
+      })),
+    );
+    if (url === "/") expect(markings.length, url).toBeGreaterThan(10);
+    for (const marking of markings) {
+      expect(marking.hidden, `${url}: ${marking.text}`).toBe(true);
+      expect(marking.selectable, `${url}: ${marking.text}`).toBe(false);
+      expect(marking.inNamed, `${url}: ${marking.text}`).toBe(false);
+      expect(isAllowedMarking(marking.text), `${url}: "${marking.text}"`).toBe(true);
+    }
+  }
+
+  // The values are derived from the order and the count: the fixture has three experiences.
+  await page.goto("/");
+  await expect(page.locator("#work article [data-marking]")).toHaveText(["REF 01/03", "REF 02/03", "REF 03/03"]);
+  await page.goto("/experiences/beta-project");
+  await expect(page.locator("main header [data-marking]")).toHaveText("REF 02/03");
 });
 
 test.describe("phone width", () => {

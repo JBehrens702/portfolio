@@ -34,6 +34,28 @@
   --mark-size: 1.5rem;
 }
 
+/* A small title block in the lower-right corner, beside the crop mark: the
+   sheet number of the page, the scale, and the revision (aria-hidden markings). */
+.titleBlock {
+  --readout-color: var(--color-on-purple-muted);
+  position: absolute;
+  z-index: 1;
+  right: calc(0.875rem + 1.5rem + 0.625rem);
+  bottom: 0.875rem;
+  display: flex;
+  border: 1px solid rgb(255 255 255 / 0.35);
+  background: rgb(0 0 0 / 0.2);
+  pointer-events: none;
+}
+
+.titleBlock > :global(.readout) {
+  padding: 0.3rem 0.55rem;
+}
+
+.titleBlock > :global(.readout) + :global(.readout) {
+  border-left: 1px solid rgb(255 255 255 / 0.35);
+}
+
 .markTurn {
   position: absolute;
   z-index: -1;
