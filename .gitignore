@@ -44,3 +44,6 @@ next-env.d.ts
 # playwright
 /test-results/
 /playwright-report/
+
+# owner files for upload to Blob (resume, reports) - never commit
+/content/uploads/
