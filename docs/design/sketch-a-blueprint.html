@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sketch A – Blueprint grid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@400;600&family=Michroma&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="topbar.css">
+<style>
+  body {
+    background-color: var(--black);
+    background-image:
+      linear-gradient(rgba(141,32,196,.18) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(141,32,196,.18) 1px, transparent 1px),
+      linear-gradient(rgba(141,32,196,.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(141,32,196,.07) 1px, transparent 1px);
+    background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+    color: var(--text); font: 15px/1.65 "JetBrains Mono", monospace;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 40px; }
+  h1, h2, h3 { font-family: "Orbitron", sans-serif; text-transform: uppercase; letter-spacing: .04em; margin: 0; }
+  h2 { color: var(--orange); font-size: 28px; display: flex; align-items: center; gap: 16px; margin: 80px 0 28px; }
+  h2::after { content: ""; flex: 1; height: 2px; background: linear-gradient(90deg, var(--orange), transparent); }
+  h2::before { content: ""; width: 14px; height: 14px; background: var(--orange); clip-path: polygon(0 0,100% 0,100% 60%,60% 100%,0 100%); }
+  /* chamfered panels */
+  .chamfer { clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 28px 100%, 0 calc(100% - 28px)); }
+  .hero {
+    margin-top: 40px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center;
+    padding: 64px; background: linear-gradient(135deg, var(--purple), var(--purple-deep) 60%, var(--purple-ink));
+    position: relative;
+  }
+  .hero::after { /* hazard stripe on the lower edge */
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 10px;
+    background: repeating-linear-gradient(-45deg, var(--orange) 0 14px, transparent 14px 28px);
+  }
+  .hero h1 { font-size: 62px; line-height: 1.02; font-weight: 900; }
+  .hero p { color: #f1e6fb; max-width: 56ch; margin-top: 22px; }
+  .photo { position: relative; justify-self: center; width: 360px; aspect-ratio: 1; }
+  .photo img { width: 100%; height: 100%; object-fit: cover; clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%); }
+  .photo::before, .photo::after { /* crosshair corner marks */
+    content: ""; position: absolute; width: 40px; height: 40px; border: 3px solid var(--orange);
+  }
+  .photo::before { top: -12px; left: -12px; border-right: 0; border-bottom: 0; }
+  .photo::after { bottom: -12px; right: -12px; border-left: 0; border-top: 0; }
+  .btn { display: inline-flex; margin-top: 28px; padding: 12px 26px; background: var(--orange); color: #120a00;
+    font-family: "Michroma", sans-serif; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; text-decoration: none;
+    clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
+  .skills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+  .skills span { border: 1px solid rgba(255,122,26,.6); color: #ffd7b8; padding: 4px 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+  .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 22px; }
+  .card { background: #120c19; border: 1px solid #2f2539; position: relative; display: flex; flex-direction: column; }
+  .card img { width: 100%; height: 220px; object-fit: cover; display: block; filter: saturate(.9) contrast(1.05); }
+  .card .body { padding: 22px 24px 26px; }
+  .card h3 { font-size: 17px; color: #fff; }
+  .card p { color: var(--muted); font-size: 13px; margin: 12px 0 0; }
+  .card .tick { position: absolute; top: 10px; left: 10px; width: 22px; height: 22px; border-top: 3px solid var(--orange); border-left: 3px solid var(--orange); }
+  .card.featured { grid-column: span 6; flex-direction: row; background: linear-gradient(120deg, var(--purple), var(--purple-deep)); border: 0; }
+  .card.featured img { width: 52%; height: 360px; }
+  .card.featured .body { padding: 44px; align-self: center; }
+  .card.featured h3 { font-size: 26px; }
+  .card.featured p { color: #f1e6fb; font-size: 14px; }
+  .card.w3 { grid-column: span 3; } .card.w2 { grid-column: span 2; }
+  .more { display: inline-block; margin-top: 16px; color: var(--orange); font-size: 12px; text-transform: uppercase; letter-spacing: .14em; text-decoration: none; }
+  .contact { margin: 100px 0 60px; padding: 48px 64px; background: var(--purple-deep); display: flex; justify-content: space-between; align-items: center; }
+  .contact h2 { margin: 0; color: #fff; }
+  .contact h2::after, .contact h2::before { display: none; }
+  .contact a { display: block; color: #fff; font-size: 14px; text-decoration: none; border-left: 4px solid var(--orange); padding: 6px 14px; margin: 8px 0; background: rgba(0,0,0,.25); }
+</style>
+</head>
+<body>
+<header class="topbar"><div class="slashes"></div><img src="../../public/brand/logo-full.png" alt=""><nav><a href="#">Work</a><a href="#">About</a><a href="#">Contact</a></nav></header>
+<main class="wrap">
+  <section class="hero chamfer">
+    <div>
+      <h1>Hi, I'm Jonathan Behrens</h1>
+      <p>I am a mechanical engineering student at Messiah University (Class of 2027) and a space nerd. I have dreamt of pushing humanity to the stars since middle school…</p>
+      <a class="btn" href="#">Work</a>
+    </div>
+    <div class="photo"><img src="../../content/seed/media/home-hero.jpg" alt=""></div>
+  </section>
+  <div class="skills"><span>Project Management</span><span>Electronics Design</span><span>Product Development</span><span>Validation</span><span>Machining</span><span>GD&amp;T</span><span>CAD</span><span>FEA</span><span>Arduino (Coding Language)</span></div>
+
+  <h2>Selected Work</h2>
+  <div class="grid">
+    <article class="card featured chamfer">
+      <img src="../../content/seed/media/home-card-thermocouple-reader-system.jpg" alt="">
+      <div class="body"><h3>Thermocouple Reader System Design</h3><p>From August 2024 to present, I have been working with Dr. Tim Burdett (Messiah University Engineering) to design a thermocouple data acquisition system…</p><a class="more" href="#">Read more →</a></div>
+    </article>
+    <article class="card w3 chamfer"><span class="tick"></span>
+      <img src="../../content/seed/media/home-card-turbine-testing-stand.jpg" alt="">
+      <div class="body"><h3>Streamlining Wind Turbines - Collaboratory</h3><p>Throughout the Spring 2025 semester, I worked with another student to construct and validate a single-phase AC to 3-phase AC converter…</p><a class="more" href="#">Read more →</a></div>
+    </article>
+    <article class="card w3 chamfer"><span class="tick"></span>
+      <img src="../../content/seed/media/home-card-victaulic-internship.png" alt="">
+      <div class="body"><h3>Victaulic Internship (Summer '25)</h3><p>Throughout this internship, my main personal goal was to supplement and convert my previous project and academic experience…</p><a class="more" href="#">Read more →</a></div>
+    </article>
+    <article class="card w3 chamfer"><span class="tick"></span>
+      <img src="../../content/seed/media/home-card-solidworks-experience.png" alt="">
+      <div class="body"><h3>SolidWorks Experience</h3><p>A brief overview of some of my SolidWorks projects I have done beyond the scope of dedicated work…</p><a class="more" href="#">Read more →</a></div>
+    </article>
+    <article class="card w3 chamfer"><span class="tick"></span>
+      <img src="../../content/seed/media/home-card-volunteer-experience.jpg" alt="">
+      <div class="body"><h3>Service &amp; Volunteer Work</h3><p>Here is a synopsis of some of the service projects I have participated in recently.</p><a class="more" href="#">Read more →</a></div>
+    </article>
+  </div>
+
+  <section class="contact chamfer">
+    <h2>Get in touch:</h2>
+    <div><a href="#">linkedin.com/in/jonathan-behrens-meche</a><a href="#">jbehrens702@gmail.com</a><a href="#">app.joinrise.co/professional/lcokuxryce</a></div>
+  </section>
+</main>
+<div class="sketch-tag">SKETCH A · Blueprint grid · Orbitron + JetBrains Mono</div>
+</body>
+</html>
