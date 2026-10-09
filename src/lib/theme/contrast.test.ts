@@ -50,4 +50,21 @@ describe("theme colours", () => {
     expect(has("--color-link", 4.5)).toBe(true);
     expect(has("--color-focus", 3)).toBe(true);
   });
+
+  it("checks the text and the focus outline on each emphasis background: purple panel and light callout", () => {
+    const has = (fg: string, bg: string, min: number) =>
+      contrastRules.some((r) => r.fg === fg && r.bg === bg && r.min >= min);
+    // Purple panels: text at 4.5:1 on each purple step under text, the outline at 3:1.
+    for (const bg of ["--color-purple-deep", "--color-purple-dark", "--color-purple-ink"]) {
+      expect(has("--color-on-purple", bg, 4.5), bg).toBe(true);
+    }
+    expect(has("--color-on-purple", "--color-purple-deep", 3)).toBe(true);
+    expect(has("--color-on-purple", "--color-purple-bright", 3)).toBe(true);
+    // Light callouts: dark text, purple labels and links, and the outline.
+    expect(has("--color-callout-text", "--color-callout", 4.5)).toBe(true);
+    expect(has("--color-callout-accent", "--color-callout", 4.5)).toBe(true);
+    // The raised dark card.
+    expect(has("--color-text", "--color-surface-raised", 4.5)).toBe(true);
+    expect(has("--color-focus", "--color-surface-raised", 3)).toBe(true);
+  });
 });

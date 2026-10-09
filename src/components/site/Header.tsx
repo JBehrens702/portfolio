@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import logoFull from "../../../public/brand/logo-full.png";
+import logoMark from "../../../public/brand/logo-mark.png";
 import styles from "./Header.module.css";
 
 export interface NavLink {
@@ -23,6 +24,11 @@ export interface HeaderProps {
   /** Accessible name of the navigation landmark. */
   navLabel?: string;
 }
+
+// The logo is two images: the aperture ring (logo-mark.png), which turns on
+// load and as the page scrolls, and the lettering of logo-full.png, shown
+// without its own ring. The lettering image carries the alt text; the ring is
+// decorative (alt="").
 
 export function Header({ logoAlt, links, resume, menuLabel, navLabel }: HeaderProps) {
   const [open, setOpen] = useState(false);
@@ -56,13 +62,12 @@ export function Header({ logoAlt, links, resume, menuLabel, navLabel }: HeaderPr
     <header className={styles.header}>
       <div className={`container ${styles.bar}`}>
         <Link href="/" className={styles.logoLink}>
-          <Image
-            src={logoFull}
-            alt={logoAlt}
-            className={styles.logo}
-            sizes="(min-width: 640px) 180px, 160px"
-            loading="eager"
-          />
+          <span className={styles.markSpin}>
+            <Image src={logoMark} alt="" className={styles.mark} sizes="48px" loading="eager" />
+          </span>
+          <span className={styles.word}>
+            <Image src={logoFull} alt={logoAlt} className={styles.wordImage} sizes="200px" loading="eager" />
+          </span>
         </Link>
 
         {hasNav && (
@@ -95,6 +100,9 @@ export function Header({ logoAlt, links, resume, menuLabel, navLabel }: HeaderPr
                 <li>
                   <a href={resume.href} className={`${styles.link} ${styles.resume}`} onClick={close}>
                     {resume.label}
+                    <svg className={styles.resumeIcon} viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                      <path d="M8 2v8m0 0 3.5-3.5M8 10 4.5 6.5M3 13h10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </a>
                 </li>
               )}

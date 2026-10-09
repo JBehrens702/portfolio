@@ -1,35 +1,151 @@
+/* The closing contact panel: purple, the highest emphasis, like the hero. */
+
 .footer {
-  margin-top: var(--space-12);
-  padding-block: var(--space-8);
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
+  margin-top: clamp(4rem, 3rem + 4vw, 7rem);
+  padding: 0 var(--panel-inset) var(--panel-inset);
+}
+
+.panel {
+  --focus-ring: var(--color-on-purple);
+  --color-heading: var(--color-on-purple);
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding-block: clamp(3rem, 2rem + 5vw, 6.5rem);
+  color: var(--color-on-purple);
+  background:
+    radial-gradient(36rem 26rem at 0% 100%, rgb(179 76 224 / 0.5), transparent 65%),
+    linear-gradient(110deg, var(--color-purple-deep) 0%, var(--color-purple-dark) 50%, var(--color-purple-ink) 100%);
+  border-radius: var(--radius-xl);
+}
+
+.markTurn {
+  position: absolute;
+  z-index: -1;
+  left: -8rem;
+  bottom: -10rem;
+  width: clamp(18rem, 12rem + 22vw, 32rem);
+  aspect-ratio: 1;
+  pointer-events: none;
+}
+
+.mark {
+  width: 100%;
+  height: 100%;
+  opacity: 0.55;
+}
+
+/* On narrow screens the links sit over the ring: keep it faint, so white text keeps at least 4.5:1. */
+@media (max-width: 899px) {
+  .mark {
+    opacity: 0.3;
+  }
 }
 
 .inner {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  gap: var(--space-8);
   align-items: center;
-  gap: var(--space-2) var(--space-6);
 }
 
 .heading {
   margin: 0;
-  font-size: 1.125rem;
+  max-width: 14ch;
+  font-size: clamp(2.25rem, 1.4rem + 4vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
 }
 
 .list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-4);
+  display: grid;
+  gap: var(--space-3);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .link {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  min-height: var(--tap-size);
-  padding-inline: var(--space-2);
-  font-weight: 600;
+  gap: var(--space-3);
+  min-height: 3.5rem;
+  padding: var(--space-2) var(--space-6) var(--space-2) var(--space-4);
+  color: var(--color-on-purple);
+  font-family: var(--font-display);
+  font-weight: 500;
+  text-decoration: none;
+  background: rgb(255 255 255 / 0.1);
+  border: 1px solid rgb(255 255 255 / 0.28);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    transform 0.35s var(--ease-out);
+}
+
+.link:hover {
+  color: var(--color-purple-dark);
+  background: var(--color-on-purple);
+}
+
+.icon,
+.go {
+  flex-shrink: 0;
+  width: 1.375rem;
+  height: 1.375rem;
+}
+
+.linkText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.go {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-left: auto;
+  opacity: 0.8;
+  transition: transform 0.3s var(--ease-out);
+}
+
+.link:hover .go {
+  transform: translate(2px, -2px);
+}
+
+@media (min-width: 900px) {
+  .inner {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 32rem);
+    gap: var(--space-12);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .link:hover {
+    transform: translateX(4px);
+  }
+
+  @supports (animation-timeline: view()) {
+    .markTurn {
+      animation: footer-turn linear both;
+      animation-timeline: view();
+    }
+  }
+}
+
+@keyframes footer-turn {
+  from {
+    rotate: -60deg;
+  }
+  to {
+    rotate: 60deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link,
+  .go {
+    transition: none;
+  }
 }

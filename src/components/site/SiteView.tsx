@@ -1,13 +1,17 @@
 import type { ReactNode } from "react";
 import type { Experience, Site } from "@/lib/content/schema";
 import { labelText } from "@/lib/content/visibility";
+import { Aperture } from "./Aperture";
 import { ContactLinks } from "./ContactLinks";
 import { ExperiencePage } from "./ExperiencePage";
 import { ExperienceSummary } from "./ExperienceSummary";
 import { Header } from "./Header";
 import { Hero } from "./Hero";
+import { ArrowIcon } from "./icons";
 import { homeHref, navLinks, resumeLink, SECTION_IDS } from "./links";
 import { Markdown } from "./Markdown";
+import { MotionObserver } from "./MotionObserver";
+import { SkillsMarquee } from "./SkillsMarquee";
 import { SoftwareCard } from "./SoftwareCard";
 import styles from "./Site.module.css";
 
@@ -32,15 +36,21 @@ export function SiteChrome({ site, linkBase, onHome, children }: ViewProps & { o
       />
       {children}
       <ContactLinks site={site} />
+      <MotionObserver />
     </>
   );
 }
 
-function SectionHeading({ id, text }: { id: string; text: string | null }) {
+/** A section heading with a small turning aperture and a rule. Hidden without its label. */
+function SectionHeading({ id, text, aperture }: { id: string; text: string | null; aperture: string }) {
   return text ? (
-    <h2 id={id} className={styles.sectionHeading}>
-      {text}
-    </h2>
+    <div className={styles.sectionHead} data-reveal="">
+      <Aperture id={aperture} className={styles.sectionMark} />
+      <h2 id={id} className={styles.sectionHeading}>
+        {text}
+      </h2>
+      <span className={styles.sectionRule} aria-hidden="true" />
+    </div>
   ) : null;
 }
 
@@ -55,7 +65,8 @@ export function HomeView({ site, linkBase }: ViewProps) {
   return (
     <SiteChrome site={site} linkBase={linkBase} onHome>
       <main id="main">
-        <Hero site={site} />
+        <Hero site={site} linkBase={linkBase} />
+        <SkillsMarquee experiences={site.experiences} />
 
         {site.experiences.length > 0 && (
           <section
@@ -64,14 +75,16 @@ export function HomeView({ site, linkBase }: ViewProps) {
             aria-labelledby={workHeading ? "work-heading" : undefined}
           >
             <div className="container">
-              <SectionHeading id="work-heading" text={workHeading} />
+              <SectionHeading id="work-heading" text={workHeading} aperture="work-aperture" />
               <div className={styles.summaries}>
-                {site.experiences.map((experience) => (
+                {site.experiences.map((experience, i) => (
                   <ExperienceSummary
                     key={experience.slug}
                     experience={experience}
                     linkBase={linkBase}
                     readMore={readMore}
+                    featured={i === 0}
+                    reverse={i % 2 === 1}
                   />
                 ))}
               </div>
@@ -86,10 +99,10 @@ export function HomeView({ site, linkBase }: ViewProps) {
             aria-labelledby={softwareHeading ? "software-heading" : undefined}
           >
             <div className="container">
-              <SectionHeading id="software-heading" text={softwareHeading} />
+              <SectionHeading id="software-heading" text={softwareHeading} aperture="software-aperture" />
               <div className={styles.cards}>
-                {site.software.map((card) => (
-                  <SoftwareCard key={card.id} card={card} linkBase={linkBase} />
+                {site.software.map((card, i) => (
+                  <SoftwareCard key={card.id} card={card} linkBase={linkBase} index={i} />
                 ))}
               </div>
             </div>
@@ -103,11 +116,27 @@ export function HomeView({ site, linkBase }: ViewProps) {
             aria-labelledby={aboutHeading ? "about-heading" : undefined}
           >
             <div className="container">
-              <div className={styles.about}>
-                <SectionHeading id="about-heading" text={aboutHeading} />
-                {intro.map((paragraph, i) => (
-                  <Markdown key={i} text={paragraph} className={styles.prose} linkBase={linkBase} />
-                ))}
+              <div className={styles.about} data-reveal="">
+                <div className={styles.aboutAside}>
+                  {aboutHeading && (
+                    <h2 id="about-heading" className={styles.aboutHeading}>
+                      {aboutHeading}
+                    </h2>
+                  )}
+                  <div className={styles.aboutMarkTurn}>
+                    <Aperture id="about-aperture" className={styles.aboutMark} />
+                  </div>
+                </div>
+                <div className={styles.aboutText}>
+                  {intro.map((paragraph, i) => (
+                    <Markdown
+                      key={i}
+                      text={paragraph}
+                      className={i === 0 ? `${styles.prose} ${styles.lead}` : styles.prose}
+                      linkBase={linkBase}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </section>
@@ -134,15 +163,23 @@ export function NotFoundView({ site, linkBase }: ViewProps) {
   const backHome = labelText(site, "backHome");
   return (
     <SiteChrome site={site} linkBase={linkBase} onHome={false}>
-      <main id="main" className={`container ${styles.notFound}`}>
-        {heading && <h1>{heading}</h1>}
-        {backHome && (
-          <p>
-            <a href={homeHref(linkBase)} className={styles.textLink}>
-              {backHome}
-            </a>
-          </p>
-        )}
+      <main id="main" className={styles.notFound}>
+        <div className={styles.notFoundPanel}>
+          <div className={styles.notFoundMarkTurn} aria-hidden="true">
+            <Aperture id="not-found-aperture" tone="ghost" className={styles.notFoundMark} />
+          </div>
+          <div className={`container ${styles.notFoundBody}`}>
+            {heading && <h1 className={styles.notFoundTitle}>{heading}</h1>}
+            {backHome && (
+              <p>
+                <a href={homeHref(linkBase)} className={styles.buttonLight}>
+                  {backHome}
+                  <ArrowIcon className={styles.arrow} />
+                </a>
+              </p>
+            )}
+          </div>
+        </div>
       </main>
     </SiteChrome>
   );
@@ -151,8 +188,15 @@ export function NotFoundView({ site, linkBase }: ViewProps) {
 /** Shown when no content is published or configured: the site title only (KTD12). */
 export function EmptySiteView({ title }: { title: string }) {
   return (
-    <main id="main" className={`container ${styles.notFound}`}>
-      <h1>{title}</h1>
+    <main id="main" className={styles.notFound}>
+      <div className={styles.notFoundPanel}>
+        <div className={styles.notFoundMarkTurn} aria-hidden="true">
+          <Aperture id="empty-aperture" tone="ghost" className={styles.notFoundMark} />
+        </div>
+        <div className={`container ${styles.notFoundBody}`}>
+          <h1 className={styles.notFoundTitle}>{title}</h1>
+        </div>
+      </div>
     </main>
   );
 }

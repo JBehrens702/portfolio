@@ -1,157 +1,674 @@
-/* The full page of one experience. Theme variables come from globals.css. */
+/*
+ * The full page of one experience. Theme variables come from globals.css.
+ * A purple title band (highest emphasis), the owner's blocks on near-black,
+ * and light callouts for quotes and fact lists.
+ */
 
 .page {
-  padding-block: var(--space-8) 0;
+  padding-top: var(--space-2);
 }
 
-.intro {
-  max-width: 48rem;
-  margin-bottom: var(--space-8);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--color-border);
+/* ---------- Title band ---------- */
+
+.band {
+  padding-inline: var(--panel-inset);
+}
+
+.bandPanel {
+  --focus-ring: var(--color-on-purple);
+  --color-heading: var(--color-on-purple);
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding-block: clamp(3rem, 2rem + 5vw, 6.5rem) clamp(2.5rem, 2rem + 3vw, 4.5rem);
+  color: var(--color-on-purple);
+  background:
+    radial-gradient(34rem 26rem at 95% 0%, rgb(179 76 224 / 0.55), transparent 70%),
+    linear-gradient(140deg, var(--color-purple-deep) 0%, var(--color-purple-dark) 50%, var(--color-purple-ink) 100%);
+  border-radius: var(--radius-xl);
+}
+
+.bandBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.bandGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.06) 1px, transparent 1px);
+  background-size: 3.5rem 3.5rem;
+  mask-image: radial-gradient(ellipse 60% 90% at 85% 30%, black, transparent 75%);
+}
+
+.bandMarkTurn {
+  position: absolute;
+  right: -5rem;
+  top: 50%;
+  width: clamp(16rem, 10rem + 22vw, 30rem);
+  aspect-ratio: 1;
+  translate: 0 -50%;
+}
+
+.bandMark {
+  width: 100%;
+  height: 100%;
+}
+
+/* Where the ring can sit under the subtitle, it stays faint, so white text keeps at least 4.5:1. */
+@media (max-width: 1099px) {
+  .bandMark {
+    opacity: 0.3;
+  }
+}
+
+.bandInner {
+  position: relative;
 }
 
 .title {
-  margin-bottom: var(--space-2);
+  max-width: 18ch;
+  margin-bottom: var(--space-6);
+  font-size: clamp(2.375rem, 1.3rem + 4.4vw, 5rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
 }
 
 .subtitle {
+  max-width: 46rem;
   margin: 0;
-  color: var(--color-text-muted);
-  font-size: 1.1875rem;
+  color: var(--color-on-purple-muted);
+  font-size: clamp(1.0625rem, 0.95rem + 0.45vw, 1.3125rem);
+  line-height: 1.6;
 }
 
-.blocks {
+.bandSkills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-8) !important;
+}
+
+.bandSkills li {
+  padding: 0.35rem 0.95rem;
+  color: var(--color-on-purple);
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: rgb(255 255 255 / 0.1);
+  border: 1px solid rgb(255 255 255 / 0.32);
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+}
+
+/* ---------- Body: segments ---------- */
+
+.body {
+  padding-top: clamp(2.5rem, 2rem + 3vw, 5rem);
+}
+
+.segment {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+  padding-block: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+}
+
+.segment + .segment:not(.subsegment) {
+  border-top: 1px solid var(--color-border);
+}
+
+/* A segment under a level-3 heading continues the section above it. */
+.subsegment {
+  padding-top: var(--space-4);
+}
+
+.rail {
+  min-width: 0;
+}
+
+.railSticky {
+  position: relative;
+}
+
+.heading {
+  margin: 0;
+  font-size: clamp(1.625rem, 1.2rem + 1.5vw, 2.25rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.railSticky .subheading {
+  margin: 0;
+}
+
+.railSticky .heading + .subheading {
+  margin-top: var(--space-4);
+}
+
+/* A short purple blade above each section heading. */
+.railSticky::before {
+  content: "";
+  display: block;
+  width: 2.75rem;
+  height: 0.3rem;
+  margin-bottom: var(--space-4);
+  background: linear-gradient(90deg, var(--color-purple-bright), var(--color-lavender));
+  border-radius: 0.3rem 0.05rem;
+}
+
+.subsegment .railSticky::before {
+  width: 1.5rem;
+  height: 0.2rem;
+  opacity: 0.75;
+}
+
+.main {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  max-width: 48rem;
+  gap: var(--space-6);
+  min-width: 0;
 }
 
-.blocks > * {
+.main > * {
   min-width: 0;
   margin-bottom: 0;
 }
 
-.heading {
-  margin-top: var(--space-6);
+.subheading {
+  margin: var(--space-4) 0 0;
+  color: var(--color-accent);
+  font-size: clamp(1.1875rem, 1.05rem + 0.5vw, 1.375rem);
 }
 
-.subheading {
-  margin-top: var(--space-2);
+.prose {
+  max-width: 44rem;
+  color: var(--color-text);
 }
 
 .prose > p:last-child {
   margin-bottom: 0;
 }
 
+/* ---------- Quote: a light callout ---------- */
+
 .quote {
-  margin: 0;
-  padding: var(--space-4) var(--space-6);
-  font-style: italic;
-  background: var(--color-surface);
-  border-left: 4px solid var(--color-purple-bright);
-  border-radius: 0 var(--radius) var(--radius) 0;
+  --focus-ring: var(--color-callout-accent);
+  --color-link: var(--color-callout-accent);
+  position: relative;
+  margin: var(--space-4) 0;
+  padding: clamp(2.5rem, 2rem + 2vw, 3.5rem) clamp(1.5rem, 1rem + 3vw, 3.5rem) clamp(1.75rem, 1.5rem + 1.5vw, 2.75rem);
+  color: var(--color-callout-text);
+  font-family: var(--font-display);
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+  font-weight: 400;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  background:
+    radial-gradient(24rem 14rem at 100% 0%, rgb(199 125 255 / 0.18), transparent 70%),
+    var(--color-callout);
+  border-radius: var(--radius-blade);
+  box-shadow: var(--shadow-soft);
 }
 
 .quote p:last-child {
   margin-bottom: 0;
 }
 
+.quoteMark {
+  position: absolute;
+  top: -1.1rem;
+  left: clamp(1.5rem, 1rem + 3vw, 3.5rem);
+  width: 3.25rem;
+  height: auto;
+  padding: 0.6rem 0.55rem;
+  color: var(--color-on-purple);
+  background: linear-gradient(135deg, var(--color-purple-bright), var(--color-purple-dark));
+  border-radius: 0.9rem 0.25rem;
+  box-shadow: var(--shadow-glow);
+}
+
+/* ---------- Facts: a light callout panel ---------- */
+
+.spread,
+.spreadAlone {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.spreadMedia {
+  min-width: 0;
+}
+
+.panel {
+  --focus-ring: var(--color-callout-accent);
+  --color-link: var(--color-callout-accent);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: clamp(1.5rem, 1.25rem + 1vw, 2.25rem);
+  color: var(--color-callout-text);
+  background: var(--color-callout);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+}
+
 .facts {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-4);
   margin: 0;
 }
 
+.panel > .facts + .facts,
+.panel > .figure + .facts {
+  padding-top: var(--space-6);
+  border-top: 1px solid rgb(28 19 38 / 0.12);
+}
+
 .fact dt {
-  color: var(--color-lavender);
-  font-weight: 700;
+  margin-bottom: var(--space-1);
+  color: var(--color-callout-accent);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .fact dd {
   margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
   white-space: pre-line;
 }
+
+/* ---------- Images ---------- */
 
 .figure {
   margin: 0;
 }
 
-.imageGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-3);
+/* A row of images of equal height: each item grows by its aspect ratio, so no image is cropped. */
+.gallery {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.galleryItem {
+  position: relative;
+  min-width: 0;
+  max-width: calc(var(--w) * 1px);
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
 }
 
 .image {
   width: 100%;
   height: auto;
-  border-radius: var(--radius);
-  border: 1px solid var(--color-border);
+  transition: transform 0.9s var(--ease-out);
+}
+
+/* One key image in the text column: large, in the blade shape, never taller than the screen. */
+.gallerySingle .galleryItem,
+.gallerySpread .galleryItem {
+  /* The width that keeps the image at most min(75svh, 40rem) tall; set before it loads, so nothing shifts. */
+  width: min(100%, calc(min(75svh, 40rem) * var(--ar)), calc(var(--w) * 1px));
+  border-radius: var(--radius-blade);
+}
+
+/* Logos inside the fact panel: on white tiles, never cropped. */
+.galleryLogo {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.galleryLogo .galleryItem {
+  flex: 0 1 auto;
+  width: min(100%, calc(4.5rem * var(--ar) + 2rem), calc(var(--w) * 1px + 2rem));
+  max-width: none;
+  padding: var(--space-3) var(--space-4);
+  background: #ffffff;
+  border: 1px solid rgb(28 19 38 / 0.1);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+}
+
+.galleryLogo .image {
+  max-height: 4.5rem;
+  object-fit: contain;
 }
 
 .caption {
-  margin-top: var(--space-2);
+  position: relative;
+  max-width: 44rem;
+  margin-top: var(--space-4);
+  padding-left: var(--space-4);
   color: var(--color-text-muted);
   font-size: 0.9375rem;
+  line-height: 1.6;
 }
+
+.caption::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.3em;
+  bottom: 0.3em;
+  width: 3px;
+  background: linear-gradient(180deg, var(--color-purple-bright), transparent);
+  border-radius: 3px;
+}
+
+/* ---------- File download ---------- */
 
 .file {
   margin: 0;
 }
 
 .fileLink {
-  /* inline-block, not flex, so the space after the "Download" label stays. */
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  max-width: 100%;
   min-height: var(--tap-size);
-  padding: 0.625rem var(--space-4);
-  font-weight: 700;
-  line-height: 1.4;
+  padding: var(--space-3) var(--space-6) var(--space-3) var(--space-3);
+  color: var(--color-text);
+  text-decoration: none;
+  background: linear-gradient(180deg, var(--color-surface-raised), var(--color-surface));
   border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s var(--ease-out);
+}
+
+.fileLink:hover {
+  color: var(--color-heading);
+  border-color: rgb(199 125 255 / 0.5);
+  box-shadow: var(--shadow-glow);
+}
+
+.fileIconWrap {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  color: var(--color-on-purple);
+  background: linear-gradient(135deg, var(--color-purple-deep), var(--color-purple-dark));
+  border-radius: 0.9rem 0.3rem;
+}
+
+.fileIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.fileText {
+  min-width: 0;
+  line-height: 1.35;
 }
 
 .fileAction {
-  color: var(--color-text-muted);
+  display: block;
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
   font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
+.fileName {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.fileArrow {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-accent);
+  transition: transform 0.3s var(--ease-out);
+}
+
+/* ---------- Next experience ---------- */
+
 .next {
-  max-width: 48rem;
-  margin-top: var(--space-12);
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--color-border);
+  margin-top: clamp(2rem, 1rem + 3vw, 4rem);
 }
 
 .nextLink {
-  display: inline-flex;
-  flex-direction: column;
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 0.5rem + 2vw, 2rem);
   min-height: var(--tap-size);
+  padding: clamp(1rem, 0.75rem + 1vw, 1.5rem);
+  color: var(--color-heading);
   text-decoration: none;
+  background:
+    radial-gradient(30rem 16rem at 100% 50%, rgb(141 32 196 / 0.28), transparent 70%),
+    var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.4s ease;
 }
 
-.nextLink:hover .nextTitle {
-  text-decoration: underline;
+.nextLink:hover {
+  border-color: rgb(199 125 255 / 0.5);
+  box-shadow: var(--shadow-glow);
+}
+
+.nextThumb {
+  flex-shrink: 0;
+  width: clamp(4.5rem, 3rem + 5vw, 7.5rem);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0.25rem var(--color-purple-dark);
+}
+
+.nextImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.9s var(--ease-out);
+}
+
+.nextText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .nextLabel {
-  color: var(--color-text-muted);
+  color: var(--color-accent);
+  font-family: var(--font-display);
   font-size: 0.875rem;
   font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
 }
 
 .nextTitle {
-  color: var(--color-link);
-  font-size: 1.375rem;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: clamp(1.375rem, 1rem + 1.8vw, 2.5rem);
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
 }
 
+.nextGo {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-left: auto;
+  color: var(--color-on-purple);
+  background: linear-gradient(135deg, var(--color-purple-deep), var(--color-purple-dark));
+  border-radius: 50%;
+  transition: transform 0.35s var(--ease-out);
+}
+
+.nextArrow {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* ---------- Wider screens ---------- */
+
 @media (min-width: 640px) {
-  .imageGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .gallery:not(.galleryLogo) {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  /* Equal heights: each image takes a share of the row by its aspect ratio. */
+  .gallery:not(.galleryLogo):not(.gallerySingle):not(.gallerySpread) .galleryItem {
+    flex: var(--ar) 1 0%;
+  }
+
+  /* A slight stagger: every second image sits a little lower. */
+  .gallery:not(.galleryLogo):not(.gallerySingle):not(.gallerySpread) {
+    padding-bottom: var(--space-8);
+  }
+
+  .gallery:not(.galleryLogo):not(.gallerySingle):not(.gallerySpread) .galleryItem:nth-child(even) {
+    margin-top: var(--space-8);
+    margin-bottom: calc(-1 * var(--space-8));
+  }
+}
+
+@media (min-width: 800px) {
+  .spread {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+
+  .spreadAlone .panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    column-gap: var(--space-8);
+  }
+
+  .spreadAlone .panel > .facts + .facts {
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .segment {
+    grid-template-columns: 15rem minmax(0, 1fr);
+    column-gap: clamp(2.5rem, 1rem + 3vw, 5rem);
+  }
+
+  .main {
+    grid-column: 2;
+  }
+
+  .railSticky {
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-8));
+  }
+
+  .heading {
+    font-size: 1.625rem;
+    line-height: 1.2;
+  }
+}
+
+/* ---------- Motion (none with prefers-reduced-motion) ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .title {
+    animation: band-rise 1s var(--ease-out) 0.1s both;
+  }
+
+  .subtitle {
+    animation: band-rise 1s var(--ease-out) 0.25s both;
+  }
+
+  .bandSkills li {
+    animation: band-rise 0.8s var(--ease-out) both;
+    animation-delay: calc(0.4s + var(--i, 0) * 60ms);
+  }
+
+  .bandMarkTurn {
+    animation: band-spin 1.6s var(--ease-out) both;
+  }
+
+  .galleryItem:hover .image,
+  .nextLink:hover .nextImage {
+    transform: scale(1.04);
+  }
+
+  .fileLink:hover {
+    transform: translateY(-2px);
+  }
+
+  .fileLink:hover .fileArrow {
+    transform: translateX(4px);
+  }
+
+  .nextLink:hover .nextGo {
+    transform: translateX(6px) rotate(-8deg);
+  }
+
+  @supports (animation-timeline: view()) {
+    .bandMark {
+      animation: band-turn linear both;
+      animation-timeline: view();
+    }
+  }
+}
+
+@keyframes band-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+}
+
+@keyframes band-spin {
+  from {
+    opacity: 0;
+    rotate: -90deg;
+    scale: 0.8;
+  }
+}
+
+@keyframes band-turn {
+  from {
+    transform: rotate(-30deg);
+  }
+  to {
+    transform: rotate(120deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image,
+  .fileLink,
+  .fileArrow,
+  .nextLink,
+  .nextImage,
+  .nextGo {
+    transition: none;
   }
 }

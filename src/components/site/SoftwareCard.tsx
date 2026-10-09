@@ -1,5 +1,7 @@
+import type { CSSProperties } from "react";
 import type { SoftwareCard as SoftwareCardData } from "@/lib/content/schema";
 import { isBlank } from "@/lib/content/visibility";
+import { ExternalIcon } from "./icons";
 import { Markdown } from "./Markdown";
 import { MediaImage } from "./MediaImage";
 import styles from "./Site.module.css";
@@ -8,6 +10,8 @@ export interface SoftwareCardProps {
   card: SoftwareCardData;
   /** "/" for the public site, "/preview" for the preview. */
   linkBase: string;
+  /** The position in the strip, for the stagger of the reveal. */
+  index?: number;
 }
 
 /**
@@ -15,21 +19,24 @@ export interface SoftwareCardProps {
  * to the project in a new tab when a link exists. A card never links to a full
  * page (0.1.5).
  */
-export function SoftwareCard({ card, linkBase }: SoftwareCardProps) {
+export function SoftwareCard({ card, linkBase, index = 0 }: SoftwareCardProps) {
   return (
-    <article className={styles.card}>
+    <article className={styles.card} data-reveal="" style={{ "--i": index } as CSSProperties}>
       {card.screenshot && (
-        <MediaImage
-          media={card.screenshot}
-          sizes="(min-width: 800px) 30vw, 100vw"
-          className={styles.cardImage}
-        />
+        <div className={styles.cardFrame}>
+          <MediaImage
+            media={card.screenshot}
+            sizes="(min-width: 800px) 36rem, 100vw"
+            className={styles.cardImage}
+          />
+        </div>
       )}
       <div className={styles.cardBody}>
-        <h3>
+        <h3 className={styles.cardTitle}>
           {card.link ? (
-            <a href={card.link} target="_blank" rel="noopener noreferrer">
+            <a href={card.link} target="_blank" rel="noopener noreferrer" className={styles.cardLink}>
               {card.name}
+              <ExternalIcon className={styles.cardLinkIcon} />
             </a>
           ) : (
             card.name

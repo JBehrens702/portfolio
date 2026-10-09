@@ -1,9 +1,19 @@
-import type { Block as BlockData } from "@/lib/content/schema";
+import type { CSSProperties } from "react";
+import type { Block as BlockData, ImagesBlock } from "@/lib/content/schema";
 import { isBlank } from "@/lib/content/visibility";
+import { ArrowIcon, FileIcon, QuoteMarkIcon } from "./icons";
 import { downloadHref } from "./links";
 import { Markdown } from "./Markdown";
-import { MediaImage } from "./MediaImage";
+import { MediaImage, mediaSize } from "./MediaImage";
 import styles from "./Experience.module.css";
+
+/**
+ * How an images block shows:
+ *   flow    in the text column: one large image, or a row of images of equal height
+ *   spread  the large image beside a fact panel
+ *   logo    small images inside the fact panel, such as a client logo
+ */
+export type ImagesVariant = "flow" | "spread" | "logo";
 
 export interface BlockProps {
   block: BlockData;
@@ -11,13 +21,50 @@ export interface BlockProps {
   linkBase: string;
   /** The approved "Download" label shown on file links, or null. */
   downloadLabel: string | null;
+  /** For an images block only. */
+  variant?: ImagesVariant;
+}
+
+function Images({ block, variant }: { block: ImagesBlock; variant: ImagesVariant }) {
+  const items = block.items.filter((item) => item.image);
+  const single = items.length === 1;
+  const galleryClass = [
+    styles.gallery,
+    variant === "spread" ? styles.gallerySpread : "",
+    variant === "logo" ? styles.galleryLogo : "",
+    variant === "flow" && single ? styles.gallerySingle : "",
+  ].join(" ");
+  const sizes =
+    variant === "logo"
+      ? "16rem"
+      : single
+        ? "(min-width: 1024px) 52rem, 100vw"
+        : `(min-width: 1024px) ${Math.round(56 / items.length)}rem, (min-width: 640px) ${Math.round(100 / items.length)}vw, 100vw`;
+  // A key image opens like an aperture; the images of a row rise one after another.
+  const reveal = variant === "logo" ? "fade" : single ? "iris" : "";
+  return (
+    <figure className={styles.figure}>
+      <div className={galleryClass}>
+        {items.map((item, i) => {
+          const { width, height } = mediaSize(item.image!);
+          const style = { "--ar": width / height, "--w": width, "--i": i } as CSSProperties;
+          return (
+            <div key={i} className={styles.galleryItem} style={style} data-reveal={reveal}>
+              <MediaImage media={item.image!} sizes={sizes} className={styles.image} />
+            </div>
+          );
+        })}
+      </div>
+      {block.caption && <figcaption className={styles.caption}>{block.caption}</figcaption>}
+    </figure>
+  );
 }
 
 /**
  * One block of an experience page (KTD6). Pass blocks from visibleSite(): it has
  * already removed the empty ones (KTD7).
  */
-export function Block({ block, linkBase, downloadLabel }: BlockProps) {
+export function Block({ block, linkBase, downloadLabel, variant = "flow" }: BlockProps) {
   switch (block.type) {
     case "heading":
       return block.level === 2 ? (
@@ -29,7 +76,8 @@ export function Block({ block, linkBase, downloadLabel }: BlockProps) {
       return <Markdown text={block.text} className={styles.prose} linkBase={linkBase} />;
     case "quote":
       return (
-        <blockquote className={styles.quote}>
+        <blockquote className={styles.quote} data-reveal="">
+          <QuoteMarkIcon className={styles.quoteMark} />
           <Markdown text={block.text} linkBase={linkBase} />
         </blockquote>
       );
@@ -45,33 +93,23 @@ export function Block({ block, linkBase, downloadLabel }: BlockProps) {
         </dl>
       );
     case "images":
-      return (
-        <figure className={styles.figure}>
-          <div className={block.items.length > 1 ? styles.imageGrid : undefined}>
-            {block.items.map((item, i) =>
-              item.image ? (
-                <MediaImage
-                  key={i}
-                  media={item.image}
-                  sizes={block.items.length > 1 ? "(min-width: 800px) 36rem, 100vw" : "(min-width: 800px) 48rem, 100vw"}
-                  className={styles.image}
-                />
-              ) : null,
-            )}
-          </div>
-          {block.caption && <figcaption className={styles.caption}>{block.caption}</figcaption>}
-        </figure>
-      );
+      return <Images block={block} variant={variant} />;
     case "file": {
       if (!block.file) return null;
       // The owner's label, else the owner's file name. Never a generated text (1.2.4).
       const text = !isBlank(block.label) ? block.label : block.file.fileName;
       if (isBlank(text)) return null;
       return (
-        <p className={styles.file}>
+        <p className={styles.file} data-reveal="">
           <a href={downloadHref(block.file)} className={styles.fileLink}>
-            {downloadLabel && <span className={styles.fileAction}>{`${downloadLabel} `}</span>}
-            {text}
+            <span className={styles.fileIconWrap}>
+              <FileIcon className={styles.fileIcon} />
+            </span>
+            <span className={styles.fileText}>
+              {downloadLabel && <span className={styles.fileAction}>{`${downloadLabel} `}</span>}
+              <span className={styles.fileName}>{text}</span>
+            </span>
+            <ArrowIcon className={styles.fileArrow} />
           </a>
         </p>
       );

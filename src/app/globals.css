@@ -1,22 +1,36 @@
 /*
  * Theme (plan KTD10). The colour values MUST stay equal to src/lib/theme/theme.ts;
  * src/lib/theme/contrast.test.ts checks this and the WCAG contrast of each pair.
+ * Colour by emphasis: purple panels for the highest emphasis, near-black for the
+ * page and the cards, light callouts for quotes and fact lists.
  */
 :root {
-  --color-bg: #0e0a14;
-  --color-surface: #140f1b;
+  --color-bg: #0b0810;
+  --color-surface: #16111d;
+  --color-surface-raised: #1d1726;
   --color-border: #2f2539;
   --color-text: #ede9f2;
   --color-text-muted: #b8aec4;
   --color-purple-deep: #8d20c4;
   --color-purple-bright: #b34ce0;
+  --color-purple-dark: #5a1484;
+  --color-purple-ink: #2a0a40;
   --color-lavender: #efc3fe;
-  --color-heading: #b34ce0;
+  --color-accent: #c77dff;
+  --color-heading: #f7f2fb;
   --color-link: #efc3fe;
-  --color-focus: #b34ce0;
+  --color-focus: #c77dff;
+  --color-on-purple: #ffffff;
+  --color-on-purple-muted: #f6e3ff;
+  --color-callout: #f3eef8;
+  --color-callout-text: #1c1326;
+  --color-callout-muted: #5b5068;
+  --color-callout-accent: #6b179a;
 
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
-    "Noto Sans", sans-serif;
+  /* next/font sets --font-lexend and --font-inter on <html> (src/app/layout.tsx). */
+  --font-display: var(--font-lexend), ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -25,12 +39,24 @@
   --space-6: 1.5rem;
   --space-8: 2rem;
   --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
 
   --radius: 0.5rem;
-  --content-width: 72rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 2rem;
+  /* The "blade" shape: two large and two small corners, after the aperture blades of the logo. */
+  --radius-blade: 2.5rem 0.75rem 2.5rem 0.75rem;
+  --content-width: 80rem;
   --gutter: 1rem;
-  --header-height: 4rem;
+  --panel-inset: 0.5rem;
+  --header-height: 4.5rem;
   --tap-size: 44px;
+
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.6, 0, 0.2, 1);
+  --shadow-soft: 0 1.5rem 3rem -1.5rem rgb(0 0 0 / 0.7);
+  --shadow-glow: 0 2rem 4rem -2rem rgb(141 32 196 / 0.65);
 
   color-scheme: dark;
 }
@@ -38,6 +64,14 @@
 @media (min-width: 640px) {
   :root {
     --gutter: 1.5rem;
+    --panel-inset: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --gutter: 2.5rem;
+    --panel-inset: 1.25rem;
   }
 }
 
@@ -63,13 +97,19 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--color-bg);
+  background:
+    radial-gradient(60rem 40rem at 100% -10%, rgb(141 32 196 / 0.14), transparent 70%),
+    radial-gradient(50rem 40rem at -10% 40%, rgb(90 20 132 / 0.12), transparent 70%),
+    var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
   font-size: 1.0625rem;
-  line-height: 1.65;
+  line-height: 1.7;
   overflow-wrap: break-word;
+  /* Decorative shapes may reach past the edge; they never make the page scroll sideways. */
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1,
@@ -78,31 +118,36 @@ h3,
 h4 {
   margin: 0 0 var(--space-4);
   color: var(--color-heading);
-  line-height: 1.2;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
   text-wrap: balance;
 }
 
 h1 {
-  font-size: clamp(2rem, 1.5rem + 2.5vw, 3rem);
+  font-size: clamp(2.25rem, 1.4rem + 3.6vw, 4.25rem);
+  font-weight: 700;
 }
 
 h2 {
-  font-size: clamp(1.5rem, 1.25rem + 1.25vw, 2.125rem);
+  font-size: clamp(1.75rem, 1.3rem + 1.9vw, 2.75rem);
 }
 
 h3 {
-  font-size: 1.25rem;
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  letter-spacing: -0.015em;
 }
 
 p {
   margin: 0 0 var(--space-4);
+  text-wrap: pretty;
 }
 
 a {
   color: var(--color-link);
   text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
+  text-underline-offset: 0.22em;
 }
 
 a:hover {
@@ -129,16 +174,19 @@ ol[role="list"] {
   list-style: none;
 }
 
-/* Every link and button shows a theme-purple focus outline (>= 3:1 to the background). */
+/*
+ * Every link and button shows a focus outline of at least 3:1 to its background.
+ * A purple panel sets --focus-ring to white, a light callout to its purple.
+ */
 :focus-visible {
-  outline: 3px solid var(--color-focus);
+  outline: 3px solid var(--focus-ring, var(--color-focus));
   outline-offset: 3px;
-  border-radius: 2px;
+  border-radius: 4px;
 }
 
 ::selection {
   background: var(--color-purple-deep);
-  color: var(--color-text);
+  color: var(--color-on-purple);
 }
 
 .visually-hidden {
@@ -158,4 +206,104 @@ ol[role="list"] {
   max-width: var(--content-width);
   margin-inline: auto;
   padding-inline: var(--gutter);
+}
+
+/* ---------------------------------------------------------------------------
+ * Motion. Every animation below runs only without prefers-reduced-motion; with
+ * it, each element shows in its final state at once.
+ *
+ *   [data-reveal]          fades and rises in as it scrolls into view
+ *   [data-reveal="fade"]   fades in only
+ *   [data-reveal="iris"]   opens like the aperture of the logo
+ *   --i                    the index in a group, for a stagger
+ *
+ * Browsers with scroll-driven animations tie the reveal to the scroll position
+ * (animation-timeline: view()). Other browsers get the same reveal from
+ * MotionObserver (an IntersectionObserver), which sets data-motion="io" on <html>
+ * and data-shown on each element that comes into view.
+ * ------------------------------------------------------------------------- */
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(2.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reveal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* A hexagon that turns as it opens, like the six blades of the logo. */
+@keyframes iris-open {
+  0% {
+    clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%);
+  }
+  35% {
+    clip-path: polygon(50% 25%, 71.7% 37.5%, 71.7% 62.5%, 50% 75%, 28.3% 62.5%, 28.3% 37.5%);
+  }
+  70% {
+    clip-path: polygon(80% -2%, 110% 50%, 80% 102%, 20% 102%, -10% 50%, 20% -2%);
+  }
+  100% {
+    clip-path: polygon(50% -50%, 150% 0%, 150% 100%, 50% 150%, -50% 100%, -50% 0%);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    [data-reveal] {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry min(100%, calc(var(--i, 0) * 12%)) entry min(100%, calc(65% + var(--i, 0) * 10%));
+    }
+
+    [data-reveal="fade"] {
+      animation-name: reveal-fade;
+    }
+
+    [data-reveal="iris"] {
+      animation-name: iris-open;
+      animation-timing-function: var(--ease-in-out);
+      animation-range: entry 0% entry 100%;
+    }
+  }
+
+  @supports not (animation-timeline: view()) {
+    html[data-motion="io"] [data-reveal] {
+      transition:
+        opacity 0.8s var(--ease-out),
+        transform 0.8s var(--ease-out),
+        clip-path 1.2s var(--ease-in-out);
+      transition-delay: calc(var(--i, 0) * 90ms);
+    }
+
+    html[data-motion="io"] [data-reveal]:not([data-shown]) {
+      opacity: 0;
+      transform: translateY(2.5rem);
+    }
+
+    html[data-motion="io"] [data-reveal="fade"]:not([data-shown]) {
+      transform: none;
+    }
+
+    html[data-motion="io"] [data-reveal="iris"]:not([data-shown]) {
+      opacity: 1;
+      transform: none;
+      clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%);
+    }
+
+    html[data-motion="io"] [data-reveal="iris"][data-shown] {
+      clip-path: polygon(50% -50%, 150% 0%, 150% 100%, 50% 150%, -50% 100%, -50% 0%);
+    }
+  }
 }

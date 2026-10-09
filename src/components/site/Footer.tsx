@@ -1,4 +1,7 @@
+import type { CSSProperties } from "react";
+import { Aperture } from "./Aperture";
 import type { NavLink } from "./Header";
+import { ExternalIcon, GlobeIcon, MailIcon, ProfileIcon } from "./icons";
 import styles from "./Footer.module.css";
 
 export interface FooterProps {
@@ -10,27 +13,44 @@ export interface FooterProps {
   id?: string;
 }
 
-/** The site footer with the contact links. It renders nothing when no link is supplied (0.1.8). */
+/** The decorative icon for a contact address. */
+function LinkIcon({ href }: { href: string }) {
+  if (href.startsWith("mailto:")) return <MailIcon className={styles.icon} />;
+  if (/linkedin\.com/i.test(href)) return <ProfileIcon className={styles.icon} />;
+  return <GlobeIcon className={styles.icon} />;
+}
+
+/**
+ * The site footer: a purple closing panel with the contact links. It renders
+ * nothing when no link is supplied (0.1.8).
+ */
 export function Footer({ links, heading, id }: FooterProps) {
   if (links.length === 0) return null;
   const headingId = id ? `${id}-heading` : undefined;
   return (
     <footer id={id} className={styles.footer} aria-labelledby={heading ? headingId : undefined}>
-      <div className={`container ${styles.inner}`}>
-        {heading && (
-          <h2 id={headingId} className={styles.heading}>
-            {heading}
-          </h2>
-        )}
-        <ul role="list" className={styles.list}>
-          {links.map((link) => (
-            <li key={`${link.href}|${link.label}`}>
-              <a href={link.href} className={styles.link}>
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
+      <div className={styles.panel}>
+        <div className={styles.markTurn} aria-hidden="true">
+          <Aperture id="footer-aperture" tone="ghost" className={styles.mark} />
+        </div>
+        <div className={`container ${styles.inner}`}>
+          {heading && (
+            <h2 id={headingId} className={styles.heading} data-reveal="">
+              {heading}
+            </h2>
+          )}
+          <ul role="list" className={styles.list}>
+            {links.map((link, i) => (
+              <li key={`${link.href}|${link.label}`} data-reveal="" style={{ "--i": i } as CSSProperties}>
+                <a href={link.href} className={styles.link}>
+                  <LinkIcon href={link.href} />
+                  <span className={styles.linkText}>{link.label}</span>
+                  <ExternalIcon className={styles.go} />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </footer>
   );
