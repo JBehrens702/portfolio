@@ -13,6 +13,7 @@
     "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.9.13",
     "@vercel/blob": "^2.8.1",
     "next": "16.4.0",
     "react": "19.3.0",
