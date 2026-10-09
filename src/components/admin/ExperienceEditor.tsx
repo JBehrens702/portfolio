@@ -2,11 +2,13 @@
 
 import { useCallback, useState } from "react";
 import { saveExperience } from "@/app/admin/actions";
+import { move, newBlock } from "@/lib/content/order";
 import type { Block, BlockType, Experience } from "@/lib/content/schema";
-import { BLOCK_TYPES, BlockEditor, newBlock, type BlockChange } from "./BlockEditor";
+import { AltTextField } from "./AltTextField";
+import { BLOCK_TYPES, BlockEditor, type BlockChange } from "./BlockEditor";
 import { useConfirm } from "./ConfirmDialog";
 import { MediaField } from "./MediaField";
-import { moved } from "./OrderButtons";
+import { omit } from "./omit";
 import { SaveBar } from "./SaveBar";
 import { useDraftEditor } from "./useDraftEditor";
 import styles from "./admin.module.css";
@@ -62,27 +64,15 @@ export function ExperienceEditor({ initial, mediaPrefix }: { initial: Experience
             void editor.save();
           }}
           onRemove={() => {
-            update((e) => {
-              const { cardImage: _removed, ...rest } = e;
-              void _removed;
-              return rest;
-            });
+            update((e) => omit(e, "cardImage"));
             void editor.save();
           }}
         />
-        {value.cardImage ? (
-          <label className={styles.field}>
-            <span>Card image alt text (what the image shows, for screen readers)</span>
-            <input
-              className={styles.input}
-              value={value.cardImage.alt ?? ""}
-              onChange={(e) => {
-                const alt = e.target.value;
-                update((x) => (x.cardImage ? { ...x, cardImage: { ...x.cardImage, alt } } : x));
-              }}
-            />
-          </label>
-        ) : null}
+        <AltTextField
+          label="Card image alt text (what the image shows, for screen readers)"
+          media={value.cardImage}
+          onChange={(alt) => update((x) => (x.cardImage ? { ...x, cardImage: { ...x.cardImage, alt } } : x))}
+        />
         <label className={styles.field}>
           <span>Skills (one per line)</span>
           <textarea
@@ -120,7 +110,7 @@ export function ExperienceEditor({ initial, mediaPrefix }: { initial: Experience
               count={value.blocks.length}
               onChange={blockChange(block.id, false)}
               onFileChange={blockChange(block.id, true)}
-              onMove={(direction) => blocks((list) => moved(list, list.findIndex((b) => b.id === block.id), direction))}
+              onMove={(direction) => blocks((list) => move(list, list.findIndex((b) => b.id === block.id), direction))}
               onRemove={() => blocks((list) => list.filter((b) => b.id !== block.id))}
               mediaPrefix={mediaPrefix}
               confirm={confirm}

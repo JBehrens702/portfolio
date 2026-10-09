@@ -86,3 +86,21 @@ export function QuoteMarkIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+/** A down arrow onto a line: a file download (the hero resume button). Drawn on a 16-unit grid. */
+export function DownloadIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d="M8 2v8m0 0 3.5-3.5M8 10 4.5 6.5M3 13h10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="square" strokeLinejoin="miter" />
+    </svg>
+  );
+}
+
+/** An arrow down: a link further down the same page (the hero work button). Drawn on a 16-unit grid. */
+export function DownArrowIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d="M8 3v10m0 0 4-4m-4 4-4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="square" strokeLinejoin="miter" />
+    </svg>
+  );
+}

@@ -15,5 +15,3 @@ export function ContactLinks({ site, sheet }: { site: Site; sheet?: Sheet }) {
     />
   );
 }
-
-export default ContactLinks;

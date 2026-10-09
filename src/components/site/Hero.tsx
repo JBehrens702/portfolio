@@ -3,7 +3,8 @@ import type { Site } from "@/lib/content/schema";
 import { isBlank, labelText } from "@/lib/content/visibility";
 import { Aperture } from "./Aperture";
 import { CoordReadout, PointerReadout } from "./GridReadouts";
-import { resumeLink, sectionHref, SECTION_IDS } from "./links";
+import { DownArrowIcon, DownloadIcon } from "./icons";
+import { headingId, resumeLink, sectionHref, SECTION_IDS } from "./links";
 import { MediaImage } from "./MediaImage";
 import styles from "./Site.module.css";
 
@@ -28,9 +29,10 @@ export function Hero({ site, linkBase = "/" }: { site: Site; linkBase?: string }
   const heading = isBlank(profile.tagline) ? profile.name : profile.tagline;
   // A second way down to the work, with the approved "Work" label of the header.
   const workLabel = site.experiences.length > 0 ? labelText(site, "navWork") : null;
+  const heroHeadingId = headingId("hero");
   let wordIndex = 0;
   return (
-    <section className={styles.hero} aria-labelledby="hero-heading">
+    <section className={styles.hero} aria-labelledby={heroHeadingId}>
       <div className="container">
         <div className={styles.heroPanel} data-grid-origin="">
           <span className={styles.heroGrid} aria-hidden="true" />
@@ -39,7 +41,7 @@ export function Hero({ site, linkBase = "/" }: { site: Site; linkBase?: string }
           <CoordReadout corner="end" className={styles.heroExtent} />
           <div className={styles.heroLayout}>
             <div className={styles.heroText}>
-              <h1 id="hero-heading" className={styles.heroName}>
+              <h1 id={heroHeadingId} className={styles.heroName}>
                 {words(heading).map((part, i) =>
                   /^\s+$/.test(part) ? (
                     part
@@ -55,9 +57,7 @@ export function Hero({ site, linkBase = "/" }: { site: Site; linkBase?: string }
                   {resume && (
                     <a href={resume.href} className={styles.buttonPrimary} data-resume="">
                       {resume.label}
-                      <svg className={styles.buttonIcon} viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-                        <path d="M8 2v8m0 0 3.5-3.5M8 10 4.5 6.5M3 13h10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="square" strokeLinejoin="miter" />
-                      </svg>
+                      <DownloadIcon className={styles.buttonIcon} />
                     </a>
                   )}
                   {workLabel && (
@@ -66,9 +66,7 @@ export function Hero({ site, linkBase = "/" }: { site: Site; linkBase?: string }
                       className={resume ? styles.buttonGhost : styles.buttonPrimary}
                     >
                       {workLabel}
-                      <svg className={styles.buttonIconDown} viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-                        <path d="M8 3v10m0 0 4-4m-4 4-4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="square" strokeLinejoin="miter" />
-                      </svg>
+                      <DownArrowIcon className={styles.buttonIconDown} />
                     </a>
                   )}
                 </div>
@@ -99,5 +97,3 @@ export function Hero({ site, linkBase = "/" }: { site: Site; linkBase?: string }
     </section>
   );
 }
-
-export default Hero;

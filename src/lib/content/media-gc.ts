@@ -1,6 +1,6 @@
-import { del, list } from "@vercel/blob";
+import { del } from "@vercel/blob";
 import type { Media, Site } from "./schema";
-import { blobCredentialsFromEnv, type BlobCredentials, type ContentStore } from "./store";
+import { blobCredentialsFromEnv, contentSourceFromEnv, listAllBlobs, type BlobCredentials, type ContentStore } from "./store";
 
 // The media files of a content root (U6 step 4, KTD2, KTD4). After a Publish,
 // a Blob file under the root's media prefix is deleted only when no document
@@ -39,8 +39,18 @@ export interface MediaStorage {
   delete(urls: string[]): Promise<void>;
 }
 
+/**
+ * Documents that the caller already holds, so they are not read again. Publish
+ * passes the published document that it has just written.
+ */
+export interface KnownDocuments {
+  draft?: Site | null;
+  published?: Site | null;
+}
+
 export interface CollectOptions {
   now?: () => Date;
+  knownDocuments?: KnownDocuments;
   /**
    * Files younger than this stay, so an upload that the browser has not yet
    * saved into the draft is never deleted by a Publish in another tab.
@@ -56,6 +66,23 @@ export interface CollectResult {
 /** One hour. */
 export const DEFAULT_MIN_AGE_MS = 60 * 60 * 1000;
 
+/** How many history copies are read at the same time. */
+const HISTORY_READS = 8;
+
+/** Runs the task on each item, at most `limit` at a time. The results keep the order of the items. */
+async function mapLimit<T, R>(items: T[], limit: number, task: (item: T) => Promise<R>): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await task(items[index]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => worker()));
+  return results;
+}
+
 /**
  * Deletes the media files under the store's media prefix that no document
  * uses. Each document is searched as JSON text, so a file also counts as used
@@ -69,18 +96,27 @@ export async function collectMediaGarbage(
   const prefix = store.paths.mediaPrefix;
   if (!prefix.endsWith("/media/")) throw new Error(`Unexpected media prefix: ${prefix}`);
 
-  // Read every document first. A failure throws here, before any delete.
-  const documents: unknown[] = [await store.readDraft(), await store.readPublished()];
-  for (const pathname of await store.listHistory()) {
-    documents.push(await store.readHistory(pathname));
-  }
+  // The age rule counts from before the listing starts, so a file uploaded
+  // while the cleanup runs is always young enough to stay.
+  const now = (options.now ?? (() => new Date()))().getTime();
+  const minAge = options.minAgeMs ?? DEFAULT_MIN_AGE_MS;
+  const known = options.knownDocuments ?? {};
+  const orRead = <T>(value: T | undefined, read: () => Promise<T>) => (value !== undefined ? value : read());
+
+  // Read every document and list the files at the same time. Every read ends
+  // before any delete, and a failed read throws here, so nothing is deleted.
+  const [documents, files] = await Promise.all([
+    Promise.all([
+      orRead(known.draft, () => store.readDraft()),
+      orRead(known.published, () => store.readPublished()),
+      store.listHistory().then((pathnames) => mapLimit(pathnames, HISTORY_READS, (pathname) => store.readHistory(pathname))),
+    ]).then(([draft, published, history]): unknown[] => [draft, published, ...history]),
+    storage.list(prefix),
+  ]);
   const texts = documents.filter((doc) => doc !== null).map((doc) => JSON.stringify(doc));
   const used = (pathname: string) =>
     texts.some((text) => text.includes(pathname) || text.includes(encodeURI(pathname)));
 
-  const now = (options.now ?? (() => new Date()))().getTime();
-  const minAge = options.minAgeMs ?? DEFAULT_MIN_AGE_MS;
-  const files = await storage.list(prefix);
   const unused = files.filter(
     (file) =>
       // Never outside the root's media prefix, whatever the listing returns.
@@ -96,16 +132,11 @@ export async function collectMediaGarbage(
 export function createBlobMediaStorage(credentials: BlobCredentials): MediaStorage {
   return {
     async list(prefix) {
-      const found: StoredMedia[] = [];
-      let cursor: string | undefined;
-      do {
-        const page = await list({ prefix, cursor, ...credentials });
-        found.push(
-          ...page.blobs.map((blob) => ({ pathname: blob.pathname, url: blob.url, uploadedAt: new Date(blob.uploadedAt) })),
-        );
-        cursor = page.hasMore ? page.cursor : undefined;
-      } while (cursor);
-      return found;
+      return (await listAllBlobs(prefix, credentials)).map((blob) => ({
+        pathname: blob.pathname,
+        url: blob.url,
+        uploadedAt: new Date(blob.uploadedAt),
+      }));
     },
     async delete(urls) {
       for (let i = 0; i < urls.length; i += 100) {
@@ -122,8 +153,7 @@ export function createBlobMediaStorage(credentials: BlobCredentials): MediaStora
  * documents on disk, so a cleanup there could delete files that are in use.
  */
 export function createMediaStorageFromEnv(env: Record<string, string | undefined> = process.env): MediaStorage | null {
-  const source = env.CONTENT_SOURCE?.trim() ?? "";
-  if (source.startsWith("file:")) return null;
+  if (contentSourceFromEnv(env).kind === "file") return null;
   const credentials = blobCredentialsFromEnv(env);
   return credentials ? createBlobMediaStorage(credentials) : null;
 }

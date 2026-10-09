@@ -5,7 +5,14 @@ export type PublishResult =
   | { ok: true; site: Site; historyPath: string | null }
   | { ok: false; reason: "no-draft"; message: string }
   | { ok: false; reason: "invalid"; issues: string[]; message: string }
-  | { ok: false; reason: "unapproved-labels"; labels: string[]; message: string };
+  | {
+      ok: false;
+      reason: "unapproved-labels";
+      labels: string[];
+      /** The same labels with their texts from the draft, so the admin can show them without a second read. */
+      labelTexts: { key: string; text: string }[];
+      message: string;
+    };
 
 export interface PublishOptions {
   /**
@@ -42,11 +49,13 @@ export async function publish(store: ContentStore, options: PublishOptions = {})
 
   const labels = unapprovedLabels(draft);
   if (labels.length > 0) {
-    const named = labels.map((key) => `${key} ("${draft.labels[key].text}")`).join(", ");
+    const labelTexts = labels.map((key) => ({ key, text: draft.labels[key].text }));
+    const named = labelTexts.map(({ key, text }) => `${key} ("${text}")`).join(", ");
     return {
       ok: false,
       reason: "unapproved-labels",
       labels,
+      labelTexts,
       message: `Publish refused: approve these labels first: ${named}.`,
     };
   }

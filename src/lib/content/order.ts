@@ -1,29 +1,22 @@
 import type { Block, BlockType, Experience, Site } from "./schema";
 
-// Pure helpers that add, remove, and reorder experiences, software cards, and
-// blocks. Each one returns a new document and leaves its input unchanged.
+// Pure helpers for ordered lists and new content: move an item one place, make
+// a unique slug or id, make an empty block, and add, remove, and reorder
+// experiences. Each one returns a new value and leaves its input unchanged.
+// The admin actions and the admin editors share them.
 
 export type Direction = "up" | "down";
 
-function swap<T>(list: T[], a: number, b: number): T[] {
+/**
+ * The list with the item at `index` moved one place. Move up on the first
+ * item, move down on the last item, and an unknown index return the list itself.
+ */
+export function move<T>(list: T[], index: number, direction: Direction): T[] {
+  const other = direction === "up" ? index - 1 : index + 1;
+  if (index < 0 || other < 0 || index >= list.length || other >= list.length) return list;
   const copy = [...list];
-  if (a < 0 || b < 0 || a >= copy.length || b >= copy.length) return copy;
-  [copy[a], copy[b]] = [copy[b], copy[a]];
+  [copy[index], copy[other]] = [copy[other], copy[index]];
   return copy;
-}
-
-/** Moves the item one place up. The first item stays where it is. */
-export function moveUp<T>(list: T[], index: number): T[] {
-  return swap(list, index, index - 1);
-}
-
-/** Moves the item one place down. The last item stays where it is. */
-export function moveDown<T>(list: T[], index: number): T[] {
-  return swap(list, index, index + 1);
-}
-
-function move<T>(list: T[], index: number, direction: Direction): T[] {
-  return direction === "up" ? moveUp(list, index) : moveDown(list, index);
 }
 
 /** A URL-safe slug from a title: lower case, a-z and 0-9, single hyphens. */
@@ -40,7 +33,8 @@ export function slugify(title: string, fallback = "experience"): string {
   return slug || fallback;
 }
 
-function unique(base: string, taken: Iterable<string>): string {
+/** The base when it is free, otherwise the base with the first free number: "base-2", "base-3", ... */
+export function unique(base: string, taken: Iterable<string>): string {
   const used = new Set(taken);
   if (!used.has(base)) return base;
   for (let n = 2; ; n++) {
@@ -52,12 +46,6 @@ function unique(base: string, taken: Iterable<string>): string {
 function experienceIndex(site: Site, slug: string): number {
   const index = site.experiences.findIndex((e) => e.slug === slug);
   if (index < 0) throw new Error(`Unknown experience "${slug}"`);
-  return index;
-}
-
-function softwareIndex(site: Site, id: string): number {
-  const index = site.software.findIndex((c) => c.id === id);
-  if (index < 0) throw new Error(`Unknown software card "${id}"`);
   return index;
 }
 
@@ -94,21 +82,6 @@ export function nextExperience(site: Site, slug: string): Experience | null {
   return site.experiences[(index + 1) % site.experiences.length];
 }
 
-/** Adds a software card at the end, with a unique id made from its name. */
-export function addSoftware(site: Site, name: string): { site: Site; id: string } {
-  const id = unique(slugify(name, "software"), site.software.map((c) => c.id));
-  return { site: { ...site, software: [...site.software, { id, name }] }, id };
-}
-
-export function removeSoftware(site: Site, id: string): Site {
-  const index = softwareIndex(site, id);
-  return { ...site, software: site.software.filter((_, i) => i !== index) };
-}
-
-export function moveSoftware(site: Site, id: string, direction: Direction): Site {
-  return { ...site, software: move(site.software, softwareIndex(site, id), direction) };
-}
-
 function emptyBlock(id: string, type: BlockType): Block {
   switch (type) {
     case "heading":
@@ -133,42 +106,7 @@ function newBlockId(taken: Block[]): string {
   }
 }
 
-function withBlocks(site: Site, slug: string, change: (blocks: Block[]) => Block[]): Site {
-  const index = experienceIndex(site, slug);
-  const experiences = site.experiences.map((e, i) => (i === index ? { ...e, blocks: change(e.blocks) } : e));
-  return { ...site, experiences };
-}
-
-function blockIndex(blocks: Block[], id: string): number {
-  const index = blocks.findIndex((b) => b.id === id);
-  if (index < 0) throw new Error(`Unknown block "${id}"`);
-  return index;
-}
-
-/** Adds an empty block of the given type, at the end or before the given position. */
-export function addBlock(
-  site: Site,
-  slug: string,
-  type: BlockType,
-  index?: number,
-): { site: Site; blockId: string } {
-  const blocks = site.experiences[experienceIndex(site, slug)].blocks;
-  const blockId = newBlockId(blocks);
-  const block = emptyBlock(blockId, type);
-  const updated = withBlocks(site, slug, (list) => {
-    const at = index === undefined ? list.length : Math.max(0, Math.min(index, list.length));
-    return [...list.slice(0, at), block, ...list.slice(at)];
-  });
-  return { site: updated, blockId };
-}
-
-export function removeBlock(site: Site, slug: string, blockId: string): Site {
-  return withBlocks(site, slug, (list) => {
-    const index = blockIndex(list, blockId);
-    return list.filter((_, i) => i !== index);
-  });
-}
-
-export function moveBlock(site: Site, slug: string, blockId: string, direction: Direction): Site {
-  return withBlocks(site, slug, (list) => move(list, blockIndex(list, blockId), direction));
+/** An empty block of the type, with an id that the list does not use yet. */
+export function newBlock(type: BlockType, taken: Block[]): Block {
+  return emptyBlock(newBlockId(taken), type);
 }

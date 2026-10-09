@@ -21,7 +21,7 @@ describe.skipIf(!usable)("Vercel Blob content store (Development store)", () => 
   const root = `test-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
   const config = { root, secret: `secret-${crypto.randomUUID().replace(/-/g, "")}` };
   // Vitest still runs this body when the suite is skipped, so only build the store when it is usable.
-  const store = usable ? createBlobContentStore(config, { credentials, access: "private" }) : (undefined as never);
+  const store = usable ? createBlobContentStore(config, { credentials }) : (undefined as never);
 
   afterAll(async () => {
     const { blobs } = await list({ prefix: `${root}/`, ...credentials });

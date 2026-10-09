@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { saveProfile, type ProfileInput } from "@/app/admin/actions";
 import type { Media, Site } from "@/lib/content/schema";
+import { AltTextField } from "./AltTextField";
 import { useConfirm } from "./ConfirmDialog";
 import { MediaField } from "./MediaField";
 import { SaveBar } from "./SaveBar";
@@ -95,19 +96,11 @@ export function ProfileEditor({ site, mediaPrefix }: { site: Site; mediaPrefix: 
           onUploaded={(media) => setFile("heroPhoto", media)}
           onRemove={() => setFile("heroPhoto", undefined)}
         />
-        {value.heroPhoto ? (
-          <label className={styles.field}>
-            <span>Photo alt text (what the photo shows, for screen readers)</span>
-            <input
-              className={styles.input}
-              value={value.heroPhoto.alt ?? ""}
-              onChange={(e) => {
-                const alt = e.target.value;
-                update((s) => (s.heroPhoto ? { ...s, heroPhoto: { ...s.heroPhoto, alt } } : s));
-              }}
-            />
-          </label>
-        ) : null}
+        <AltTextField
+          label="Photo alt text (what the photo shows, for screen readers)"
+          media={value.heroPhoto}
+          onChange={(alt) => update((s) => (s.heroPhoto ? { ...s, heroPhoto: { ...s.heroPhoto, alt } } : s))}
+        />
         <MediaField
           label="the resume"
           kind="file"

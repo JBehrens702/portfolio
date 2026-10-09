@@ -5,8 +5,13 @@ import type { NavLink } from "./Header";
 // Pure helpers for the addresses of the site pages. The page components take a
 // link base: "/" for the public site and "/preview" for the owner's preview (U5).
 
-/** The section ids of the home page. Header links point to them. */
-export const SECTION_IDS = { work: "work", about: "about", contact: "contact" } as const;
+/** The section ids of the home page. Header links point to work, about, and contact. */
+export const SECTION_IDS = { work: "work", software: "software", about: "about", contact: "contact" } as const;
+
+/** The id of a section's heading, for aria-labelledby: "work" gives "work-heading". */
+export function headingId(sectionId: string): string {
+  return `${sectionId}-heading`;
+}
 
 export function homeHref(base: string): string {
   const trimmed = base.replace(/\/+$/, "");

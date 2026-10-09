@@ -8,7 +8,7 @@ import { ExperienceSummary } from "./ExperienceSummary";
 import { Header } from "./Header";
 import { Hero } from "./Hero";
 import { ArrowIcon } from "./icons";
-import { homeHref, navLinks, resumeLink, SECTION_IDS } from "./links";
+import { headingId, homeHref, navLinks, resumeLink, SECTION_IDS } from "./links";
 import { Markdown } from "./Markdown";
 import { sectionMark, type Sheet } from "./markings";
 import { MotionObserver } from "./MotionObserver";
@@ -27,7 +27,7 @@ export interface ViewProps {
 }
 
 /** Header, page content, the contact footer, and the zone indices of the sheet border. */
-export function SiteChrome({
+function SiteChrome({
   site,
   linkBase,
   onHome,
@@ -100,10 +100,10 @@ export function HomeView({ site, linkBase }: ViewProps) {
           <section
             id={SECTION_IDS.work}
             className={styles.section}
-            aria-labelledby={workHeading ? "work-heading" : undefined}
+            aria-labelledby={workHeading ? headingId(SECTION_IDS.work) : undefined}
           >
             <div className="container">
-              <SectionHeading id="work-heading" text={workHeading} index={sectionIndex(0)} />
+              <SectionHeading id={headingId(SECTION_IDS.work)} text={workHeading} index={sectionIndex(0)} />
               <div className={styles.summaries}>
                 {site.experiences.map((experience, i) => (
                   <ExperienceSummary
@@ -123,12 +123,12 @@ export function HomeView({ site, linkBase }: ViewProps) {
 
         {site.software.length > 0 && (
           <section
-            id="software"
+            id={SECTION_IDS.software}
             className={styles.section}
-            aria-labelledby={softwareHeading ? "software-heading" : undefined}
+            aria-labelledby={softwareHeading ? headingId(SECTION_IDS.software) : undefined}
           >
             <div className="container">
-              <SectionHeading id="software-heading" text={softwareHeading} index={sectionIndex(1)} />
+              <SectionHeading id={headingId(SECTION_IDS.software)} text={softwareHeading} index={sectionIndex(1)} />
               <div className={styles.cards}>
                 {site.software.map((card, i) => (
                   <SoftwareCard
@@ -148,10 +148,10 @@ export function HomeView({ site, linkBase }: ViewProps) {
           <section
             id={SECTION_IDS.about}
             className={styles.section}
-            aria-labelledby={aboutHeading ? "about-heading" : undefined}
+            aria-labelledby={aboutHeading ? headingId(SECTION_IDS.about) : undefined}
           >
             <div className="container">
-              <SectionHeading id="about-heading" text={aboutHeading} index={sectionIndex(2)} />
+              <SectionHeading id={headingId(SECTION_IDS.about)} text={aboutHeading} index={sectionIndex(2)} />
               <div className={styles.about} data-reveal="">
                 <div className={styles.aboutAside} aria-hidden="true">
                   <div className={styles.aboutMarkTurn}>

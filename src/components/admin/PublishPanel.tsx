@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { approveLabel, publishSite, type PublishActionResult } from "@/app/admin/actions";
+import { IssueList } from "./IssueList";
 import { useHydrated } from "./useHydrated";
 import styles from "./admin.module.css";
 
@@ -106,13 +107,7 @@ export function PublishPanel() {
               ))}
             </ul>
           ) : null}
-          {state.result.issues?.length ? (
-            <ul className={styles.issues}>
-              {state.result.issues.map((issue) => (
-                <li key={issue}>{issue}</li>
-              ))}
-            </ul>
-          ) : null}
+          <IssueList issues={state.result.issues} />
         </div>
       ) : null}
     </section>

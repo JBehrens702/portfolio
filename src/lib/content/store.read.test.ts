@@ -1,72 +1,83 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// The Blob backend's read (KTD2, changed in U6): the public Blob CDN can serve
-// the version from before an overwrite for up to about 60 s, and `useCache:
-// false` does not bypass it for public blobs. The read takes the current ETag
-// from the Blob API (head) and accepts only that version from the CDN.
+// The Blob backend of the documents (KTD2, changed in U6): the JSON documents
+// sit in a PRIVATE store. Every read and write uses private access, and a read
+// passes `useCache: false`, which a private store honours, so it returns the
+// current version at once.
 
 const blob = vi.hoisted(() => ({
-  headEtag: '"v2"' as string | null,
-  getEtags: [] as string[],
-  gets: 0,
+  stored: null as unknown,
+  statusCode: 200,
+  calls: [] as { op: string; pathname: string; options: Record<string, unknown> }[],
 }));
 
 vi.mock("@vercel/blob", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@vercel/blob")>();
   return {
     ...actual,
-    head: vi.fn(async () => {
-      if (blob.headEtag === null) throw new actual.BlobNotFoundError();
-      return { etag: blob.headEtag };
+    get: vi.fn(async (pathname: string, options: Record<string, unknown>) => {
+      blob.calls.push({ op: "get", pathname, options });
+      if (blob.stored === null) return null;
+      return { statusCode: blob.statusCode, stream: new Response(JSON.stringify(blob.stored)).body };
     }),
-    get: vi.fn(async () => {
-      const etag = blob.getEtags[Math.min(blob.gets, blob.getEtags.length - 1)];
-      blob.gets++;
-      const version = etag.replace(/^W\//, "").replace(/"/g, "");
-      return { statusCode: 200, stream: new Response(JSON.stringify({ version })).body, blob: { etag } };
+    put: vi.fn(async (pathname: string, body: string, options: Record<string, unknown>) => {
+      blob.calls.push({ op: "put", pathname, options });
+      blob.stored = JSON.parse(body);
+      return { pathname, url: `https://store.private.blob.vercel-storage.com/${pathname}` };
+    }),
+    list: vi.fn(async (options: Record<string, unknown>) => {
+      blob.calls.push({ op: "list", pathname: String(options.prefix), options });
+      const page = options.cursor === undefined ? 1 : 2;
+      const blobs = [{ pathname: `${options.prefix}page-${page}.json` }];
+      return page === 1 ? { blobs, hasMore: true, cursor: "next" } : { blobs, hasMore: false };
     }),
   };
 });
 
 import { createBlobBackend } from "./store";
 
-const backend = () => createBlobBackend({ credentials: { storeId: "store_test" } });
+const credentials = { storeId: "store_test" };
+const backend = () => createBlobBackend({ credentials });
 
 afterEach(() => {
-  blob.headEtag = '"v2"';
-  blob.getEtags = [];
-  blob.gets = 0;
-  vi.useRealTimers();
-  vi.restoreAllMocks();
+  blob.stored = null;
+  blob.statusCode = 200;
+  blob.calls = [];
 });
 
-describe("createBlobBackend().read", () => {
-  it("waits while the CDN serves the old version, then returns the current one", async () => {
-    blob.getEtags = ['"v1"', '"v1"', '"v2"'];
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+describe("createBlobBackend (private documents store)", () => {
+  it("reads with private access, past the cache, with the given store", async () => {
+    blob.stored = { version: "v2" };
     expect(await backend().read("root/draft.json")).toEqual({ version: "v2" });
-    expect(blob.gets).toBe(3);
-    expect(warn).toHaveBeenCalledOnce();
+    expect(blob.calls).toEqual([
+      { op: "get", pathname: "root/draft.json", options: { access: "private", useCache: false, storeId: "store_test" } },
+    ]);
   });
 
-  it("accepts the CDN's weak ETag form of the current version", async () => {
-    blob.getEtags = ['W/"v2"'];
-    expect(await backend().read("root/draft.json")).toEqual({ version: "v2" });
-    expect(blob.gets).toBe(1);
-  });
-
-  it("returns null when the Blob API has no such document", async () => {
-    blob.headEtag = null;
+  it("returns null when there is no such document", async () => {
     expect(await backend().read("root/draft.json")).toBeNull();
-    expect(blob.gets).toBe(0);
+    blob.stored = { version: "v1" };
+    blob.statusCode = 304;
+    expect(await backend().read("root/draft.json")).toBeNull();
   });
 
-  it("never returns an old version: it fails after the wait instead", async () => {
-    vi.useFakeTimers();
-    blob.getEtags = ['"v1"'];
-    const result = backend().read("root/draft.json");
-    const failed = expect(result).rejects.toThrow(/old version/);
-    await vi.advanceTimersByTimeAsync(130_000);
-    await failed;
+  it("writes JSON with private access, at the exact pathname, and without a CDN cache setting", async () => {
+    await backend().write("root/published.json", { version: "v3" });
+    expect(blob.calls).toEqual([
+      {
+        op: "put",
+        pathname: "root/published.json",
+        options: { access: "private", storeId: "store_test", contentType: "application/json", addRandomSuffix: false, allowOverwrite: true },
+      },
+    ]);
+    expect(await backend().read("root/published.json")).toEqual({ version: "v3" });
+  });
+
+  it("lists every page of pathnames under the prefix", async () => {
+    expect(await backend().list("root/history/")).toEqual(["root/history/page-1.json", "root/history/page-2.json"]);
+    expect(blob.calls.map((c) => c.options)).toEqual([
+      { prefix: "root/history/", cursor: undefined, storeId: "store_test" },
+      { prefix: "root/history/", cursor: "next", storeId: "store_test" },
+    ]);
   });
 });

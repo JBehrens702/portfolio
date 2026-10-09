@@ -1,8 +1,11 @@
 "use client";
 
+import { move, type Direction } from "@/lib/content/order";
 import type { Block, BlockType, FactsBlock, FileBlock, ImagesBlock, Media } from "@/lib/content/schema";
+import { AltTextField } from "./AltTextField";
 import { MediaField } from "./MediaField";
-import { OrderButtons, moved } from "./OrderButtons";
+import { omit } from "./omit";
+import { OrderButtons } from "./OrderButtons";
 import styles from "./admin.module.css";
 
 // One block of an experience page (KTD6): heading, text, facts, images, file,
@@ -20,26 +23,6 @@ export const BLOCK_TYPES: { type: BlockType; name: string }[] = [
 
 export function blockTypeName(type: BlockType): string {
   return BLOCK_TYPES.find((t) => t.type === type)?.name ?? type;
-}
-
-/** An empty block of the type, with an id that the list does not use yet. */
-export function newBlock(type: BlockType, taken: Block[]): Block {
-  const used = new Set(taken.map((b) => b.id));
-  let id = "";
-  do id = `b-${crypto.randomUUID().slice(0, 8)}`;
-  while (used.has(id));
-  switch (type) {
-    case "heading":
-      return { id, type, text: "", level: 2 };
-    case "text":
-    case "quote":
-      return { id, type, text: "" };
-    case "facts":
-    case "images":
-      return { id, type, items: [] };
-    case "file":
-      return { id, type, label: "" };
-  }
 }
 
 /** True when a removal loses something the owner wrote or uploaded, so it needs a confirmation. */
@@ -88,7 +71,7 @@ export interface BlockEditorProps {
   onChange: BlockChange;
   /** A file change: saved into the draft at once. */
   onFileChange: BlockChange;
-  onMove: (direction: "up" | "down") => void;
+  onMove: (direction: Direction) => void;
   onRemove: () => void;
   mediaPrefix: string;
   confirm: (question: string) => Promise<boolean>;
@@ -212,15 +195,7 @@ function FileFields(props: BlockEditorProps & { block: FileBlock }) {
         beginUpload={props.beginUpload}
         endUpload={props.endUpload}
         onUploaded={(file) => onFileChange(typed<FileBlock>("file", (b) => ({ ...b, file })))}
-        onRemove={() =>
-          onFileChange(
-            typed<FileBlock>("file", (b) => {
-              const { file: _removed, ...rest } = b;
-              void _removed;
-              return rest;
-            }),
-          )
-        }
+        onRemove={() => onFileChange(typed<FileBlock>("file", (b) => omit(b, "file")))}
       />
     </div>
   );
@@ -262,7 +237,7 @@ function FactsFields(props: BlockEditorProps & { block: FactsBlock }) {
               name={`fact "${item.label || i + 1}"`}
               index={i}
               count={block.items.length}
-              onMove={(d) => items((list) => moved(list, i, d))}
+              onMove={(d) => items((list) => move(list, i, d))}
             />
             <button
               type="button"
@@ -316,7 +291,7 @@ function ImagesFields(props: BlockEditorProps & { block: ImagesBlock }) {
                   name={`image ${i + 1}`}
                   index={i}
                   count={block.items.length}
-                  onMove={(d) => items(false, (list) => moved(list, i, d))}
+                  onMove={(d) => items(false, (list) => move(list, i, d))}
                 />
                 <button
                   type="button"
@@ -342,19 +317,11 @@ function ImagesFields(props: BlockEditorProps & { block: ImagesBlock }) {
               endUpload={props.endUpload}
               onUploaded={(image) => setImage(i, true, () => image)}
             />
-            {item.image ? (
-              <label className={styles.field}>
-                <span>Alt text (what the image shows, for screen readers)</span>
-                <input
-                  className={styles.input}
-                  value={item.image.alt ?? ""}
-                  onChange={(e) => {
-                    const alt = e.target.value;
-                    setImage(i, false, (image) => (image ? { ...image, alt } : image));
-                  }}
-                />
-              </label>
-            ) : null}
+            <AltTextField
+              label="Alt text (what the image shows, for screen readers)"
+              media={item.image}
+              onChange={(alt) => setImage(i, false, (image) => (image ? { ...image, alt } : image))}
+            />
           </li>
         ))}
       </ol>

@@ -1,15 +1,24 @@
 import { expect as baseExpect, test, type BrowserContext, type Page } from "@playwright/test";
 import { clerk, clerkSetup, setupClerkTestingToken } from "@clerk/testing/playwright";
 import { loadEnvConfig } from "@next/env";
-import { del, list } from "@vercel/blob";
-import { blobCredentialsFromEnv, createBlobContentStore, type BlobCredentials, type ContentStore } from "../src/lib/content/store";
+import { del } from "@vercel/blob";
+import {
+  blobCredentialsFromEnv,
+  createBlobContentStore,
+  docsCredentialsFromEnv,
+  listAllBlobs,
+  type BlobCredentials,
+  type ContentStore,
+} from "../src/lib/content/store";
 import type { Site } from "../src/lib/content/schema";
 import { exifSegments, hasGps, withGpsExif } from "./fixtures/exif";
 
 // U6 scenarios in a real browser, signed in as the owner with Clerk's testing
-// token, against the DEVELOPMENT Blob store under a test-only content root, so
-// the seeded content ("site") is never touched. The root and everything under
-// it are deleted after the run.
+// token, against the DEVELOPMENT Blob stores under a test-only content root, so
+// the seeded content ("site") is never touched. As in the app, the documents
+// (draft, published, history) are in the private documents store (DEVDOCS) and
+// the uploaded files in the public media store (DEV). The root and everything
+// under it are deleted from both stores after the run.
 //
 // Run it against its own dev server, started with the Blob source and the test root:
 //   CONTENT_SOURCE=blob CONTENT_ROOT=e2e-<random> next dev -p 3001
@@ -23,9 +32,8 @@ loadEnvConfig(process.cwd(), true, { info: () => undefined, error: console.error
 const ROOT = process.env.CONTENT_ROOT ?? "";
 const ENABLED = process.env.E2E_PUBLISH === "1";
 
-// After an overwrite, the public Blob CDN can serve the old document for up to
-// about 60 s; the store's read then waits for the current version (store.ts).
-// So a save or a Publish can take more than a minute, and the waits here allow for that.
+// A dev server compiles each route on its first visit, which can take more
+// than a minute in the container; the waits here allow for that.
 const expect = baseExpect.configure({ timeout: 150_000 });
 test.describe.configure({ mode: "serial", timeout: 1_200_000 });
 test.skip(!ENABLED, "set E2E_PUBLISH=1 with CONTENT_SOURCE=blob and a test CONTENT_ROOT (see the comment at the top)");
@@ -67,7 +75,10 @@ function seedSite(): Site {
 
 let store: ContentStore;
 let visitors: BrowserContext;
-let credentials: BlobCredentials;
+/** The private documents store, which the app reads with docsCredentialsFromEnv(). */
+let docsCredentials: BlobCredentials;
+/** The public media store, which the upload route writes with blobCredentialsFromEnv(). */
+let mediaCredentials: BlobCredentials;
 let context: BrowserContext;
 let page: Page;
 
@@ -103,14 +114,9 @@ async function waitForClerk(target: Page) {
   }
 }
 
-async function deleteRoot() {
-  const urls: string[] = [];
-  let cursor: string | undefined;
-  do {
-    const result = await list({ prefix: `${ROOT}/`, cursor, ...credentials });
-    urls.push(...result.blobs.map((b) => b.url));
-    cursor = result.hasMore ? result.cursor : undefined;
-  } while (cursor);
+/** Deletes everything under the test root from one store. */
+async function deleteRoot(credentials: BlobCredentials) {
+  const urls = (await listAllBlobs(`${ROOT}/`, credentials)).map((b) => b.url);
   for (let i = 0; i < urls.length; i += 100) await del(urls.slice(i, i + 100), credentials);
 }
 
@@ -148,10 +154,14 @@ test.beforeAll(async ({ browser, baseURL }, testInfo) => {
   // Never run against a root that is not a test root.
   if (!/^e2e-[a-z0-9-]+$/.test(ROOT)) throw new Error(`CONTENT_ROOT must be a test root such as "e2e-1a2b3c", not "${ROOT}"`);
   if (process.env.CONTENT_SOURCE !== "blob") throw new Error("CONTENT_SOURCE must be blob for this spec");
-  const found = blobCredentialsFromEnv();
-  if (!found) throw new Error("No development Blob store in the environment (DEV_READ_WRITE_TOKEN or DEV_STORE_ID)");
-  credentials = found;
-  store = createBlobContentStore({ root: ROOT, secret: process.env.CONTENT_PATH_SECRET ?? "" }, { credentials });
+  const docs = docsCredentialsFromEnv();
+  const media = blobCredentialsFromEnv();
+  if (!docs) throw new Error("No development documents store in the environment (DEVDOCS_READ_WRITE_TOKEN or DEVDOCS_STORE_ID)");
+  if (!media) throw new Error("No development media store in the environment (DEV_READ_WRITE_TOKEN or DEV_STORE_ID)");
+  docsCredentials = docs;
+  mediaCredentials = media;
+  // The same store as the app: the private documents store (createContentStoreFromEnv).
+  store = createBlobContentStore({ root: ROOT, secret: process.env.CONTENT_PATH_SECRET ?? "" }, { credentials: docsCredentials });
   const site = seedSite();
   await store.writeDraft(site);
   await store.writePublished({ ...site, labels: { ...site.labels, softwareHeading: { text: "Software projects", approved: true } } });
@@ -159,7 +169,7 @@ test.beforeAll(async ({ browser, baseURL }, testInfo) => {
   await clerkSetup({ publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, secretKey: process.env.CLERK_SECRET_KEY });
   context = await browser.newContext({ baseURL });
   visitors = await browser.newContext({ baseURL });
-  // A page load that reads a just-written document can wait for the CDN (see the top).
+  // A page load can wait for the dev server to compile the route (see the top).
   context.setDefaultNavigationTimeout(180_000);
   visitors.setDefaultNavigationTimeout(180_000);
   page = await context.newPage();
@@ -187,7 +197,10 @@ test.beforeAll(async ({ browser, baseURL }, testInfo) => {
 test.afterAll(async () => {
   await context?.close();
   await visitors?.close();
-  if (ENABLED && /^e2e-[a-z0-9-]+$/.test(ROOT) && credentials) await deleteRoot();
+  if (ENABLED && /^e2e-[a-z0-9-]+$/.test(ROOT)) {
+    if (docsCredentials) await deleteRoot(docsCredentials);
+    if (mediaCredentials) await deleteRoot(mediaCredentials);
+  }
 });
 
 test("AE6: Publish with an unapproved label is refused and names it; after approval, Publish works", async () => {

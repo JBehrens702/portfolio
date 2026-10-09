@@ -1,8 +1,8 @@
 import { PreviewMarker } from "@/components/site/PreviewMarker";
 import { EmptySiteView, HomeView } from "@/components/site/SiteView";
 import { SITE_TITLE } from "@/components/site/site-title";
+import { readDraftOrNull } from "@/app/admin/draft";
 import { requireOwnerPage } from "@/lib/auth/owner";
-import { createContentStoreFromEnv } from "@/lib/content/store";
 import { visibleSite } from "@/lib/content/visibility";
 
 // The preview of the home page: the DRAFT, through the same visibility function
@@ -14,7 +14,7 @@ export const instant = false;
 
 export default async function PreviewHome() {
   await requireOwnerPage();
-  const draft = (await createContentStoreFromEnv()?.readDraft()) ?? null;
+  const draft = await readDraftOrNull();
   if (!draft) return <EmptySiteView title={SITE_TITLE} />;
   const site = visibleSite(draft);
   return (

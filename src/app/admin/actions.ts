@@ -10,16 +10,10 @@ import {
   type Direction,
 } from "@/lib/content/order";
 import { publish } from "@/lib/content/publish";
-import {
-  ContentValidationError,
-  parseSite,
-  type Experience,
-  type Media,
-  type Site,
-  type SoftwareCard,
-} from "@/lib/content/schema";
-import { CONTENT_TAG, createContentStoreFromEnv, saveDraft, type ContentStore } from "@/lib/content/store";
+import { parseSite, type Experience, type Media, type Site, type SoftwareCard } from "@/lib/content/schema";
+import { CONTENT_TAG, createContentStoreFromEnv, type ContentStore } from "@/lib/content/store";
 import { ALLOWED_CONTENT_TYPES } from "@/lib/content/upload-rules";
+import { readStoredDraft } from "./draft";
 
 // The admin's server actions (U6). Each one checks the owner first (3.4.1),
 // works on the DRAFT only (2.4.6), and validates the whole document before it
@@ -30,17 +24,18 @@ import { ALLOWED_CONTENT_TYPES } from "@/lib/content/upload-rules";
 // presigned URL from /api/admin/upload, then saves the returned file information with
 // one of the save actions below.
 
-export type ActionResult =
-  | { ok: true; savedAt: string }
-  | { ok: false; message: string; issues?: string[] };
+/** A refused action: nothing was written. */
+type Refusal = { ok: false; message: string; issues?: string[] };
 
-export type AddExperienceResult = { ok: true; slug: string; savedAt: string } | { ok: false; message: string; issues?: string[] };
+export type ActionResult = { ok: true; savedAt: string } | Refusal;
+
+export type AddExperienceResult = { ok: true; slug: string; savedAt: string } | Refusal;
 
 export type PublishActionResult =
   | { ok: true; publishedAt: string; cleanup: { deleted: number } | { error: string } | null }
   | { ok: false; reason: "no-draft" | "invalid" | "unapproved-labels"; message: string; labels?: { key: string; text: string }[]; issues?: string[] };
 
-function refused(message: string, issues?: string[]): { ok: false; message: string; issues?: string[] } {
+function refused(message: string, issues?: string[]): Refusal {
   return issues ? { ok: false, message, issues } : { ok: false, message };
 }
 
@@ -50,18 +45,14 @@ function getStore(): ContentStore {
   return store;
 }
 
-type Loaded = { ok: true; store: ContentStore; draft: Site } | { ok: false; message: string; issues?: string[] };
+type Loaded = { ok: true; store: ContentStore; draft: Site } | Refusal;
 
 async function loadDraft(): Promise<Loaded> {
   const store = getStore();
-  try {
-    const draft = await store.readDraft();
-    if (!draft) return refused("There is no draft yet.");
-    return { ok: true, store, draft };
-  } catch (error) {
-    if (error instanceof ContentValidationError) return refused("The stored draft is not valid.", error.issues);
-    throw error;
-  }
+  const draft = await readStoredDraft(store);
+  if (draft.kind === "no-draft") return refused("There is no draft yet.");
+  if (draft.kind === "invalid") return refused("The stored draft is not valid.", draft.issues);
+  return { ok: true, store, draft: draft.site };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -103,8 +94,8 @@ async function commit(store: ContentStore, before: Site, next: unknown): Promise
   if (!parsed.ok) return refused("Not saved: the change is not valid.", parsed.issues);
   const problems = mediaProblems(parsed.site, before, store.paths.mediaPrefix);
   if (problems.length > 0) return refused("Not saved: a file is not valid.", problems);
-  const result = await saveDraft(store, parsed.site);
-  if (!result.ok) return refused("Not saved: the change is not valid.", result.issues);
+  // The store validates again at its boundary; the document already passed parseSite.
+  await store.writeDraft(parsed.site);
   return { ok: true, savedAt: new Date().toISOString() };
 }
 
@@ -253,9 +244,7 @@ export async function publishSite(): Promise<PublishActionResult> {
   const result = await publish(store, { afterPublish: () => updateTag(CONTENT_TAG) });
   if (!result.ok) {
     if (result.reason === "unapproved-labels") {
-      const draft = await store.readDraft();
-      const labels = result.labels.map((key) => ({ key, text: draft?.labels[key]?.text ?? "" }));
-      return { ok: false, reason: result.reason, message: "Not published: approve these labels first.", labels };
+      return { ok: false, reason: result.reason, message: "Not published: approve these labels first.", labels: result.labelTexts };
     }
     if (result.reason === "invalid") {
       return { ok: false, reason: result.reason, message: "Not published: the draft is not valid.", issues: result.issues };
@@ -267,7 +256,10 @@ export async function publishSite(): Promise<PublishActionResult> {
   const storage = createMediaStorageFromEnv();
   if (storage) {
     try {
-      cleanup = { deleted: (await collectMediaGarbage(store, storage)).deleted.length };
+      // The published document is the site that was just written. The draft is
+      // read again: another tab can save a file into it while Publish runs.
+      const knownDocuments = { published: result.site };
+      cleanup = { deleted: (await collectMediaGarbage(store, storage, { knownDocuments })).deleted.length };
     } catch (error) {
       // The site is published; only the cleanup failed. The next Publish tries again.
       console.error("Media cleanup after Publish failed:", error);

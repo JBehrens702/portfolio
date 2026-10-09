@@ -1,4 +1,4 @@
-import { BlobNotFoundError, get, head, list, put, type BlobAccessType } from "@vercel/blob";
+import { get, list, put, type ListBlobResultBlob } from "@vercel/blob";
 import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { assertSite, parseSite, type ParseResult, type Site } from "./schema";
@@ -190,6 +190,11 @@ export function createMemoryContentStore(
  */
 export type BlobCredentials = { token: string } | { storeId: string };
 
+/** True on a Vercel Production deployment. Every other place uses the development stores. */
+export function isProduction(env: Record<string, string | undefined> = process.env): boolean {
+  return env.VERCEL_ENV === "production";
+}
+
 function credentialsForPrefix(env: Record<string, string | undefined>, prefix: string): BlobCredentials | undefined {
   const token = env[`${prefix}_READ_WRITE_TOKEN`]?.trim();
   if (token) return { token };
@@ -202,7 +207,7 @@ function credentialsForPrefix(env: Record<string, string | undefined>, prefix: s
 export function blobCredentialsFromEnv(
   env: Record<string, string | undefined> = process.env,
 ): BlobCredentials | undefined {
-  return credentialsForPrefix(env, env.VERCEL_ENV === "production" ? "BLOB" : "DEV");
+  return credentialsForPrefix(env, isProduction(env) ? "BLOB" : "DEV");
 }
 
 /**
@@ -214,104 +219,68 @@ export function blobCredentialsFromEnv(
 export function docsCredentialsFromEnv(
   env: Record<string, string | undefined> = process.env,
 ): BlobCredentials | undefined {
-  return credentialsForPrefix(env, env.VERCEL_ENV === "production" ? "DOCS" : "DEVDOCS");
+  return credentialsForPrefix(env, isProduction(env) ? "DOCS" : "DEVDOCS");
+}
+
+/**
+ * Every blob under the prefix, from all pages of the Blob listing. The
+ * credentials name the store, so the media store and the documents store stay apart.
+ */
+export async function listAllBlobs(prefix: string, credentials: BlobCredentials): Promise<ListBlobResultBlob[]> {
+  const found: ListBlobResultBlob[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await list({ prefix, cursor, ...credentials });
+    found.push(...page.blobs);
+    cursor = page.hasMore ? page.cursor : undefined;
+  } while (cursor);
+  return found;
 }
 
 export interface BlobBackendOptions {
   /**
-   * Defaults to blobCredentialsFromEnv(). Always passed to the SDK, which
-   * would otherwise pick BLOB_READ_WRITE_TOKEN or BLOB_STORE_ID by itself.
+   * The PRIVATE documents store. Defaults to docsCredentialsFromEnv(). Always
+   * passed to the SDK, which would otherwise pick BLOB_READ_WRITE_TOKEN or
+   * BLOB_STORE_ID by itself.
    */
   credentials?: BlobCredentials;
-  /** Must match the access of the Blob store. Defaults to "public", so media files can be shown to visitors. */
-  access?: BlobAccessType;
 }
 
 /**
- * How long a read waits for the Blob CDN to serve the current version. Waits of
- * up to 73 s were measured on the development store (U6, 2026-10-09).
+ * The JSON documents in a PRIVATE Blob store (KTD2, changed in U6). A private
+ * store honours `useCache: false`, so a read returns the current version at
+ * once. The SDK refuses private access on a public store, so the documents
+ * never go to the public media store by mistake.
  */
-const STALE_READ_TIMEOUT_MS = 120_000;
-
-/** An ETag without quotes or the weak prefix, so the API's and the CDN's forms compare equal. */
-function normalizeEtag(etag: string | null | undefined): string {
-  return (etag ?? "").replace(/^W\//, "").replace(/"/g, "");
-}
-
 export function createBlobBackend(options: BlobBackendOptions = {}): JsonBackend {
-  const access = options.access ?? "public";
-  const auth = options.credentials ?? blobCredentialsFromEnv();
+  const auth = options.credentials ?? docsCredentialsFromEnv();
   if (!auth) {
     throw new Error(
-      "No Blob store given and none for this environment: pass credentials, or set DEV_STORE_ID / DEV_READ_WRITE_TOKEN (BLOB_* on Production).",
+      "No Blob documents store given and none for this environment: pass credentials, or set DEVDOCS_STORE_ID / DEVDOCS_READ_WRITE_TOKEN (DOCS_* on Production).",
     );
   }
   return {
     async read(pathname) {
-      if (access === "private") {
-        // A private store honours useCache: false and reads the current version.
-        const result = await get(pathname, { access, useCache: false, ...auth });
-        if (result === null || result.statusCode !== 200) return null;
-        return JSON.parse(await new Response(result.stream).text());
-      }
-      // The Blob CDN can return the version from before an overwrite (KTD2), and
-      // `useCache: false` bypasses it only for PRIVATE blobs; this store is public.
-      // Measured on the development store (U6): a read right after an overwrite
-      // sometimes returned the old version, and a path that was deleted and then
-      // written again read as missing for more than 20 s. So the Blob API (head,
-      // not cached) names the current version by its ETag, and only that version
-      // is accepted from the CDN.
-      let current: string;
-      try {
-        current = normalizeEtag((await head(pathname, auth)).etag);
-      } catch (error) {
-        if (error instanceof BlobNotFoundError) return null;
-        throw error;
-      }
-      const deadline = Date.now() + STALE_READ_TIMEOUT_MS;
-      for (let attempt = 0; ; attempt++) {
-        const result = await get(pathname, { access, useCache: false, ...auth });
-        if (result !== null && result.statusCode === 200) {
-          if (normalizeEtag(result.blob.etag) === current) {
-            if (attempt > 0) {
-              const waited = Date.now() - (deadline - STALE_READ_TIMEOUT_MS);
-              console.warn(`Blob read of ${pathname} waited ${waited} ms for the current version.`);
-            }
-            return JSON.parse(await new Response(result.stream).text());
-          }
-          await result.stream.cancel();
-        }
-        if (Date.now() > deadline) {
-          throw new Error(`Blob still returns an old version of ${pathname}; try again in a minute.`);
-        }
-        await new Promise((resolve) => setTimeout(resolve, Math.min(250 * 2 ** attempt, 2000)));
-      }
+      const result = await get(pathname, { access: "private", useCache: false, ...auth });
+      if (result === null || result.statusCode !== 200) return null;
+      return JSON.parse(await new Response(result.stream).text());
     },
     async write(pathname, value) {
       await put(pathname, JSON.stringify(value), {
-        access,
+        access: "private",
         ...auth,
         contentType: "application/json",
         addRandomSuffix: false,
         allowOverwrite: true,
-        // The shortest CDN cache that Blob allows; the server never reads through it.
-        ...(access === "public" ? { cacheControlMaxAge: 60 } : {}),
       });
     },
     async list(prefix) {
-      const pathnames: string[] = [];
-      let cursor: string | undefined;
-      do {
-        const page = await list({ prefix, cursor, ...auth });
-        pathnames.push(...page.blobs.map((blob) => blob.pathname));
-        cursor = page.hasMore ? page.cursor : undefined;
-      } while (cursor);
-      return pathnames;
+      return (await listAllBlobs(prefix, auth)).map((blob) => blob.pathname);
     },
   };
 }
 
-/** The store over Vercel Blob, configured from the environment unless a config is given. */
+/** The store over the private Blob documents store, configured from the environment unless a config is given. */
 export function createBlobContentStore(
   config: ContentConfig = contentConfigFromEnv(),
   options: BlobBackendOptions & ContentStoreOptions = {},
@@ -385,8 +354,9 @@ export type ContentSource = { kind: "file"; folder: string } | { kind: "blob" } 
 /**
  * Reads CONTENT_SOURCE. "file:<folder>" selects local JSON files (local
  * development and tests). "blob", or no value while this environment's Blob
- * documents store is configured (docsCredentialsFromEnv), selects Vercel Blob. With neither, no content is configured: the site
- * then renders no content, and `next build` still passes.
+ * documents store is configured (docsCredentialsFromEnv), selects Vercel Blob.
+ * With neither, no content is configured: the site then renders no content,
+ * and `next build` still passes.
  */
 export function contentSourceFromEnv(env: Record<string, string | undefined> = process.env): ContentSource {
   const source = env.CONTENT_SOURCE?.trim() ?? "";
@@ -409,5 +379,5 @@ export function createContentStoreFromEnv(
   if (source.kind === "none") return null;
   const config = contentConfigFromEnv(env);
   if (source.kind === "file") return createContentStore(createFileBackend(source.folder), config, options);
-  return createBlobContentStore(config, { ...options, credentials: docsCredentialsFromEnv(env), access: "private" });
+  return createBlobContentStore(config, { ...options, credentials: docsCredentialsFromEnv(env) });
 }

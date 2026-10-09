@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { Aperture } from "./Aperture";
 import type { NavLink } from "./Header";
 import { ExternalIcon, GlobeIcon, MailIcon, ProfileIcon } from "./icons";
+import { headingId } from "./links";
 import { sheetMark, type Sheet } from "./markings";
 import { Readout } from "./Readout";
 import styles from "./Footer.module.css";
@@ -33,9 +34,9 @@ function LinkIcon({ href }: { href: string }) {
  */
 export function Footer({ links, heading, id, sheet }: FooterProps) {
   if (links.length === 0) return null;
-  const headingId = id ? `${id}-heading` : undefined;
+  const headingElementId = id ? headingId(id) : undefined;
   return (
-    <footer id={id} className={`container ${styles.footer}`} aria-labelledby={heading ? headingId : undefined}>
+    <footer id={id} className={`container ${styles.footer}`} aria-labelledby={heading ? headingElementId : undefined}>
       <div className={styles.panel}>
         <div className={styles.markTurn} aria-hidden="true">
           <Aperture id="footer-aperture" tone="ghost" className={styles.mark} />
@@ -50,7 +51,7 @@ export function Footer({ links, heading, id, sheet }: FooterProps) {
         )}
         <div className={styles.inner}>
           {heading && (
-            <h2 id={headingId} className={styles.heading} data-reveal="">
+            <h2 id={headingElementId} className={styles.heading} data-reveal="">
               {heading}
             </h2>
           )}
@@ -70,5 +71,3 @@ export function Footer({ links, heading, id, sheet }: FooterProps) {
     </footer>
   );
 }
-
-export default Footer;

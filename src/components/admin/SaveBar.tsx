@@ -1,5 +1,6 @@
 "use client";
 
+import { IssueList } from "./IssueList";
 import type { DraftEditor } from "./useDraftEditor";
 import { useHydrated } from "./useHydrated";
 import styles from "./admin.module.css";
@@ -50,13 +51,7 @@ export function SaveStatusText<T>({ editor }: { editor: DraftEditor<T> }) {
       return (
         <div role="alert" className={styles.error} data-testid="save-error">
           {status.message}
-          {status.issues?.length ? (
-            <ul className={styles.issues}>
-              {status.issues.map((issue) => (
-                <li key={issue}>{issue}</li>
-              ))}
-            </ul>
-          ) : null}
+          <IssueList issues={status.issues} />
         </div>
       );
     case "failed":

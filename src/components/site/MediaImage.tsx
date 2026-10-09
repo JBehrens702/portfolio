@@ -50,5 +50,3 @@ export function MediaImage({ media, sizes, className, style, eager, decorative }
     />
   );
 }
-
-export default MediaImage;

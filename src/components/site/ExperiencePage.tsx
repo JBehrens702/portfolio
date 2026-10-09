@@ -140,5 +140,3 @@ export function ExperiencePage({ site, experience, linkBase }: ExperiencePagePro
     </article>
   );
 }
-
-export default ExperiencePage;

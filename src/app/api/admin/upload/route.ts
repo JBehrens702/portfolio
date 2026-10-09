@@ -1,7 +1,7 @@
 import { issueSignedToken } from "@vercel/blob";
 import { handleUploadPresigned, type HandleUploadPresignedBody } from "@vercel/blob/client";
 import { getOwnerCheck, refusalResponse } from "@/lib/auth/owner";
-import { blobCredentialsFromEnv, contentConfigFromEnv, contentPaths } from "@/lib/content/store";
+import { blobCredentialsFromEnv, contentConfigFromEnv, contentPaths, isProduction } from "@/lib/content/store";
 import { MAX_UPLOAD_BYTES, checkTokenRequest } from "@/lib/content/upload-rules";
 
 // The upload route (U6 step 3, 2.4.3, KTD2). The browser asks here for a
@@ -44,7 +44,7 @@ class UploadRefused extends Error {
  * is never used to accept one.
  */
 function webhookKeyFromEnv(env: Record<string, string | undefined> = process.env): string {
-  const prefix = env.VERCEL_ENV === "production" ? "BLOB" : "DEV";
+  const prefix = isProduction(env) ? "BLOB" : "DEV";
   return env[`${prefix}_WEBHOOK_PUBLIC_KEY`]?.trim() || "unused: this route accepts no upload callbacks";
 }
 

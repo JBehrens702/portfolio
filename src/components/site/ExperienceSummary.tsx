@@ -75,5 +75,3 @@ export function ExperienceSummary({ experience, linkBase, readMore, featured, in
     </article>
   );
 }
-
-export default ExperienceSummary;

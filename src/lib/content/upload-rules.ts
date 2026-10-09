@@ -17,7 +17,7 @@ export const UPLOAD_TYPES: Readonly<Record<string, readonly string[]>> = {
 };
 
 export const ALLOWED_CONTENT_TYPES = Object.keys(UPLOAD_TYPES);
-export const IMAGE_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+export const IMAGE_CONTENT_TYPES = ALLOWED_CONTENT_TYPES.filter((type) => type.startsWith("image/"));
 
 /** The message for a refused file. It names the allowed types and the limit. */
 export const UPLOAD_REFUSED_MESSAGE =

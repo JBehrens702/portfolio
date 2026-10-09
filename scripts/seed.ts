@@ -65,7 +65,7 @@ async function main(): Promise<void> {
   }
   console.log(`Seeding the ${options.store === "production" ? "PRODUCTION" : "development"} store.`);
   const config = contentConfigFromEnv();
-  const store = createBlobContentStore(config, { credentials: docsCredentials, access: "private" });
+  const store = createBlobContentStore(config, { credentials: docsCredentials });
 
   const upload: Uploader = async ({ pathname, contentType, data }) => {
     const blob = await put(pathname, Buffer.from(data), { access: "public", addRandomSuffix: true, contentType, ...credentials });

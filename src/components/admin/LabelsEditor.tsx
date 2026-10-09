@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { saveLabels, type LabelsInput } from "@/app/admin/actions";
 import { SaveBar } from "./SaveBar";
 import { useDraftEditor } from "./useDraftEditor";
@@ -11,8 +10,7 @@ import styles from "./admin.module.css";
 // the owner rewrites counts as approved when it is saved.
 
 export function LabelsEditor({ initial }: { initial: LabelsInput }) {
-  const persist = useCallback((labels: LabelsInput) => saveLabels(labels), []);
-  const editor = useDraftEditor(initial, persist);
+  const editor = useDraftEditor(initial, saveLabels);
   const { value, update } = editor;
   // Unapproved labels first, in the order of the page load, so a label does not jump when it is approved.
   const keys = Object.keys(initial).sort(

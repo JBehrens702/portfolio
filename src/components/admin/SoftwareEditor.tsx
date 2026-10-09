@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { saveSoftware } from "@/app/admin/actions";
-import { slugify } from "@/lib/content/order";
+import { move, slugify, unique } from "@/lib/content/order";
 import type { SoftwareCard } from "@/lib/content/schema";
+import { AltTextField } from "./AltTextField";
 import { useConfirm } from "./ConfirmDialog";
 import { MediaField } from "./MediaField";
-import { OrderButtons, moved } from "./OrderButtons";
+import { omit } from "./omit";
+import { OrderButtons } from "./OrderButtons";
 import { SaveBar } from "./SaveBar";
 import { useDraftEditor } from "./useDraftEditor";
 import styles from "./admin.module.css";
@@ -15,16 +17,8 @@ import styles from "./admin.module.css";
 // cards, and edit each card's name, overview, screenshot, and link. A card has
 // no full page (0.1.5).
 
-function uniqueId(name: string, cards: SoftwareCard[]): string {
-  const base = slugify(name, "software");
-  const used = new Set(cards.map((c) => c.id));
-  if (!used.has(base)) return base;
-  for (let n = 2; ; n++) if (!used.has(`${base}-${n}`)) return `${base}-${n}`;
-}
-
 export function SoftwareEditor({ initial, mediaPrefix }: { initial: SoftwareCard[]; mediaPrefix: string }) {
-  const persist = useCallback((cards: SoftwareCard[]) => saveSoftware(cards), []);
-  const editor = useDraftEditor(initial, persist);
+  const editor = useDraftEditor(initial, saveSoftware);
   const { value, update } = editor;
   const { confirm, dialog } = useConfirm();
   const [newName, setNewName] = useState("");
@@ -46,7 +40,7 @@ export function SoftwareEditor({ initial, mediaPrefix }: { initial: SoftwareCard
                   name={`the card "${item.name}"`}
                   index={index}
                   count={value.length}
-                  onMove={(d) => update((cards) => moved(cards, cards.findIndex((c) => c.id === item.id), d))}
+                  onMove={(d) => update((cards) => move(cards, cards.findIndex((c) => c.id === item.id), d))}
                 />
                 <button
                   type="button"
@@ -104,31 +98,13 @@ export function SoftwareEditor({ initial, mediaPrefix }: { initial: SoftwareCard
               beginUpload={editor.beginUpload}
               endUpload={editor.endUpload}
               onUploaded={(screenshot) => card(item.id, (c) => ({ ...c, screenshot }), true)}
-              onRemove={() =>
-                card(
-                  item.id,
-                  (c) => {
-                    const { screenshot: _removed, ...rest } = c;
-                    void _removed;
-                    return rest;
-                  },
-                  true,
-                )
-              }
+              onRemove={() => card(item.id, (c) => omit(c, "screenshot"), true)}
             />
-            {item.screenshot ? (
-              <label className={styles.field}>
-                <span>Screenshot alt text</span>
-                <input
-                  className={styles.input}
-                  value={item.screenshot.alt ?? ""}
-                  onChange={(e) => {
-                    const alt = e.target.value;
-                    card(item.id, (c) => (c.screenshot ? { ...c, screenshot: { ...c.screenshot, alt } } : c));
-                  }}
-                />
-              </label>
-            ) : null}
+            <AltTextField
+              label="Screenshot alt text"
+              media={item.screenshot}
+              onChange={(alt) => card(item.id, (c) => (c.screenshot ? { ...c, screenshot: { ...c.screenshot, alt } } : c))}
+            />
           </li>
         ))}
       </ol>
@@ -139,7 +115,7 @@ export function SoftwareEditor({ initial, mediaPrefix }: { initial: SoftwareCard
           e.preventDefault();
           const name = newName.trim();
           if (!name) return;
-          update((cards) => [...cards, { id: uniqueId(name, cards), name }]);
+          update((cards) => [...cards, { id: unique(slugify(name, "software"), cards.map((c) => c.id)), name }]);
           setNewName("");
         }}
       >

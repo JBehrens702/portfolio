@@ -1,38 +1,33 @@
 import { describe, expect, it } from "vitest";
-import {
-  addBlock,
-  addExperience,
-  addSoftware,
-  moveBlock,
-  moveDown,
-  moveExperience,
-  moveSoftware,
-  moveUp,
-  nextExperience,
-  removeBlock,
-  removeExperience,
-  removeSoftware,
-  slugify,
-} from "./order";
+import { addExperience, move, moveExperience, newBlock, nextExperience, removeExperience, slugify, unique } from "./order";
+import type { BlockType } from "./schema";
 import { parseSite } from "./schema";
 import { experience, makeSite, textBlock } from "./test-fixtures";
 
 const slugs = (site: { experiences: { slug: string }[] }) => site.experiences.map((e) => e.slug);
 
-describe("moveUp and moveDown", () => {
-  it("move an item one place", () => {
-    expect(moveUp(["a", "b", "c"], 1)).toEqual(["b", "a", "c"]);
-    expect(moveDown(["a", "b", "c"], 1)).toEqual(["a", "c", "b"]);
+describe("move", () => {
+  it("moves an item one place up or down", () => {
+    expect(move(["a", "b", "c"], 1, "up")).toEqual(["b", "a", "c"]);
+    expect(move(["a", "b", "c"], 1, "down")).toEqual(["a", "c", "b"]);
   });
 
-  it("change nothing for move up on the first item and move down on the last item", () => {
-    expect(moveUp(["a", "b", "c"], 0)).toEqual(["a", "b", "c"]);
-    expect(moveDown(["a", "b", "c"], 2)).toEqual(["a", "b", "c"]);
+  it("changes nothing for move up on the first item and move down on the last item", () => {
+    expect(move(["a", "b", "c"], 0, "up")).toEqual(["a", "b", "c"]);
+    expect(move(["a", "b", "c"], 2, "down")).toEqual(["a", "b", "c"]);
   });
 
-  it("do not change the input list", () => {
+  it("returns the list itself for a no-op or an unknown index (the item was removed meanwhile)", () => {
+    const list = ["a", "b", "c"];
+    expect(move(list, 0, "up")).toBe(list);
+    expect(move(list, 2, "down")).toBe(list);
+    expect(move(list, -1, "down")).toBe(list);
+    expect(move(list, 3, "up")).toBe(list);
+  });
+
+  it("does not change the input list", () => {
     const list = ["a", "b"];
-    moveDown(list, 0);
+    expect(move(list, 0, "down")).toEqual(["b", "a"]);
     expect(list).toEqual(["a", "b"]);
   });
 });
@@ -90,50 +85,53 @@ describe("slugify", () => {
   });
 });
 
-describe("software cards", () => {
-  it("move, add, and remove", () => {
-    const site = makeSite();
-    expect(moveSoftware(site, "dashboard", "up").software.map((c) => c.id)).toEqual(["dashboard", "unquotable"]);
-    expect(moveSoftware(site, "unquotable", "down").software.map((c) => c.id)).toEqual(["dashboard", "unquotable"]);
-    expect(moveSoftware(site, "unquotable", "up").software.map((c) => c.id)).toEqual(["unquotable", "dashboard"]);
+describe("unique", () => {
+  it("keeps a free base, and otherwise adds the first free number", () => {
+    expect(unique("rig", ["dashboard"])).toBe("rig");
+    expect(unique("rig", ["rig"])).toBe("rig-2");
+    expect(unique("rig", ["rig", "rig-2", "rig-4"])).toBe("rig-3");
+  });
 
-    const added = addSoftware(site, "Dashboard");
-    expect(added.id).not.toBe("dashboard");
-    expect(parseSite(added.site).ok).toBe(true);
-    expect(removeSoftware(added.site, "dashboard").software.map((c) => c.id)).toEqual(["unquotable", added.id]);
+  it("gives a new software card a unique, valid id (the software editor's use)", () => {
+    const site = makeSite();
+    const id = unique(slugify("Dashboard", "software"), site.software.map((c) => c.id));
+    expect(id).toBe("dashboard-2");
+    expect(unique(slugify("!!!", "software"), site.software.map((c) => c.id))).toBe("software");
+    expect(parseSite({ ...site, software: [...site.software, { id, name: "Dashboard" }] }).ok).toBe(true);
   });
 });
 
-describe("blocks", () => {
-  const withBlocks = () =>
-    makeSite({ experiences: [experience("x", { blocks: [textBlock("a", "A"), textBlock("b", "B"), textBlock("c", "C")] })] });
-  const blockIds = (site: ReturnType<typeof makeSite>) => site.experiences[0].blocks.map((b) => b.id);
+describe("newBlock", () => {
+  const taken = () => [textBlock("a", "A"), textBlock("b", "B"), textBlock("c", "C")];
 
-  it("move up on the first and move down on the last change nothing", () => {
-    expect(blockIds(moveBlock(withBlocks(), "x", "a", "up"))).toEqual(["a", "b", "c"]);
-    expect(blockIds(moveBlock(withBlocks(), "x", "c", "down"))).toEqual(["a", "b", "c"]);
-    expect(blockIds(moveBlock(withBlocks(), "x", "a", "down"))).toEqual(["b", "a", "c"]);
+  it("makes an empty block of each type, with the defaults of that type", () => {
+    const expected: Record<BlockType, Record<string, unknown>> = {
+      heading: { type: "heading", text: "", level: 2 },
+      text: { type: "text", text: "" },
+      quote: { type: "quote", text: "" },
+      facts: { type: "facts", items: [] },
+      images: { type: "images", items: [] },
+      file: { type: "file", label: "" },
+    };
+    for (const [type, fields] of Object.entries(expected) as [BlockType, Record<string, unknown>][]) {
+      const block = newBlock(type, taken());
+      expect(block).toEqual({ id: block.id, ...fields });
+    }
   });
 
-  it("adds an empty block with a new id, at the end or at a position", () => {
-    const atEnd = addBlock(withBlocks(), "x", "file");
-    expect(atEnd.site.experiences[0].blocks.at(-1)).toEqual({ id: atEnd.blockId, type: "file", label: "" });
-    const atStart = addBlock(withBlocks(), "x", "heading", 0);
-    expect(atStart.site.experiences[0].blocks[0]).toEqual({ id: atStart.blockId, type: "heading", text: "", level: 2 });
-    expect(["a", "b", "c"]).not.toContain(atStart.blockId);
-    expect(parseSite(atEnd.site).ok).toBe(true);
+  it("gives a new id that the list does not use, and the block is valid in a page", () => {
+    const blocks = taken();
+    const block = newBlock("file", blocks);
+    expect(block.id).toMatch(/^b-[0-9a-f]{8}$/);
+    expect(blocks.map((b) => b.id)).not.toContain(block.id);
+    const site = makeSite({ experiences: [experience("x", { blocks: [...blocks, block] })] });
+    expect(parseSite(site).ok).toBe(true);
   });
 
-  it("removes a block", () => {
-    expect(blockIds(removeBlock(withBlocks(), "x", "b"))).toEqual(["a", "c"]);
-  });
-
-  it("does not change the input document", () => {
-    const site = withBlocks();
-    const before = structuredClone(site);
-    moveBlock(site, "x", "a", "down");
-    removeBlock(site, "x", "a");
-    addBlock(site, "x", "text");
-    expect(site).toEqual(before);
+  it("does not change the input list", () => {
+    const blocks = taken();
+    const before = structuredClone(blocks);
+    newBlock("text", blocks);
+    expect(blocks).toEqual(before);
   });
 });

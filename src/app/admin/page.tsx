@@ -16,6 +16,7 @@ export const instant = false;
 export default async function AdminHome() {
   await requireOwnerPage();
   const state = await readDraftState();
+  const unapproved = state.kind === "ok" ? unapprovedLabels(state.site).length : 0;
 
   return (
     <main id="main" className={`container ${styles.page}`} data-testid="admin-home">
@@ -44,10 +45,7 @@ export default async function AdminHome() {
               </li>
               <li>
                 <a href="/admin/labels">Labels</a>
-                {(() => {
-                  const count = unapprovedLabels(state.site).length;
-                  return count > 0 ? ` (${count} not approved)` : " (all approved)";
-                })()}
+                {unapproved > 0 ? ` (${unapproved} not approved)` : " (all approved)"}
               </li>
             </ul>
           </section>

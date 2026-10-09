@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { addExperience, moveExperience, removeExperience, type ActionResult } from "@/app/admin/actions";
 import { useConfirm } from "./ConfirmDialog";
+import { IssueList } from "./IssueList";
 import { OrderButtons } from "./OrderButtons";
 import { NETWORK_FAILURE } from "./useDraftEditor";
 import { useHydrated } from "./useHydrated";
@@ -106,13 +107,7 @@ export function ExperienceList({ experiences }: { experiences: ExperienceRow[] }
       {message ? (
         <div role={message.ok ? "status" : "alert"} className={message.ok ? undefined : styles.error}>
           {message.text}
-          {message.issues?.length ? (
-            <ul className={styles.issues}>
-              {message.issues.map((issue) => (
-                <li key={issue}>{issue}</li>
-              ))}
-            </ul>
-          ) : null}
+          <IssueList issues={message.issues} />
         </div>
       ) : null}
       {dialog}

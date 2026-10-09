@@ -109,6 +109,44 @@ describe("collectMediaGarbage", () => {
     await expect(collectMediaGarbage(store, files.value, { now: () => NOW })).rejects.toThrow();
     expect(files.deleted).toEqual([]);
   });
+
+  it("deletes nothing when one history copy cannot be read", async () => {
+    const { store, backend } = createMemoryContentStore(ROOT);
+    await store.writeDraft(makeSite());
+    for (let i = 0; i < 12; i++) await backend.write(`${store.paths.historyPrefix}${i}.json`, makeSite());
+    const failing = {
+      ...store,
+      readHistory: async (pathname: string) => {
+        if (pathname.endsWith("/7.json")) throw new Error("Blob is down");
+        return store.readHistory(pathname);
+      },
+    };
+    const files = storage([stored("site/media/unused.jpg")]);
+    await expect(collectMediaGarbage(failing, files.value, { now: () => NOW })).rejects.toThrow("Blob is down");
+    expect(files.deleted).toEqual([]);
+  });
+
+  it("reads every history copy, also more than it reads at the same time", async () => {
+    const { store, backend } = createMemoryContentStore(ROOT);
+    await store.writeDraft(makeSite());
+    const names = Array.from({ length: 20 }, (_, i) => `h${i}.jpg`);
+    for (const [i, name] of names.entries()) {
+      await backend.write(`${store.paths.historyPrefix}${String(i).padStart(2, "0")}.json`, { photo: { pathname: `site/media/${name}` } });
+    }
+    const files = storage([...names, "gone.jpg"].map((n) => stored(`site/media/${n}`)));
+    const result = await collectMediaGarbage(store, files.value, { now: () => NOW });
+    expect(result).toEqual({ deleted: ["site/media/gone.jpg"], kept: 20 });
+  });
+
+  it("uses a known document instead of reading it again", async () => {
+    const { store } = createMemoryContentStore(ROOT);
+    await store.writeDraft(makeSite());
+    await store.writePublished(makeSite({ experiences: [experience("a", { cardImage: media("stored.jpg") })] }));
+    const known = makeSite({ experiences: [experience("a", { cardImage: media("known.jpg") })] });
+    const files = storage([stored("site/media/stored.jpg"), stored("site/media/known.jpg")]);
+    const result = await collectMediaGarbage(store, files.value, { now: () => NOW, knownDocuments: { published: known } });
+    expect(result.deleted).toEqual(["site/media/stored.jpg"]);
+  });
 });
 
 describe("createMediaStorageFromEnv", () => {

@@ -41,5 +41,3 @@ export function SkillsMarquee({ experiences }: { experiences: readonly Experienc
     </div>
   );
 }
-
-export default SkillsMarquee;

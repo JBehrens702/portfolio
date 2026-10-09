@@ -120,5 +120,3 @@ export function Block({ block, linkBase, downloadLabel, variant = "flow" }: Bloc
     }
   }
 }
-
-export default Block;

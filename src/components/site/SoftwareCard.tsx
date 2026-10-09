@@ -58,5 +58,3 @@ export function SoftwareCard({ card, linkBase, index = 0, count = 1 }: SoftwareC
     </article>
   );
 }
-
-export default SoftwareCard;

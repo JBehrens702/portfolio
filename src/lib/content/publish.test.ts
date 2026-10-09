@@ -34,6 +34,7 @@ describe("publish", () => {
     if (!refused.ok) {
       expect(refused.reason).toBe("unapproved-labels");
       expect(refused.reason === "unapproved-labels" && refused.labels).toEqual(["readMore"]);
+      expect(refused.reason === "unapproved-labels" && refused.labelTexts).toEqual([{ key: "readMore", text: "Read more" }]);
       expect(refused.message).toContain("readMore");
       expect(refused.message).toContain("Read more");
     }
