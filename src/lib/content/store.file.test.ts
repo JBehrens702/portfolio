@@ -83,8 +83,8 @@ describe("content source from the environment", () => {
     });
   });
 
-  it("selects Blob when a token exists, or when CONTENT_SOURCE=blob", () => {
-    expect(contentSourceFromEnv({ BLOB_READ_WRITE_TOKEN: "vercel_blob_rw_x" })).toEqual({ kind: "blob" });
+  it("selects Blob when this environment's token exists, or when CONTENT_SOURCE=blob", () => {
+    expect(contentSourceFromEnv({ DEV_READ_WRITE_TOKEN: "vercel_blob_rw_x" })).toEqual({ kind: "blob" });
     expect(contentSourceFromEnv({ CONTENT_SOURCE: "blob" })).toEqual({ kind: "blob" });
   });
 

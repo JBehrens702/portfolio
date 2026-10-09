@@ -6,19 +6,20 @@ import { createBlobContentStore } from "./store";
 import { makeSite } from "./test-fixtures";
 
 // Integration check against the Development Blob store (U2, KTD2). It is skipped
-// when BLOB_READ_WRITE_TOKEN is not set. It uses its own random CONTENT_ROOT and
+// when DEV_READ_WRITE_TOKEN is not set. It uses its own random CONTENT_ROOT and
 // deletes everything under that root at the end, so seeded content is never touched.
 // WARNING: never run it with the Production token.
 
-if (!process.env.BLOB_READ_WRITE_TOKEN && existsSync(".env.local")) {
+if (!process.env.DEV_READ_WRITE_TOKEN && existsSync(".env.local")) {
   process.loadEnvFile(".env.local");
 }
-const token = process.env.BLOB_READ_WRITE_TOKEN;
+const token = process.env.DEV_READ_WRITE_TOKEN;
 
 describe.skipIf(!token)("Vercel Blob content store (Development store)", () => {
   const root = `test-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
   const config = { root, secret: `secret-${crypto.randomUUID().replace(/-/g, "")}` };
-  const store = createBlobContentStore(config, { token });
+  // Vitest still runs this body when the suite is skipped, so only build the store with a token.
+  const store = token ? createBlobContentStore(config, { token }) : (undefined as never);
 
   afterAll(async () => {
     const { blobs } = await list({ prefix: `${root}/`, token });

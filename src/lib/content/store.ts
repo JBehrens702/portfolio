@@ -180,8 +180,19 @@ export function createMemoryContentStore(
 
 // ---- Vercel Blob ----
 
+/**
+ * The Blob token for this environment. A Production deployment uses the
+ * Production store (BLOB_READ_WRITE_TOKEN); every other place - Preview
+ * deployments, local work, tests - uses the development store
+ * (DEV_READ_WRITE_TOKEN), so nothing outside Production can change the live site.
+ */
+export function blobTokenFromEnv(env: Record<string, string | undefined> = process.env): string | undefined {
+  const name = env.VERCEL_ENV === "production" ? "BLOB_READ_WRITE_TOKEN" : "DEV_READ_WRITE_TOKEN";
+  return env[name]?.trim() || undefined;
+}
+
 export interface BlobBackendOptions {
-  /** Defaults to BLOB_READ_WRITE_TOKEN. */
+  /** Defaults to blobTokenFromEnv(). Always passed to the SDK, which would otherwise read BLOB_READ_WRITE_TOKEN by itself. */
   token?: string;
   /** Must match the access of the Blob store. Defaults to "public", so media files can be shown to visitors. */
   access?: BlobAccessType;
@@ -189,7 +200,8 @@ export interface BlobBackendOptions {
 
 export function createBlobBackend(options: BlobBackendOptions = {}): JsonBackend {
   const access = options.access ?? "public";
-  const token = options.token;
+  const token = options.token ?? blobTokenFromEnv();
+  if (!token) throw new Error("No Blob token for this environment: set DEV_READ_WRITE_TOKEN (or BLOB_READ_WRITE_TOKEN on Production).");
   return {
     async read(pathname) {
       // Uncached: the Blob CDN can return the version from before an overwrite (KTD2).
@@ -295,8 +307,8 @@ export type ContentSource = { kind: "file"; folder: string } | { kind: "blob" } 
 
 /**
  * Reads CONTENT_SOURCE. "file:<folder>" selects local JSON files (local
- * development and tests). "blob", or no value while BLOB_READ_WRITE_TOKEN is
- * set, selects Vercel Blob. With neither, no content is configured: the site
+ * development and tests). "blob", or no value while this environment's Blob
+ * token is set (blobTokenFromEnv), selects Vercel Blob. With neither, no content is configured: the site
  * then renders no content, and `next build` still passes.
  */
 export function contentSourceFromEnv(env: Record<string, string | undefined> = process.env): ContentSource {
@@ -308,7 +320,7 @@ export function contentSourceFromEnv(env: Record<string, string | undefined> = p
   }
   if (source === "blob") return { kind: "blob" };
   if (source !== "") throw new Error(`CONTENT_SOURCE must be "blob" or "file:<folder>", not "${source}".`);
-  return env.BLOB_READ_WRITE_TOKEN?.trim() ? { kind: "blob" } : { kind: "none" };
+  return blobTokenFromEnv(env) ? { kind: "blob" } : { kind: "none" };
 }
 
 /** The content store that the environment selects, or null when no content source is configured. */
@@ -320,5 +332,5 @@ export function createContentStoreFromEnv(
   if (source.kind === "none") return null;
   const config = contentConfigFromEnv(env);
   if (source.kind === "file") return createContentStore(createFileBackend(source.folder), config, options);
-  return createBlobContentStore(config, options);
+  return createBlobContentStore(config, { ...options, token: blobTokenFromEnv(env) });
 }

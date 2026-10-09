@@ -3,9 +3,14 @@
 // Usage, in the dev-env container, from the repo root:
 //   npm run seed -- --check                    validate the seed only; needs no env vars
 //   npm run seed -- --env-file=.env.local      upload the media and write the draft
+//                                              into the DEVELOPMENT store
 //   npm run seed -- --env-file=.env.local --force   overwrite an existing draft
+//   npm run seed -- --store=production         seed the PRODUCTION store (U8 only);
+//       pass BLOB_READ_WRITE_TOKEN and the Production CONTENT_PATH_SECRET as env
+//       vars for this one run - never put them in a file
 //
-// It reads BLOB_READ_WRITE_TOKEN, CONTENT_ROOT, and CONTENT_PATH_SECRET from the
+// The development store's token is DEV_READ_WRITE_TOKEN; the Production store's
+// is BLOB_READ_WRITE_TOKEN. It also reads CONTENT_ROOT and CONTENT_PATH_SECRET from the
 // environment (or from the --env-file). It writes only the draft, never the
 // published document, and it never prints or saves the token or the secret.
 
@@ -18,12 +23,13 @@ import { DraftExistsError, checkSeed, seedDraft, type ManifestEntry, type Upload
 const SEED_DIR = path.resolve("content/seed");
 
 function parseArgs(argv: string[]) {
-  const options = { force: false, check: false, envFile: undefined as string | undefined };
+  const options = { force: false, check: false, envFile: undefined as string | undefined, store: "dev" as "dev" | "production" };
   for (const arg of argv) {
     if (arg === "--force") options.force = true;
     else if (arg === "--check") options.check = true;
     else if (arg.startsWith("--env-file=")) options.envFile = arg.slice("--env-file=".length);
-    else throw new Error(`Unknown option: ${arg}. Use --check, --force, or --env-file=<path>.`);
+    else if (arg === "--store=dev" || arg === "--store=production") options.store = arg.slice("--store=".length) as "dev" | "production";
+    else throw new Error(`Unknown option: ${arg}. Use --check, --force, --store=dev|production, or --env-file=<path>.`);
   }
   return options;
 }
@@ -44,8 +50,10 @@ async function main(): Promise<void> {
   }
 
   if (options.envFile) process.loadEnvFile(options.envFile);
-  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
-  if (!token) throw new Error("BLOB_READ_WRITE_TOKEN must be set.");
+  const tokenName = options.store === "production" ? "BLOB_READ_WRITE_TOKEN" : "DEV_READ_WRITE_TOKEN";
+  const token = process.env[tokenName]?.trim();
+  if (!token) throw new Error(`${tokenName} must be set for --store=${options.store}.`);
+  console.log(`Seeding the ${options.store === "production" ? "PRODUCTION" : "development"} store.`);
   const config = contentConfigFromEnv();
   const store = createBlobContentStore(config, { token });
 
@@ -70,7 +78,7 @@ async function main(): Promise<void> {
 /** Removes the token and the secret path segment from a message. */
 function redact(message: string): string {
   let text = message;
-  for (const name of ["BLOB_READ_WRITE_TOKEN", "CONTENT_PATH_SECRET"]) {
+  for (const name of ["BLOB_READ_WRITE_TOKEN", "DEV_READ_WRITE_TOKEN", "CONTENT_PATH_SECRET"]) {
     const value = process.env[name]?.trim();
     if (value) text = text.split(value).join(`<${name}>`);
   }
