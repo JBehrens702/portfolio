@@ -1,0 +1,290 @@
+[
+  {
+    "page": "home",
+    "position": 1,
+    "file": "home-hero.jpg",
+    "contentType": "image/jpeg",
+    "width": 1280,
+    "height": 1409,
+    "bytes": 388340
+  },
+  {
+    "page": "home",
+    "position": 2,
+    "file": "home-card-thermocouple-reader-system.jpg",
+    "contentType": "image/jpeg",
+    "width": 1280,
+    "height": 1280,
+    "bytes": 413639
+  },
+  {
+    "page": "home",
+    "position": 3,
+    "file": "home-card-turbine-testing-stand.jpg",
+    "contentType": "image/jpeg",
+    "width": 565,
+    "height": 565,
+    "bytes": 91528
+  },
+  {
+    "page": "home",
+    "position": 4,
+    "file": "home-card-victaulic-internship.png",
+    "contentType": "image/png",
+    "width": 959,
+    "height": 959,
+    "bytes": 591107
+  },
+  {
+    "page": "home",
+    "position": 5,
+    "file": "home-card-solidworks-experience.png",
+    "contentType": "image/png",
+    "width": 1033,
+    "height": 1033,
+    "bytes": 96796
+  },
+  {
+    "page": "home",
+    "position": 6,
+    "file": "home-card-volunteer-experience.jpg",
+    "contentType": "image/jpeg",
+    "width": 1280,
+    "height": 1280,
+    "bytes": 740334
+  },
+  {
+    "page": "thermocouple-reader-system",
+    "position": 1,
+    "file": "thermocouple-reader-system-01.jpg",
+    "contentType": "image/jpeg",
+    "width": 1280,
+    "height": 1280,
+    "bytes": 465226
+  },
+  {
+    "page": "thermocouple-reader-system",
+    "position": 2,
+    "file": "thermocouple-reader-system-02.png",
+    "contentType": "image/png",
+    "width": 199,
+    "height": 199,
+    "bytes": 36192
+  },
+  {
+    "page": "thermocouple-reader-system",
+    "position": 3,
+    "file": "thermocouple-reader-system-03.jpg",
+    "contentType": "image/jpeg",
+    "width": 1280,
+    "height": 962,
+    "bytes": 248284
+  },
+  {
+    "page": "thermocouple-reader-system",
+    "position": 4,
+    "file": "thermocouple-reader-system-04.png",
+    "contentType": "image/png",
+    "width": 993,
+    "height": 747,
+    "bytes": 168429
+  },
+  {
+    "page": "thermocouple-reader-system",
+    "position": 5,
+    "file": "thermocouple-reader-system-05.jpg",
+    "contentType": "image/jpeg",
+    "width": 1280,
+    "height": 973,
+    "bytes": 279574
+  },
+  {
+    "page": "thermocouple-reader-system",
+    "position": 6,
+    "file": "thermocouple-reader-system-06.png",
+    "contentType": "image/png",
+    "width": 1234,
+    "height": 870,
+    "bytes": 171198
+  },
+  {
+    "page": "thermocouple-reader-system",
+    "position": 7,
+    "file": "thermocouple-reader-system-07.png",
+    "contentType": "image/png",
+    "width": 1280,
+    "height": 903,
+    "bytes": 237566
+  },
+  {
+    "page": "turbine-testing-stand",
+    "position": 1,
+    "file": "turbine-testing-stand-01.jpg",
+    "contentType": "image/jpeg",
+    "width": 585,
+    "height": 585,
+    "bytes": 125943
+  },
+  {
+    "page": "turbine-testing-stand",
+    "position": 2,
+    "file": "turbine-testing-stand-02.png",
+    "contentType": "image/png",
+    "width": 396,
+    "height": 111,
+    "bytes": 39509
+  },
+  {
+    "page": "turbine-testing-stand",
+    "position": 3,
+    "file": "turbine-testing-stand-03.png",
+    "contentType": "image/png",
+    "width": 1280,
+    "height": 271,
+    "bytes": 60306
+  },
+  {
+    "page": "turbine-testing-stand",
+    "position": 4,
+    "file": "turbine-testing-stand-04.jpg",
+    "contentType": "image/jpeg",
+    "width": 612,
+    "height": 464,
+    "bytes": 81915
+  },
+  {
+    "page": "turbine-testing-stand",
+    "position": 5,
+    "file": "turbine-testing-stand-05.jpg",
+    "contentType": "image/jpeg",
+    "width": 512,
+    "height": 383,
+    "bytes": 39494
+  },
+  {
+    "page": "turbine-testing-stand",
+    "position": 6,
+    "file": "turbine-testing-stand-06.jpg",
+    "contentType": "image/jpeg",
+    "width": 504,
+    "height": 380,
+    "bytes": 40284
+  },
+  {
+    "page": "turbine-testing-stand",
+    "position": 7,
+    "file": "turbine-testing-stand-07.jpg",
+    "contentType": "image/jpeg",
+    "width": 693,
+    "height": 557,
+    "bytes": 118014
+  },
+  {
+    "page": "turbine-testing-stand",
+    "position": 8,
+    "file": "turbine-testing-stand-08.png",
+    "contentType": "image/png",
+    "width": 1280,
+    "height": 849,
+    "bytes": 28340
+  },
+  {
+    "page": "victaulic-internship",
+    "position": 1,
+    "file": "victaulic-internship-01.png",
+    "contentType": "image/png",
+    "width": 893,
+    "height": 893,
+    "bytes": 446396
+  },
+  {
+    "page": "victaulic-internship",
+    "position": 2,
+    "file": "victaulic-internship-02.png",
+    "contentType": "image/png",
+    "width": 200,
+    "height": 200,
+    "bytes": 1683
+  },
+  {
+    "page": "victaulic-internship",
+    "position": 3,
+    "file": "victaulic-internship-03.png",
+    "contentType": "image/png",
+    "width": 1280,
+    "height": 970,
+    "bytes": 152252
+  },
+  {
+    "page": "victaulic-internship",
+    "position": 4,
+    "file": "victaulic-internship-04.png",
+    "contentType": "image/png",
+    "width": 930,
+    "height": 959,
+    "bytes": 588790
+  },
+  {
+    "page": "victaulic-internship",
+    "position": 5,
+    "file": "victaulic-internship-05.jpg",
+    "contentType": "image/jpeg",
+    "width": 1280,
+    "height": 502,
+    "bytes": 183266
+  },
+  {
+    "page": "solidworks-experience",
+    "position": 1,
+    "file": "solidworks-experience-01.png",
+    "contentType": "image/png",
+    "width": 989,
+    "height": 763,
+    "bytes": 112654
+  },
+  {
+    "page": "solidworks-experience",
+    "position": 2,
+    "file": "solidworks-experience-02.jpg",
+    "contentType": "image/jpeg",
+    "width": 1280,
+    "height": 719,
+    "bytes": 188207
+  },
+  {
+    "page": "volunteer-experience",
+    "position": 1,
+    "file": "volunteer-experience-01.jpg",
+    "contentType": "image/jpeg",
+    "width": 1280,
+    "height": 817,
+    "bytes": 474836
+  },
+  {
+    "page": "volunteer-experience",
+    "position": 2,
+    "file": "volunteer-experience-02.jpg",
+    "contentType": "image/jpeg",
+    "width": 1280,
+    "height": 719,
+    "bytes": 356572
+  },
+  {
+    "page": "volunteer-experience",
+    "position": 3,
+    "file": "volunteer-experience-03.jpg",
+    "contentType": "image/jpeg",
+    "width": 1280,
+    "height": 666,
+    "bytes": 166346
+  },
+  {
+    "page": "volunteer-experience",
+    "position": 4,
+    "file": "volunteer-experience-04.jpg",
+    "contentType": "image/jpeg",
+    "width": 1280,
+    "height": 719,
+    "bytes": 136949
+  }
+]

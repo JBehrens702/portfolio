@@ -1,0 +1,348 @@
+{
+  "schemaVersion": 1,
+  "profile": {
+    "name": "Jonathan Behrens",
+    "tagline": "Hi, I'm Jonathan Behrens",
+    "heroPhoto": { "seed": "home-hero.jpg" },
+    "introParagraphs": [
+      "I am a mechanical engineering student at Messiah University (Class of 2027) and a space nerd. I have dreamt of pushing humanity to the stars since middle school, when I tried to build a converging-diverging nozzle for a model rocket out of aluminum foil. My interest and passion remain unchanged, but my skills (at least in material selection) have improved! That's what I hope you will find as you browse this collection of some of the work I have done.",
+      "A little more about me personally, I am a devout Christian, which means that I have a strong sense of ethics when it comes to the workplace, and a passion to share and explore our Creation. I love travelling internationally; thus far, I have visited Israel and the Palestinian Authority, Peru (where this picture was taken, in Taquile on Lake Titicaca), and just this summer, Greece and Türkiye. Part of the reason I love visiting other countries is learning languages; I am fluent in English and Spanish and am trying to pick up Greek and Hebrew. Throughout my grade school time, I was very active in Boy Scouts, where I held many leadership positions and led three model rocket design competitions. (Despite my competitive advantage, I don't think I ever won!) If you couldn't tell from the structure of this paragraph, I am not the most organized person, but I have never let that hold me back from doing work that I am passionate about, so without taking up more of your time, some of my work and project experiences are found following the links below:"
+    ]
+  },
+  "contact": {
+    "linkedin": "https://www.linkedin.com/in/jonathan-behrens-meche/",
+    "email": "jbehrens702@gmail.com",
+    "rise": "https://app.joinrise.co/professional/lcokuxryce"
+  },
+  "labels": {
+    "selectedWork": { "text": "Selected Work", "approved": true },
+    "nextExperience": { "text": "Next Experience", "approved": true },
+    "contactHeading": { "text": "Get in touch:", "approved": true },
+    "readMore": { "text": "Read more", "approved": false },
+    "resume": { "text": "Resume", "approved": false },
+    "softwareHeading": { "text": "Software Projects", "approved": false },
+    "aboutHeading": { "text": "About Me", "approved": false },
+    "navWork": { "text": "Work", "approved": false },
+    "navAbout": { "text": "About", "approved": false },
+    "navContact": { "text": "Contact", "approved": false },
+    "menu": { "text": "Menu", "approved": false },
+    "logoAlt": { "text": "Jonathan Behrens' Portfolio", "approved": false },
+    "notFoundTitle": { "text": "Page not found", "approved": false },
+    "backHome": { "text": "Back to home", "approved": false },
+    "downloadFile": { "text": "Download", "approved": false },
+    "previewMarker": { "text": "Preview", "approved": false }
+  },
+  "experiences": [
+    {
+      "slug": "thermocouple-reader-system",
+      "homeTitle": "Thermocouple Reader System Design",
+      "pageTitle": "Thermocouple Reader (TCR) System",
+      "subtitle": "From August 2024 to present, I have been working with Dr. Tim Burdett (Messiah University Engineering) to design a thermocouple data acquisition system for Messiah University's Heat Transfer labs.",
+      "cardImage": { "seed": "home-card-thermocouple-reader-system.jpg" },
+      "skills": ["Project Management", "Electronics Design", "Product Development", "Validation", "Arduino (Coding Language)"],
+      "homeText": "From August 2024 to present, I have been working with Dr. Tim Burdett (Messiah University Engineering) to design a thermocouple data acquisition system for Messiah University's Heat Transfer labs.",
+      "blocks": [
+        { "id": "project-overview", "type": "heading", "text": "Project Overview:", "level": 2 },
+        { "id": "images-1", "type": "images", "items": [{ "image": { "seed": "thermocouple-reader-system-01.jpg" } }] },
+        {
+          "id": "skills",
+          "type": "facts",
+          "items": [
+            {
+              "label": "Skills Demonstrated",
+              "value": "Project Management, Electronics Design, Product Development, Validation, Arduino (Coding Language)"
+            }
+          ]
+        },
+        { "id": "images-2", "type": "images", "items": [{ "image": { "seed": "thermocouple-reader-system-02.png" } }] },
+        {
+          "id": "client",
+          "type": "facts",
+          "items": [{ "label": "Client", "value": "Dr. Tim Burdett\nProfessor, Messiah University" }]
+        },
+        { "id": "problem-statement", "type": "heading", "text": "Problem Statement", "level": 3 },
+        {
+          "id": "problem-quote",
+          "type": "quote",
+          "text": "\"In the past, the Heat Transfer class has used National Instruments DAQs with LabVIEW to take measurements from thermocouples over time. However, the hardware and software are expensive (~$2,000 per unit for hardware and ~$3,000 for multiple licenses for students), and the class wants a more affordable solution. One alternative is to use an Arduino with the thermocouple reader attachment, but this alternative is not plug-and-play – further design work is needed.\""
+        },
+        {
+          "id": "images-3",
+          "type": "images",
+          "items": [
+            { "image": { "seed": "thermocouple-reader-system-03.jpg" } },
+            { "image": { "seed": "thermocouple-reader-system-04.png" } },
+            { "image": { "seed": "thermocouple-reader-system-05.jpg" } }
+          ],
+          "caption": "Above, the completed TCR Version 1 is shown, both the physical model, its electrical schematic, and a depiction of one of the validation methods. Read the Version 1 report below!"
+        },
+        { "id": "project-report", "type": "file", "label": "2024 12 16-ProjectReport-V3.0.pdf" },
+        {
+          "id": "images-4",
+          "type": "images",
+          "items": [
+            { "image": { "seed": "thermocouple-reader-system-06.png" } },
+            { "image": { "seed": "thermocouple-reader-system-07.png" } }
+          ],
+          "caption": "These images compare a previous transient conduction experiment, completed with data logged by hand using a multimeter, versus our data when running a similar test."
+        },
+        {
+          "id": "version-1",
+          "type": "text",
+          "text": "During the first work cycle (Version 1), I served as the student project manager for a group of five. We took the project from a statement of need to a finished product in the first image within a semester (Fall 2024), or approximately three months. To achieve this, I employed Monday.com to track and assign tasks, and stepped into all roles and subgroups to assist where possible. As such, I ended up doing the complete soldering of the electronics, as well as a handful of edits to the code."
+        },
+        {
+          "id": "version-2",
+          "type": "text",
+          "text": "Unfortunately, this device had some issues discussed in the report, so for the next semester (Spring 2025) and moving forward, I have been working individually with Dr. Burdett, our client, to develop TCR Version 2."
+        },
+        { "id": "project-record", "type": "heading", "text": "Read my project record from the Version 1 system:", "level": 3 },
+        { "id": "project-record-file", "type": "file", "label": "2024 11 05-ProjectRecord-JB.docx" },
+        {
+          "id": "version-2-accuracy",
+          "type": "text",
+          "text": "The Version 2 TCR system will feature improved accuracy through the incorporation of a real-time clock circuit. This will also improve the Excel stream to limit data errors."
+        },
+        {
+          "id": "version-2-hardware",
+          "type": "text",
+          "text": "The system will also include serious hardware reliability improvements to make a more robust system by switching to SPI-communicating boards. This change also decreases the unit cost by upwards of 5%. Finally, the new system will natively support writing to an SD card and feature status indicators so the user will know immediately if data transmission has failed or if the sensors are attached incorrectly."
+        },
+        {
+          "id": "version-2-validation",
+          "type": "text",
+          "text": "The Version 2 system is expected to begin validation in late Fall 2025."
+        }
+      ]
+    },
+    {
+      "slug": "turbine-testing-stand",
+      "homeTitle": "Streamlining Wind Turbines - Collaboratory",
+      "pageTitle": "Turbine Testing Stand (TTS) Development",
+      "subtitle": "Throughout the Spring 2025 semester, I worked with another student to construct and validate a single-phase AC to 3-phase AC converter for the Streamlining Wind Turbines Collaboratory Project.",
+      "cardImage": { "seed": "home-card-turbine-testing-stand.jpg" },
+      "skills": ["Mechanical Design", "Electronics Design", "Sustainability", "Validation", "Teamwork", "Machining"],
+      "homeText": "Throughout the Spring 2025 semester, I worked with another student to construct and validate a single-phase AC to 3-phase AC converter for the Streamlining Wind Turbines Collaboratory Project.",
+      "blocks": [
+        { "id": "project-overview", "type": "heading", "text": "Project Overview:", "level": 2 },
+        { "id": "images-1", "type": "images", "items": [{ "image": { "seed": "turbine-testing-stand-01.jpg" } }] },
+        {
+          "id": "skills",
+          "type": "facts",
+          "items": [
+            {
+              "label": "Skills Demonstrated",
+              "value": "Mechanical Design, Electronics Design, Sustainability, Validation, Teamwork, Machining"
+            }
+          ]
+        },
+        {
+          "id": "images-2",
+          "type": "images",
+          "items": [
+            { "image": { "seed": "turbine-testing-stand-02.png" } },
+            { "image": { "seed": "turbine-testing-stand-03.png" } }
+          ]
+        },
+        {
+          "id": "clients",
+          "type": "facts",
+          "items": [
+            {
+              "label": "Clients",
+              "value": "WindAid Institute (Peru), Messiah University Collaboratory for Strategic Partnerships and Applied Research"
+            }
+          ]
+        },
+        { "id": "problem-statement", "type": "heading", "text": "Problem Statement", "level": 3 },
+        {
+          "id": "problem-quote",
+          "type": "quote",
+          "text": "\"It would be beneficial to the Streamlining Wind Turbine (SWT) team to create a system that generates 3-phase AC power to simulate power coming from a turbine. With this simulated power, the Turbine Monitoring System (TMS) and the battery can be tested in a controlled environment. Additionally, this interior test design will be quicker to set up and easier to control different power inputs to the system.\""
+        },
+        {
+          "id": "images-3",
+          "type": "images",
+          "items": [
+            { "image": { "seed": "turbine-testing-stand-04.jpg" } },
+            { "image": { "seed": "turbine-testing-stand-05.jpg" } },
+            { "image": { "seed": "turbine-testing-stand-06.jpg" } }
+          ],
+          "caption": "These images demonstrate the main goal of the TTS, using an AC motor (top right) to drive a 3-phase AC generator (bottom right). The red tape in the large picture is the rear of that generator, so as the motor spins, the generator, which is held concentric by the boards, can produce power. This whole system was built for less than $30. Below is our test stand design record."
+        },
+        { "id": "design-record", "type": "file", "label": "Test Stand Design Record.pdf" },
+        {
+          "id": "images-4",
+          "type": "images",
+          "items": [
+            { "image": { "seed": "turbine-testing-stand-07.jpg" } },
+            { "image": { "seed": "turbine-testing-stand-08.png" } }
+          ],
+          "caption": "Here shown is the testing setup and results, confirming the capacity to deliver above 300W, not yet meeting our criteria for use."
+        },
+        {
+          "id": "adapter-plate",
+          "type": "text",
+          "text": "My primary contribution to this project was the design of the adapter plate between the motor and generator. Since the goal was to build this stand using existing hardware as much as possible, I opted to attempt to use the blade attachment bracket already on the generator and the V-belt pulley that was attached to the motor. This required drilling three holes through the pulley, which would then have standoffs run through them to provide a rigid connection. Unfortunately, while assembling this system the first time, the old pulley warped considerably, so a new part needed to be bought to replace it."
+        },
+        {
+          "id": "final-design",
+          "type": "text",
+          "text": "Once this system was attached, there was still a great deal of stress on the system since we could not reasonably make our setup completely concentric. To mitigate this issue, I introduced some intentional play in the bolts interfacing the adapter that would allow limited movement without resistance normal to the axis of rotation. This final design, as shown in the results plot above, only makes about 300W, with 500 needed to accurately simulate the generator that will be on the final version, yet still likely powerful enough to perform preliminary testing."
+        }
+      ]
+    },
+    {
+      "slug": "victaulic-internship",
+      "homeTitle": "Victaulic Internship (Summer '25)",
+      "pageTitle": "Summer 2025 Internship: Victaulic",
+      "cardImage": { "seed": "home-card-victaulic-internship.png" },
+      "skills": ["Mechanical Design", "Electronics Design", "Product Development", "Validation", "GD&T", "CAD", "FEA"],
+      "homeText": "Throughout this internship, my main personal goal was to supplement and convert my previous project and academic experience to industry applications. As such, I spent as much time as possible learning about the operations and programs at all parts of the company. I gained valuable experience in a number of industry-standard hardware and software, including SolidWorks, Hexagon, PolyWorks, Ansys, Office, Keyence, and more.",
+      "blocks": [
+        { "id": "summary", "type": "heading", "text": "Summary", "level": 2 },
+        { "id": "summary-text", "type": "text", "text": "" },
+        { "id": "internship-overview", "type": "heading", "text": "Internship Overview:", "level": 2 },
+        { "id": "images-1", "type": "images", "items": [{ "image": { "seed": "victaulic-internship-01.png" } }] },
+        {
+          "id": "skills",
+          "type": "facts",
+          "items": [
+            {
+              "label": "Skills Demonstrated",
+              "value": "Mechanical Design, Electronics Design, Product Development, Validation, GD&T, CAD, FEA"
+            }
+          ]
+        },
+        { "id": "images-2", "type": "images", "items": [{ "image": { "seed": "victaulic-internship-02.png" } }] },
+        {
+          "id": "employer",
+          "type": "facts",
+          "items": [{ "label": "Employer", "value": "Victaulic Co, a leading manufacturer of construction piping systems." }]
+        },
+        { "id": "job-description", "type": "heading", "text": "Job Description", "level": 3 },
+        {
+          "id": "job-quote",
+          "type": "quote",
+          "text": "\"Working under Alex Murphy in the Tools Technology group, the intern will work on projects related to the design of electromechanical systems to prototype new products. In addition, the intern will engage with other team members and leaders to gain an understanding of the operations and mission of Victaulic. Several of these projects included analyzing the viability of transitioning current product offerings to cordless power, opening new market segments to the company.\""
+        },
+        {
+          "id": "images-3",
+          "type": "images",
+          "items": [
+            { "image": { "seed": "victaulic-internship-03.png" } },
+            { "image": { "seed": "victaulic-internship-04.png" } }
+          ],
+          "caption": "Some examples of work I performed in completing larger projects, including metrology and mechanical design. Most of the projects I was tasked with are potential New Product Development, so they are protected intellectual property and cannot be shared here. All files and images on this page are uploaded with permission."
+        },
+        {
+          "id": "images-4",
+          "type": "images",
+          "items": [{ "image": { "seed": "victaulic-internship-05.jpg" } }],
+          "caption": "Some of the Victaulic intern crew after one of our professional development events. I am second from the left in the back row."
+        },
+        {
+          "id": "industry-experience",
+          "type": "text",
+          "text": "Throughout this internship, my main personal goal was to supplement and convert my previous project and academic experience to industry applications. As such, I spent as much time as possible learning about the operations and programs at all parts of the company. I gained valuable experience in a number of industry-standard hardware and software, including SolidWorks, Hexagon, PolyWorks, Ansys, Office, Keyence, and more."
+        },
+        {
+          "id": "project-management",
+          "type": "text",
+          "text": "I also gained valuable experience through assisting with the Tools group's project management process, focusing on turning stakeholder input into more efficient processes, culminating in a redesigned workflow."
+        }
+      ]
+    },
+    {
+      "slug": "solidworks-experience",
+      "homeTitle": "SolidWorks Experience",
+      "pageTitle": "Personal SolidWorks Projects",
+      "subtitle": "A brief overview of some of my SolidWorks projects I have done beyond the scope of dedicated work shown on my other experiences.",
+      "cardImage": { "seed": "home-card-solidworks-experience.png" },
+      "skills": [],
+      "homeText": "A brief overview of some of my SolidWorks projects I have done beyond the scope of dedicated work shown on my other experiences.",
+      "blocks": [
+        { "id": "images-1", "type": "images", "items": [{ "image": { "seed": "solidworks-experience-01.png" } }] },
+        { "id": "gdt-heading", "type": "heading", "text": "GD&T Drawing Example", "level": 2 },
+        {
+          "id": "gdt-text",
+          "type": "text",
+          "text": "To demonstrate the power of Geometric Dimensioning and Tolerancing, as prescribed by ASME Y14.5, I put together this manufacturing drawing for an aluminum spacer that could have been used in the design of the [Turbine Testing Stand](/experiences/turbine-testing-stand). The part file was made during the project cycle, but I built this drawing in front of some friends later in a matter of minutes. It shows how geometric tolerancing makes it easy to identify and process critical areas while leaving more room for error in noncritical ones."
+        },
+        { "id": "tutorials-heading", "type": "heading", "text": "ENGR111 SolidWorks Tutorials", "level": 2 },
+        {
+          "id": "tutorials-text",
+          "type": "text",
+          "text": "While in ENGR111 at Messiah (my freshman year), I created a short series of tutorials breaking down a few of our homework assignments to demonstrate the power of SolidWorks and some helpful tricks for making the assigned parts. This really doesn't go beyond basic parametric modeling skills, but should be helpful to someone new to SolidWorks or CAD in general."
+        },
+        { "id": "tutorials-video", "type": "text", "text": "<https://www.youtube.com/watch?v=lXUrrETXG5M>" },
+        { "id": "images-2", "type": "images", "items": [{ "image": { "seed": "solidworks-experience-02.jpg" } }] },
+        { "id": "prints-heading", "type": "heading", "text": "Desktop 3D Prints", "level": 2 },
+        {
+          "id": "prints-text",
+          "type": "text",
+          "text": "I have a love for tangible models, in large part why I chose mechanical engineering as opposed to more theoretical fields, so I have a long history of using Tinkercad, then Fusion 360, and now SolidWorks to make physical models of things I am working on. These always present a fun design challenge to design parts that work as intended when being 3D printed, which involves a lot of tolerancing tables and jumping between CAD and Ultimaker Cura, my slicer of choice."
+        },
+        {
+          "id": "closing",
+          "type": "text",
+          "text": "I have a wealth of experience in SolidWorks for personal projects, predominantly for 3D printing. I have used the product for the development of parts, assemblies, and drawings of car components, desktop models, and tests of different physics phenomena."
+        }
+      ]
+    },
+    {
+      "slug": "volunteer-experience",
+      "homeTitle": "Service & Volunteer Work",
+      "pageTitle": "Volunteer Experience",
+      "subtitle": "Here is a synopsis of some of the service projects I have participated in recently.",
+      "cardImage": { "seed": "home-card-volunteer-experience.jpg" },
+      "skills": [],
+      "homeText": "Here is a synopsis of some of the service projects I have participated in recently.",
+      "blocks": [
+        { "id": "images-1", "type": "images", "items": [{ "image": { "seed": "volunteer-experience-01.jpg" } }] },
+        { "id": "impact-day-heading", "type": "heading", "text": "Lehigh Valley Intern Impact Day", "level": 2 },
+        {
+          "id": "impact-day-text",
+          "type": "text",
+          "text": "While working at Victaulic, our intern team joined others across the Valley for Intern Impact Day. At this event, we divided into groups to complete a variety of service projects throughout our local area. I volunteered with about half of the Victaulic crew at the Wildlands Conservancy, where we cleared brush and removed invasive species to prepare the ground for new, native plants across their Black River Sanctuary. It was a fantastic opportunity to spend a day working outside with my hands and beautifying the area around me. I also got to explore a gorgeous reserve I have passed by countless times without realizing it!"
+        },
+        { "id": "north-carolina-heading", "type": "heading", "text": "Service Project in North Carolina", "level": 2 },
+        {
+          "id": "north-carolina-text",
+          "type": "text",
+          "text": "During the spring of 2025, I had the opportunity to join a team heading to North Carolina to assist with flood restoration and recovery efforts from Hurricane Helene. The damage from the storm was intense in the mountainous areas of western NC, with many communities unlikely to have routine access to water or power until 2026. Our work consisted of cleaning up and organizing relief supplies, preparing and delivering meals, and straightening up the camp we were staying at."
+        },
+        {
+          "id": "images-2",
+          "type": "images",
+          "items": [
+            { "image": { "seed": "volunteer-experience-02.jpg" } },
+            { "image": { "seed": "volunteer-experience-03.jpg" } }
+          ]
+        },
+        { "id": "calvary-heading", "type": "heading", "text": "Volunteering at Calvary BFC", "level": 2 },
+        {
+          "id": "calvary-text",
+          "type": "text",
+          "text": "In the past few years, I have volunteered during the summer at Calvary Bible Fellowship Church for Vacation Bible School (VBS). I served as a games leader, guiding groups of up to 30 kids from first through 12th grade."
+        },
+        { "id": "midtown-heading", "type": "heading", "text": "Volunteering at Midtown", "level": 2 },
+        {
+          "id": "midtown-text",
+          "type": "text",
+          "text": "While at school, I am active with Midtown Community Church, right in the heart of Harrisburg, and as such, we participate in a lot of service work. I have packed backpacks and PSSA kits for elementary students at Ben Franklin; volunteered in the Children's Church program, serving kids in 1st to 5th grade; and worked the cameras and sound equipment for our Audio/Visual team."
+        },
+        { "id": "images-3", "type": "images", "items": [{ "image": { "seed": "volunteer-experience-04.jpg" } }] },
+        {
+          "id": "closing",
+          "type": "text",
+          "text": "Throughout my internship and personal time, I have been able to invest a lot into service and volunteering. It is a great privilege to get to give back to the people around me."
+        }
+      ]
+    }
+  ],
+  "software": [
+    { "id": "unquotable", "name": "[UN]Quotable", "link": "https://unquotable.626house.casa" },
+    { "id": "dashboard", "name": "Dashboard" }
+  ]
+}
