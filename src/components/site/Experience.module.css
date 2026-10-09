@@ -1,17 +1,22 @@
 /*
- * The full page of one experience. Theme variables come from globals.css.
- * A purple title band (highest emphasis), the owner's blocks on near-black,
- * and light callouts for quotes and fact lists.
+ * The full page of one experience (design A). Theme variables come from globals.css.
+ * A purple title band with cut corners (highest emphasis), the owner's blocks
+ * on the graph-paper page, orange section headings in a sticky left column,
+ * and light callouts with cut corners for quotes and fact lists.
+ *
+ * Links and buttons never get a clip-path of their own (it would clip the focus
+ * outline): their cut-corner shape is drawn by ::before (the edge) and ::after
+ * (the fill), behind the content.
  */
 
 .page {
-  padding-top: var(--space-2);
+  padding-top: clamp(1.25rem, 0.75rem + 2vw, 2.5rem);
 }
 
 /* ---------- Title band ---------- */
 
 .band {
-  padding-inline: var(--panel-inset);
+  display: block;
 }
 
 .bandPanel {
@@ -20,12 +25,18 @@
   position: relative;
   isolation: isolate;
   overflow: clip;
-  padding-block: clamp(3rem, 2rem + 5vw, 6.5rem) clamp(2.5rem, 2rem + 3vw, 4.5rem);
+  padding: clamp(2.5rem, 1.5rem + 4.5vw, 5.5rem) clamp(1.25rem, 0.5rem + 3.5vw, 4.5rem)
+    clamp(3rem, 2rem + 3.5vw, 5rem);
   color: var(--color-on-purple);
-  background:
-    radial-gradient(34rem 26rem at 95% 0%, rgb(179 76 224 / 0.55), transparent 70%),
-    linear-gradient(140deg, var(--color-purple-deep) 0%, var(--color-purple-dark) 50%, var(--color-purple-ink) 100%);
-  border-radius: var(--radius-xl);
+  background: linear-gradient(118deg, var(--color-purple-deep) 0%, var(--color-purple-dark) 52%, var(--color-purple-ink) 100%);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut))
+  );
 }
 
 .bandBackdrop {
@@ -39,10 +50,17 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgb(255 255 255 / 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 0.06) 1px, transparent 1px);
-  background-size: 3.5rem 3.5rem;
-  mask-image: radial-gradient(ellipse 60% 90% at 85% 30%, black, transparent 75%);
+    linear-gradient(rgb(255 255 255 / 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.08) 1px, transparent 1px),
+    linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+  background-size:
+    var(--grid-coarse) var(--grid-coarse),
+    var(--grid-coarse) var(--grid-coarse),
+    var(--grid-fine) var(--grid-fine),
+    var(--grid-fine) var(--grid-fine);
+  -webkit-mask-image: radial-gradient(ellipse 60% 90% at 85% 30%, #000, transparent 75%);
+  mask-image: radial-gradient(ellipse 60% 90% at 85% 30%, #000, transparent 75%);
 }
 
 .bandMarkTurn {
@@ -54,16 +72,17 @@
   translate: 0 -50%;
 }
 
+/* The ring can sit under a long title: it stays faint, so white text keeps at least 4.5:1. */
 .bandMark {
   width: 100%;
   height: 100%;
+  opacity: 0.3;
 }
 
-/* Where the ring can sit under the subtitle, it stays faint, so white text keeps at least 4.5:1. */
-@media (max-width: 1099px) {
-  .bandMark {
-    opacity: 0.3;
-  }
+.bandTicks {
+  --mark-color: rgb(255 255 255 / 0.7);
+  --mark-inset: 0.875rem;
+  --mark-size: 1.5rem;
 }
 
 .bandInner {
@@ -71,54 +90,55 @@
 }
 
 .title {
-  max-width: 18ch;
+  max-width: 22ch;
   margin-bottom: var(--space-6);
-  font-size: clamp(2.375rem, 1.3rem + 4.4vw, 5rem);
-  font-weight: 700;
-  line-height: 1.02;
-  letter-spacing: -0.045em;
+  font-size: clamp(1.875rem, 1.1rem + 3.4vw, 4rem);
+  font-weight: 900;
+  line-height: 1.06;
+  letter-spacing: 0.02em;
 }
 
 .subtitle {
-  max-width: 46rem;
+  max-width: 60ch;
   margin: 0;
   color: var(--color-on-purple-muted);
-  font-size: clamp(1.0625rem, 0.95rem + 0.45vw, 1.3125rem);
-  line-height: 1.6;
+  font-size: clamp(0.9375rem, 0.9rem + 0.25vw, 1.0625rem);
+  line-height: 1.7;
 }
 
 .bandSkills {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: 0.375rem;
   margin-top: var(--space-8) !important;
 }
 
 .bandSkills li {
-  padding: 0.35rem 0.95rem;
+  padding: 0.2rem 0.6rem;
   color: var(--color-on-purple);
-  font-family: var(--font-display);
-  font-size: 0.875rem;
-  font-weight: 500;
-  background: rgb(255 255 255 / 0.1);
-  border: 1px solid rgb(255 255 255 / 0.32);
-  border-radius: 999px;
-  backdrop-filter: blur(4px);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgb(0 0 0 / 0.18);
+  border: 1px solid rgb(255 255 255 / 0.55);
 }
 
 /* ---------- Body: segments ---------- */
 
 .body {
-  padding-top: clamp(2.5rem, 2rem + 3vw, 5rem);
+  padding-top: clamp(2rem, 1.5rem + 3vw, 4.5rem);
 }
 
 .segment {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
   padding-block: clamp(2rem, 1.5rem + 2vw, 3.5rem);
 }
 
+/* A thin rule between sections; the orange mark of the heading below it starts the next one. */
 .segment + .segment:not(.subsegment) {
   border-top: 1px solid var(--color-border);
 }
@@ -134,13 +154,53 @@
 
 .railSticky {
   position: relative;
+  padding-top: 1.5rem;
+}
+
+/* The small orange square with a cut corner, and a ruler that fades out to the right. */
+.railSticky::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0.875rem;
+  height: 0.875rem;
+  background: var(--color-orange);
+  clip-path: polygon(0 0, 100% 0, 100% 60%, 60% 100%, 0 100%);
+}
+
+.railSticky::after {
+  content: "";
+  position: absolute;
+  top: 0.1875rem;
+  left: 1.5rem;
+  right: 0;
+  max-width: 12rem;
+  height: 0.5rem;
+  background:
+    linear-gradient(90deg, var(--color-orange), var(--color-orange)) left bottom / 100% 2px no-repeat,
+    repeating-linear-gradient(90deg, rgb(255 122 26 / 0.6) 0 1px, transparent 1px var(--grid-fine)) left bottom / 100%
+      0.5rem no-repeat;
+  -webkit-mask-image: linear-gradient(90deg, #000 10%, transparent 95%);
+  mask-image: linear-gradient(90deg, #000 10%, transparent 95%);
+  transform-origin: left center;
+}
+
+.subsegment .railSticky {
+  padding-top: 0;
+}
+
+.subsegment .railSticky::before,
+.subsegment .railSticky::after {
+  display: none;
 }
 
 .heading {
   margin: 0;
-  font-size: clamp(1.625rem, 1.2rem + 1.5vw, 2.25rem);
-  font-weight: 650;
-  letter-spacing: -0.03em;
+  color: var(--color-orange);
+  font-size: clamp(1.25rem, 1rem + 1vw, 1.625rem);
+  font-weight: 700;
+  letter-spacing: 0.05em;
 }
 
 .railSticky .subheading {
@@ -149,23 +209,6 @@
 
 .railSticky .heading + .subheading {
   margin-top: var(--space-4);
-}
-
-/* A short purple blade above each section heading. */
-.railSticky::before {
-  content: "";
-  display: block;
-  width: 2.75rem;
-  height: 0.3rem;
-  margin-bottom: var(--space-4);
-  background: linear-gradient(90deg, var(--color-purple-bright), var(--color-lavender));
-  border-radius: 0.3rem 0.05rem;
-}
-
-.subsegment .railSticky::before {
-  width: 1.5rem;
-  height: 0.2rem;
-  opacity: 0.75;
 }
 
 .main {
@@ -183,11 +226,12 @@
 .subheading {
   margin: var(--space-4) 0 0;
   color: var(--color-accent);
-  font-size: clamp(1.1875rem, 1.05rem + 0.5vw, 1.375rem);
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+  letter-spacing: 0.05em;
 }
 
 .prose {
-  max-width: 44rem;
+  max-width: var(--measure);
   color: var(--color-text);
 }
 
@@ -195,25 +239,30 @@
   margin-bottom: 0;
 }
 
-/* ---------- Quote: a light callout ---------- */
+/* ---------- Quote: a light callout with cut corners ---------- */
 
 .quote {
   --focus-ring: var(--color-callout-accent);
   --color-link: var(--color-callout-accent);
   position: relative;
-  margin: var(--space-4) 0;
-  padding: clamp(2.5rem, 2rem + 2vw, 3.5rem) clamp(1.5rem, 1rem + 3vw, 3.5rem) clamp(1.75rem, 1.5rem + 1.5vw, 2.75rem);
+  max-width: calc(var(--measure) + 8rem);
+  margin: var(--space-2) 0;
+  padding: clamp(1.5rem, 1.25rem + 1.5vw, 2.5rem) clamp(1.5rem, 1rem + 3vw, 3.25rem) clamp(1.75rem, 1.5rem + 1.5vw, 2.75rem)
+    clamp(1.75rem, 1.25rem + 3vw, 3.5rem);
   color: var(--color-callout-text);
-  font-family: var(--font-display);
-  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
-  font-weight: 400;
-  line-height: 1.55;
-  letter-spacing: -0.01em;
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+  line-height: 1.7;
   background:
-    radial-gradient(24rem 14rem at 100% 0%, rgb(199 125 255 / 0.18), transparent 70%),
+    linear-gradient(var(--color-orange), var(--color-orange)) left top / 0.375rem 100% no-repeat,
     var(--color-callout);
-  border-radius: var(--radius-blade);
-  box-shadow: var(--shadow-soft);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut))
+  );
 }
 
 .quote p:last-child {
@@ -221,16 +270,13 @@
 }
 
 .quoteMark {
-  position: absolute;
-  top: -1.1rem;
-  left: clamp(1.5rem, 1rem + 3vw, 3.5rem);
-  width: 3.25rem;
+  width: 2.75rem;
   height: auto;
-  padding: 0.6rem 0.55rem;
+  margin-bottom: var(--space-4);
+  padding: 0.55rem 0.5rem;
   color: var(--color-on-purple);
-  background: linear-gradient(135deg, var(--color-purple-bright), var(--color-purple-dark));
-  border-radius: 0.9rem 0.25rem;
-  box-shadow: var(--shadow-glow);
+  background: var(--color-purple-dark);
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%);
 }
 
 /* ---------- Facts: a light callout panel ---------- */
@@ -250,14 +296,23 @@
 .panel {
   --focus-ring: var(--color-callout-accent);
   --color-link: var(--color-callout-accent);
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
   padding: clamp(1.5rem, 1.25rem + 1vw, 2.25rem);
   color: var(--color-callout-text);
-  background: var(--color-callout);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-soft);
+  background:
+    linear-gradient(var(--color-orange), var(--color-orange)) left top / 100% 0.25rem no-repeat,
+    var(--color-callout);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut))
+  );
 }
 
 .facts {
@@ -269,23 +324,22 @@
 .panel > .facts + .facts,
 .panel > .figure + .facts {
   padding-top: var(--space-6);
-  border-top: 1px solid rgb(28 19 38 / 0.12);
+  border-top: 1px dashed rgb(28 19 38 / 0.25);
 }
 
 .fact dt {
   margin-bottom: var(--space-1);
   color: var(--color-callout-accent);
-  font-family: var(--font-display);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-family: var(--font-ui);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .fact dd {
   margin: 0;
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: 0.9375rem;
+  line-height: 1.65;
   white-space: pre-line;
 }
 
@@ -303,27 +357,50 @@
 }
 
 .galleryItem {
+  --mark-inset: 0.625rem;
+  --mark-size: 1.25rem;
   position: relative;
   min-width: 0;
   max-width: calc(var(--w) * 1px);
   overflow: hidden;
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-soft);
+  view-timeline: --frame block;
 }
 
+/* Each photo has cut corners (top right, bottom left). The image keeps its own shape. */
 .image {
   width: 100%;
   height: auto;
-  transition: transform 0.9s var(--ease-out);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut-sm)) 0,
+    100% var(--cut-sm),
+    100% 100%,
+    var(--cut-sm) 100%,
+    0 calc(100% - var(--cut-sm))
+  );
 }
 
-/* One key image in the text column: large, in the blade shape, never taller than the screen. */
+/* The scan line: see Site.module.css. Hidden at rest. */
+.scan {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent calc(100% - 5rem),
+    rgb(255 122 26 / 0.22) calc(100% - 2px),
+    var(--color-orange) calc(100% - 2px)
+  );
+  opacity: 0;
+  transform: translateY(-100%);
+}
+
+/* One key image in the text column: large, never taller than the screen. */
 .gallerySingle .galleryItem,
 .gallerySpread .galleryItem {
   /* The width that keeps the image at most min(75svh, 40rem) tall; set before it loads, so nothing shifts. */
   width: min(100%, calc(min(75svh, 40rem) * var(--ar)), calc(var(--w) * 1px));
-  border-radius: var(--radius-blade);
+  --cut-sm: 1.25rem;
 }
 
 /* Logos inside the fact panel: on white tiles, never cropped. */
@@ -340,35 +417,33 @@
   max-width: none;
   padding: var(--space-3) var(--space-4);
   background: #ffffff;
-  border: 1px solid rgb(28 19 38 / 0.1);
-  border-radius: var(--radius-lg);
-  box-shadow: none;
+  border: 1px solid rgb(28 19 38 / 0.12);
 }
 
 .galleryLogo .image {
   max-height: 4.5rem;
   object-fit: contain;
+  clip-path: none;
 }
 
 .caption {
   position: relative;
-  max-width: 44rem;
+  max-width: var(--measure);
   margin-top: var(--space-4);
   padding-left: var(--space-4);
   color: var(--color-text-muted);
-  font-size: 0.9375rem;
-  line-height: 1.6;
+  font-size: 0.875rem;
+  line-height: 1.65;
 }
 
 .caption::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 0.3em;
-  bottom: 0.3em;
-  width: 3px;
-  background: linear-gradient(180deg, var(--color-purple-bright), transparent);
-  border-radius: 3px;
+  top: 0.35em;
+  bottom: 0.35em;
+  width: 2px;
+  background: linear-gradient(180deg, var(--color-orange), transparent);
 }
 
 /* ---------- File download ---------- */
@@ -378,57 +453,80 @@
 }
 
 .fileLink {
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   gap: var(--space-4);
   max-width: 100%;
   min-height: var(--tap-size);
-  padding: var(--space-3) var(--space-6) var(--space-3) var(--space-3);
+  padding: var(--space-3) var(--space-8) var(--space-3) var(--space-3);
   color: var(--color-text);
   text-decoration: none;
+}
+
+.fileLink::before,
+.fileLink::after,
+.nextLink::before,
+.nextLink::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  --c: var(--cut-sm);
+  clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, var(--c) 100%, 0 calc(100% - var(--c)));
+}
+
+/* The edge. */
+.fileLink::before,
+.nextLink::before {
+  inset: 0;
+  background: var(--color-border);
+  transition: background-color 0.3s ease;
+}
+
+/* The fill, 1 px inside the edge. */
+.fileLink::after {
+  inset: 1px;
   background: linear-gradient(180deg, var(--color-surface-raised), var(--color-surface));
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  transition:
-    border-color 0.3s ease,
-    box-shadow 0.3s ease,
-    transform 0.3s var(--ease-out);
 }
 
 .fileLink:hover {
   color: var(--color-heading);
-  border-color: rgb(199 125 255 / 0.5);
-  box-shadow: var(--shadow-glow);
+}
+
+.fileLink:hover::before,
+.nextLink:hover::before {
+  background: var(--color-orange);
 }
 
 .fileIconWrap {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 3rem;
-  height: 3rem;
-  color: var(--color-on-purple);
-  background: linear-gradient(135deg, var(--color-purple-deep), var(--color-purple-dark));
-  border-radius: 0.9rem 0.3rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--color-on-orange);
+  background: var(--color-orange);
+  clip-path: polygon(0 0, calc(100% - 0.625rem) 0, 100% 0.625rem, 100% 100%, 0 100%);
 }
 
 .fileIcon {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.375rem;
+  height: 1.375rem;
 }
 
 .fileText {
   min-width: 0;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .fileAction {
   display: block;
-  color: var(--color-accent);
-  font-family: var(--font-display);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  color: var(--color-orange);
+  font-family: var(--font-ui);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .fileName {
@@ -438,9 +536,9 @@
 
 .fileArrow {
   flex-shrink: 0;
-  width: 1.25rem;
-  height: 1.25rem;
-  color: var(--color-accent);
+  width: 1.125rem;
+  height: 1.125rem;
+  color: var(--color-orange);
   transition: transform 0.3s var(--ease-out);
 }
 
@@ -451,35 +549,39 @@
 }
 
 .nextLink {
+  --mark-inset: 0.625rem;
+  --mark-size: 1.125rem;
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
   gap: clamp(1rem, 0.5rem + 2vw, 2rem);
   min-height: var(--tap-size);
-  padding: clamp(1rem, 0.75rem + 1vw, 1.5rem);
+  padding: clamp(1.25rem, 1rem + 1vw, 1.75rem) clamp(1.25rem, 1rem + 1.5vw, 2.25rem);
   color: var(--color-heading);
   text-decoration: none;
-  background:
-    radial-gradient(30rem 16rem at 100% 50%, rgb(141 32 196 / 0.28), transparent 70%),
-    var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  transition:
-    border-color 0.3s ease,
-    box-shadow 0.4s ease;
 }
 
-.nextLink:hover {
-  border-color: rgb(199 125 255 / 0.5);
-  box-shadow: var(--shadow-glow);
+.nextLink::before,
+.nextLink::after {
+  --c: var(--cut);
+}
+
+.nextLink::after {
+  inset: 1px;
+  background:
+    radial-gradient(30rem 16rem at 100% 50%, rgb(141 32 196 / 0.3), transparent 70%),
+    var(--color-surface);
 }
 
 .nextThumb {
+  position: relative;
   flex-shrink: 0;
   width: clamp(4.5rem, 3rem + 5vw, 7.5rem);
   aspect-ratio: 1;
   overflow: hidden;
-  border-radius: 50%;
-  box-shadow: 0 0 0 0.25rem var(--color-purple-dark);
+  background: var(--color-purple-dark);
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
 }
 
 .nextImage {
@@ -492,42 +594,53 @@
 .nextText {
   display: flex;
   flex-direction: column;
+  gap: var(--space-1);
   min-width: 0;
 }
 
 .nextLabel {
-  color: var(--color-accent);
-  font-family: var(--font-display);
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  color: var(--color-orange);
+  font-family: var(--font-ui);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
 .nextTitle {
   font-family: var(--font-display);
-  font-size: clamp(1.375rem, 1rem + 1.8vw, 2.5rem);
-  font-weight: 650;
+  font-size: clamp(1.0625rem, 0.85rem + 1.2vw, 1.875rem);
+  font-weight: 800;
   line-height: 1.15;
-  letter-spacing: -0.03em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
+/* An orange parallelogram with a dark arrow. */
 .nextGo {
+  position: relative;
+  isolation: isolate;
   display: grid;
   place-items: center;
   flex-shrink: 0;
   width: 3.5rem;
-  height: 3.5rem;
+  height: 2.75rem;
   margin-left: auto;
-  color: var(--color-on-purple);
-  background: linear-gradient(135deg, var(--color-purple-deep), var(--color-purple-dark));
-  border-radius: 50%;
+  color: var(--color-on-orange);
   transition: transform 0.35s var(--ease-out);
 }
 
+.nextGo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-orange);
+  transform: skewX(-14deg);
+}
+
 .nextArrow {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.375rem;
+  height: 1.375rem;
 }
 
 /* ---------- Wider screens ---------- */
@@ -574,7 +687,7 @@
 
 @media (min-width: 1024px) {
   .segment {
-    grid-template-columns: 15rem minmax(0, 1fr);
+    grid-template-columns: 16rem minmax(0, 1fr);
     column-gap: clamp(2.5rem, 1rem + 3vw, 5rem);
   }
 
@@ -588,38 +701,47 @@
   }
 
   .heading {
-    font-size: 1.625rem;
-    line-height: 1.2;
+    font-size: 1.375rem;
+    line-height: 1.25;
   }
 }
 
 /* ---------- Motion (none with prefers-reduced-motion) ---------- */
 
 @media (prefers-reduced-motion: no-preference) {
+  .bandPanel {
+    animation: band-wipe 1s var(--ease-snap) both;
+  }
+
   .title {
-    animation: band-rise 1s var(--ease-out) 0.1s both;
+    animation: band-rise 1s var(--ease-out) 0.2s both;
   }
 
   .subtitle {
-    animation: band-rise 1s var(--ease-out) 0.25s both;
+    animation: band-rise 1s var(--ease-out) 0.35s both;
   }
 
   .bandSkills li {
     animation: band-rise 0.8s var(--ease-out) both;
-    animation-delay: calc(0.4s + var(--i, 0) * 60ms);
+    animation-delay: calc(0.5s + var(--i, 0) * 60ms);
   }
 
   .bandMarkTurn {
     animation: band-spin 1.6s var(--ease-out) both;
   }
 
-  .galleryItem:hover .image,
-  .nextLink:hover .nextImage {
-    transform: scale(1.04);
+  .bandTicks::before {
+    animation: tick-draw 0.7s var(--ease-snap) 0.6s both;
+    transform-origin: top left;
   }
 
-  .fileLink:hover {
-    transform: translateY(-2px);
+  .bandTicks::after {
+    animation: tick-draw 0.7s var(--ease-snap) 0.75s both;
+    transform-origin: bottom right;
+  }
+
+  .nextLink:hover .nextImage {
+    transform: scale(1.06);
   }
 
   .fileLink:hover .fileArrow {
@@ -627,7 +749,12 @@
   }
 
   .nextLink:hover .nextGo {
-    transform: translateX(6px) rotate(-8deg);
+    transform: translateX(6px);
+  }
+
+  .galleryItem:hover .scan {
+    animation: scan-sweep 0.9s var(--ease-in-out) both;
+    animation-timeline: auto;
   }
 
   @supports (animation-timeline: view()) {
@@ -635,6 +762,51 @@
       animation: band-turn linear both;
       animation-timeline: view();
     }
+
+    .railSticky::before {
+      animation: square-turn linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 35%;
+    }
+
+    .railSticky::after {
+      animation: rule-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 40%;
+    }
+
+    .scan {
+      animation: scan-sweep linear both;
+      animation-timeline: --frame;
+      animation-range: entry 40% cover 55%;
+    }
+
+    .galleryItem:hover .scan {
+      animation: scan-sweep 0.9s var(--ease-in-out) both;
+      animation-timeline: auto;
+    }
+  }
+
+  @supports not (animation-timeline: view()) {
+    :global(html[data-motion="io"]) [data-shown] > .scan {
+      animation: scan-sweep 1.2s var(--ease-in-out) 0.35s both;
+    }
+  }
+}
+
+@keyframes band-wipe {
+  from {
+    clip-path: polygon(0 0, 0 0, 0 0, 0 0, 0 0, 0 0);
+  }
+  to {
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--cut)) 0,
+      100% var(--cut),
+      100% 100%,
+      var(--cut) 100%,
+      0 calc(100% - var(--cut))
+    );
   }
 }
 
@@ -662,13 +834,50 @@
   }
 }
 
+@keyframes tick-draw {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+
+@keyframes square-turn {
+  from {
+    transform: rotate(-180deg) scale(0.4);
+    opacity: 0;
+  }
+}
+
+@keyframes rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes scan-sweep {
+  0% {
+    opacity: 1;
+    transform: translateY(-100%);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .image,
-  .fileLink,
+  .fileLink::before,
+  .nextLink::before,
   .fileArrow,
-  .nextLink,
   .nextImage,
   .nextGo {
     transition: none;
+  }
+
+  .scan {
+    display: none;
   }
 }

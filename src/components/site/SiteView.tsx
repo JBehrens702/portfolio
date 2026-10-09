@@ -41,11 +41,15 @@ export function SiteChrome({ site, linkBase, onHome, children }: ViewProps & { o
   );
 }
 
-/** A section heading with a small turning aperture and a rule. Hidden without its label. */
-function SectionHeading({ id, text, aperture }: { id: string; text: string | null; aperture: string }) {
+/**
+ * An orange section heading after design A: a small square with a cut corner,
+ * the heading, and a rule with tick marks that fades out to the right. The
+ * square and the rule are aria-hidden graphics without text. Hidden without its label.
+ */
+function SectionHeading({ id, text }: { id: string; text: string | null }) {
   return text ? (
     <div className={styles.sectionHead} data-reveal="">
-      <Aperture id={aperture} className={styles.sectionMark} />
+      <span className={styles.sectionMark} aria-hidden="true" />
       <h2 id={id} className={styles.sectionHeading}>
         {text}
       </h2>
@@ -54,7 +58,10 @@ function SectionHeading({ id, text, aperture }: { id: string; text: string | nul
   ) : null;
 }
 
-/** The home page in the order of the approved sketch: hero, experiences, software, intro. */
+/**
+ * The home page in the order of sketch A: hero, skills, the work grid (the first
+ * experience as a full-width purple card, the others in pairs), software, intro.
+ */
 export function HomeView({ site, linkBase }: ViewProps) {
   const workHeading = labelText(site, "selectedWork");
   const softwareHeading = labelText(site, "softwareHeading");
@@ -75,7 +82,7 @@ export function HomeView({ site, linkBase }: ViewProps) {
             aria-labelledby={workHeading ? "work-heading" : undefined}
           >
             <div className="container">
-              <SectionHeading id="work-heading" text={workHeading} aperture="work-aperture" />
+              <SectionHeading id="work-heading" text={workHeading} />
               <div className={styles.summaries}>
                 {site.experiences.map((experience, i) => (
                   <ExperienceSummary
@@ -84,7 +91,6 @@ export function HomeView({ site, linkBase }: ViewProps) {
                     linkBase={linkBase}
                     readMore={readMore}
                     featured={i === 0}
-                    reverse={i % 2 === 1}
                   />
                 ))}
               </div>
@@ -99,7 +105,7 @@ export function HomeView({ site, linkBase }: ViewProps) {
             aria-labelledby={softwareHeading ? "software-heading" : undefined}
           >
             <div className="container">
-              <SectionHeading id="software-heading" text={softwareHeading} aperture="software-aperture" />
+              <SectionHeading id="software-heading" text={softwareHeading} />
               <div className={styles.cards}>
                 {site.software.map((card, i) => (
                   <SoftwareCard key={card.id} card={card} linkBase={linkBase} index={i} />
@@ -116,16 +122,13 @@ export function HomeView({ site, linkBase }: ViewProps) {
             aria-labelledby={aboutHeading ? "about-heading" : undefined}
           >
             <div className="container">
+              <SectionHeading id="about-heading" text={aboutHeading} />
               <div className={styles.about} data-reveal="">
-                <div className={styles.aboutAside}>
-                  {aboutHeading && (
-                    <h2 id="about-heading" className={styles.aboutHeading}>
-                      {aboutHeading}
-                    </h2>
-                  )}
+                <div className={styles.aboutAside} aria-hidden="true">
                   <div className={styles.aboutMarkTurn}>
                     <Aperture id="about-aperture" className={styles.aboutMark} />
                   </div>
+                  <span className="corner-marks" />
                 </div>
                 <div className={styles.aboutText}>
                   {intro.map((paragraph, i) => (
@@ -163,22 +166,24 @@ export function NotFoundView({ site, linkBase }: ViewProps) {
   const backHome = labelText(site, "backHome");
   return (
     <SiteChrome site={site} linkBase={linkBase} onHome={false}>
-      <main id="main" className={styles.notFound}>
+      <main id="main" className={`container ${styles.notFound}`}>
         <div className={styles.notFoundPanel}>
           <div className={styles.notFoundMarkTurn} aria-hidden="true">
             <Aperture id="not-found-aperture" tone="ghost" className={styles.notFoundMark} />
           </div>
-          <div className={`container ${styles.notFoundBody}`}>
+          <span className={`corner-marks ${styles.panelTicks}`} aria-hidden="true" />
+          <div className={styles.notFoundBody}>
             {heading && <h1 className={styles.notFoundTitle}>{heading}</h1>}
             {backHome && (
               <p>
-                <a href={homeHref(linkBase)} className={styles.buttonLight}>
+                <a href={homeHref(linkBase)} className={styles.buttonPrimary}>
                   {backHome}
                   <ArrowIcon className={styles.arrow} />
                 </a>
               </p>
             )}
           </div>
+          <span className="hazard" aria-hidden="true" />
         </div>
       </main>
     </SiteChrome>
@@ -188,14 +193,16 @@ export function NotFoundView({ site, linkBase }: ViewProps) {
 /** Shown when no content is published or configured: the site title only (KTD12). */
 export function EmptySiteView({ title }: { title: string }) {
   return (
-    <main id="main" className={styles.notFound}>
+    <main id="main" className={`container ${styles.notFound}`}>
       <div className={styles.notFoundPanel}>
         <div className={styles.notFoundMarkTurn} aria-hidden="true">
           <Aperture id="empty-aperture" tone="ghost" className={styles.notFoundMark} />
         </div>
-        <div className={`container ${styles.notFoundBody}`}>
+        <span className={`corner-marks ${styles.panelTicks}`} aria-hidden="true" />
+        <div className={styles.notFoundBody}>
           <h1 className={styles.notFoundTitle}>{title}</h1>
         </div>
+        <span className="hazard" aria-hidden="true" />
       </div>
     </main>
   );

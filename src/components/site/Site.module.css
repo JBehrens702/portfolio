@@ -1,156 +1,211 @@
 /*
- * Home page and shared parts: hero, skills band, work rows, software cards,
- * about, and the 404 page. Theme variables come from globals.css.
- * Colour by emphasis: purple panels (hero, featured work), near-black cards.
+ * Home page and shared parts (design A, "Blueprint grid"): hero, skill tags,
+ * the work grid, software cards, about, and the 404 page. Theme variables come
+ * from globals.css. Colour by emphasis: purple panels with cut corners (hero,
+ * featured work), charcoal cards with cut corners, orange headings and marks.
+ *
+ * A cut-corner card with a 1 px edge: the element paints the edge colour and is
+ * clipped to the chamfer; its ::before paints the fill, 1 px inside, clipped to
+ * the same chamfer. The children sit above it (z-index 1).
  */
 
 /* ---------- Buttons and links ---------- */
 
+.buttonPrimary,
 .buttonLight,
 .buttonGhost {
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  min-height: 3rem;
-  padding: var(--space-2) var(--space-6);
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 600;
+  gap: 0.625rem;
+  min-height: 3.25rem;
+  padding: 0.5rem 2rem;
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   text-decoration: none;
-  border-radius: 999px;
+}
+
+/* The parallelogram of each button, drawn behind the text, so the square focus outline is not clipped. */
+.buttonPrimary::before,
+.buttonLight::before,
+.buttonGhost::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transform: skewX(-14deg);
   transition:
     background-color 0.25s ease,
-    color 0.25s ease,
-    box-shadow 0.3s ease,
-    transform 0.3s var(--ease-out);
+    border-color 0.25s ease,
+    transform 0.35s var(--ease-out);
 }
 
-/* The highest-emphasis button on a purple panel: white with dark purple text. */
-.buttonLight {
-  color: var(--color-purple-dark);
-  background: var(--color-on-purple);
-  box-shadow: 0 0.75rem 2rem -0.75rem rgb(0 0 0 / 0.5);
+.buttonPrimary:focus-visible,
+.buttonLight:focus-visible,
+.buttonGhost:focus-visible {
+  outline-offset: 6px;
 }
 
+/* The orange button with dark text: the primary action. */
+.buttonPrimary,
+.buttonPrimary:hover {
+  color: var(--color-on-orange);
+}
+
+.buttonPrimary::before {
+  background: var(--color-orange);
+  box-shadow: 0 0.75rem 1.75rem -0.75rem rgb(0 0 0 / 0.6);
+}
+
+.buttonPrimary:hover::before {
+  background: #ff8f3d;
+}
+
+/* On a purple panel: white with dark purple text. */
+.buttonLight,
 .buttonLight:hover {
   color: var(--color-purple-dark);
-  box-shadow: 0 1rem 2.5rem -0.75rem rgb(0 0 0 / 0.6);
 }
 
-.buttonGhost {
-  color: var(--color-on-purple);
-  background: rgb(255 255 255 / 0.08);
-  border: 1px solid rgb(255 255 255 / 0.4);
+.buttonLight::before {
+  background: var(--color-on-purple);
 }
 
+.buttonLight:hover::before {
+  background: #f6e3ff;
+}
+
+/* The second button on a purple panel: a white outline. */
+.buttonGhost,
 .buttonGhost:hover {
   color: var(--color-on-purple);
-  background: rgb(255 255 255 / 0.16);
+}
+
+.buttonGhost::before {
+  background: rgb(255 255 255 / 0.06);
+  border: 1px solid rgb(255 255 255 / 0.65);
+}
+
+.buttonGhost:hover::before {
+  background: rgb(255 255 255 / 0.14);
+  border-color: var(--color-on-purple);
 }
 
 .buttonIcon,
 .buttonIconDown,
 .arrow {
   flex-shrink: 0;
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1rem;
+  height: 1rem;
   transition: transform 0.3s var(--ease-out);
 }
 
+/* "Read more" on a charcoal card: orange capitals with an angled bar that grows on hover. */
 .arrowLink {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  align-self: flex-start;
   min-height: var(--tap-size);
-  color: var(--color-link);
-  font-family: var(--font-display);
-  font-weight: 600;
+  color: var(--color-orange);
+  font-family: var(--font-ui);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   text-decoration: none;
-  background: linear-gradient(currentColor, currentColor) left calc(100% - 0.6rem) / 0 2px no-repeat;
-  transition: background-size 0.35s var(--ease-out);
 }
 
-.arrowLink:hover {
-  background-size: calc(100% - 1.625rem) 2px;
+.arrowLink::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 1.5rem;
+  bottom: 0.45rem;
+  height: 2px;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 2px) 100%, 0 100%);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.35s var(--ease-out);
 }
 
-.textLink {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--tap-size);
-  margin-top: var(--space-2);
-  font-weight: 700;
+.arrowLink:hover,
+.arrowLink:focus-visible {
+  color: var(--color-orange);
+}
+
+.arrowLink:hover::after,
+.arrowLink:focus-visible::after {
+  transform: scaleX(1);
 }
 
 /* ---------- Hero ---------- */
 
 .hero {
-  padding: var(--space-2) var(--panel-inset) 0;
+  padding-top: clamp(1.25rem, 0.75rem + 2vw, 2.5rem);
 }
 
+/* The purple panel: cut corners at the top right and the bottom left. Darker
+   towards the photo, so the orange corner marks there keep 3:1 or more. */
 .heroPanel {
   --focus-ring: var(--color-on-purple);
   --color-heading: var(--color-on-purple);
   position: relative;
   isolation: isolate;
+  /* The turning ring and the corner marks never reach past the panel, so the page never scrolls sideways. */
   overflow: clip;
-  display: grid;
-  align-items: center;
-  min-height: clamp(36rem, 84svh, 52rem);
-  padding-block: clamp(3rem, 2rem + 4vw, 5rem);
+  padding: clamp(2rem, 1.25rem + 3.5vw, 4.5rem) clamp(1.25rem, 0.5rem + 3.5vw, 4.5rem)
+    clamp(2.75rem, 1.75rem + 3.5vw, 5rem);
   color: var(--color-on-purple);
-  background: linear-gradient(140deg, var(--color-purple-deep) 0%, var(--color-purple-dark) 48%, var(--color-purple-ink) 100%);
-  border-radius: var(--radius-xl);
+  background: linear-gradient(172deg, var(--color-purple-deep) 0%, var(--color-purple-dark) 45%, var(--color-purple-ink) 100%);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut))
+  );
 }
 
-.heroBackdrop {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-}
-
-.heroBlobA,
-.heroBlobB {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(70px);
-  will-change: transform;
-}
-
-/* A glow behind the photo, never behind the text. */
-.heroBlobA {
-  right: -8%;
-  top: -12%;
-  width: 46rem;
-  height: 46rem;
-  background: radial-gradient(circle, rgb(179 76 224 / 0.75), transparent 65%);
-}
-
-.heroBlobB {
-  left: 30%;
-  bottom: -40%;
-  width: 40rem;
-  height: 34rem;
-  background: radial-gradient(circle, rgb(42 10 64 / 0.9), transparent 70%);
-}
-
-/* A fine engineering grid that fades out towards the edges. */
+/* A fine white grid inside the panel, strongest behind the photo. */
 .heroGrid {
   position: absolute;
   inset: 0;
+  z-index: -1;
   background-image:
-    linear-gradient(rgb(255 255 255 / 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 0.07) 1px, transparent 1px);
-  background-size: 3.5rem 3.5rem;
-  mask-image: radial-gradient(ellipse 70% 70% at 70% 40%, black, transparent 75%);
+    linear-gradient(rgb(255 255 255 / 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.08) 1px, transparent 1px),
+    linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+  background-size:
+    var(--grid-coarse) var(--grid-coarse),
+    var(--grid-coarse) var(--grid-coarse),
+    var(--grid-fine) var(--grid-fine),
+    var(--grid-fine) var(--grid-fine);
+  -webkit-mask-image: radial-gradient(ellipse 70% 80% at 75% 50%, #000, transparent 80%);
+  mask-image: radial-gradient(ellipse 70% 80% at 75% 50%, #000, transparent 80%);
+}
+
+/* White crop marks in the two square corners of the panel. */
+.heroTicks,
+.panelTicks {
+  --mark-color: rgb(255 255 255 / 0.7);
+  --mark-inset: 0.875rem;
+  --mark-size: 1.5rem;
 }
 
 .heroLayout {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-12);
+  gap: clamp(2.5rem, 2rem + 2vw, 3rem);
   align-items: center;
 }
 
@@ -160,10 +215,10 @@
 
 .heroName {
   margin: 0 0 var(--space-8);
-  font-size: clamp(2.75rem, 1.4rem + 5.6vw, 6.25rem);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.045em;
+  font-size: clamp(2.125rem, 1rem + 4.6vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1.04;
+  letter-spacing: 0.02em;
   text-wrap: balance;
 }
 
@@ -174,35 +229,43 @@
 .heroActions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--space-4) var(--space-6);
+  padding-left: 0.375rem;
 }
 
 .heroVisual {
   position: relative;
   justify-self: center;
-  width: min(100%, 22rem);
+  width: min(100% - 1.5rem, 20rem);
   aspect-ratio: 1;
+}
+
+/* A thin white hexagon rim around the photo. */
+.heroVisual::before {
+  content: "";
+  position: absolute;
+  inset: calc(7% - 5px);
+  background: linear-gradient(160deg, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.12));
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
 }
 
 .heroRingTurn {
   position: absolute;
-  inset: 0;
+  inset: -4%;
+  opacity: 0.75;
 }
 
 .heroRing {
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 1.5rem 2.5rem rgb(20 4 32 / 0.55));
 }
 
-.heroPhotoFrame {
+.heroHex {
   position: absolute;
-  inset: 17%;
+  inset: 7%;
   overflow: hidden;
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 0.4rem rgb(42 10 64 / 0.85),
-    0 1.5rem 3rem rgb(20 4 32 / 0.6);
+  background: var(--color-purple-ink);
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
 }
 
 .heroPhoto {
@@ -212,17 +275,31 @@
   object-position: 50% 22%;
 }
 
-.buttonIconDown {
-  width: 1rem;
-  height: 1rem;
+/* On a phone the photo sits in the lower corner: only the top-left panel mark shows. */
+@media (max-width: 899px) {
+  .heroTicks::after {
+    display: none;
+  }
 }
 
-/* ---------- Skills band ---------- */
+/* The orange crosshair corners of sketch A, just outside the photo box. */
+.heroMarks {
+  --mark-inset: -0.75rem;
+  --mark-size: clamp(1.75rem, 1.25rem + 1.5vw, 2.5rem);
+}
+
+.buttonIconDown {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* ---------- Skill tags ---------- */
 
 .marquee {
   display: grid;
-  gap: var(--space-3);
-  margin-top: var(--space-8);
+  gap: var(--space-2);
+  max-width: var(--content-width);
+  margin: var(--space-6) auto 0;
   padding-inline: var(--gutter);
   overflow: clip;
 }
@@ -230,250 +307,299 @@
 .marqueeRow {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .marqueeChip {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: 0.5rem 1.25rem 0.5rem 1rem;
-  color: var(--color-text);
-  font-family: var(--font-display);
-  font-size: 0.9375rem;
-  font-weight: 500;
+  gap: 0.5rem;
+  padding: 0.25rem 0.7rem;
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   white-space: nowrap;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
+  background: rgb(11 8 16 / 0.82);
+  border: 1px solid rgb(255 122 26 / 0.55);
+}
+
+/* A small orange square with a cut corner before each skill. */
+.marqueeChip::before {
+  content: "";
+  flex-shrink: 0;
+  width: 0.375rem;
+  height: 0.375rem;
+  background: var(--color-orange);
+  clip-path: polygon(0 0, 100% 0, 100% 55%, 55% 100%, 0 100%);
 }
 
 @media (max-width: 639px) {
-  .marquee,
-  .marqueeRow {
-    gap: var(--space-2);
-  }
-
   .marqueeChip {
-    gap: var(--space-2);
-    padding: 0.3rem 0.8rem 0.3rem 0.65rem;
-    font-size: 0.8125rem;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.6875rem;
   }
 }
 
-/* A small purple blade before each skill. */
-.marqueeChip::before {
-  content: "";
-  width: 0.55rem;
-  height: 0.55rem;
-  background: linear-gradient(135deg, var(--color-lavender), var(--color-purple-deep));
-  border-radius: 0.55rem 0.1rem;
-}
-
-/* ---------- Sections ---------- */
+/* ---------- Sections and their orange headings ---------- */
 
 .section {
-  padding-top: clamp(4.5rem, 3rem + 5vw, 8rem);
+  padding-top: clamp(4rem, 3rem + 4vw, 7rem);
 }
 
 .sectionHead {
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  margin-bottom: clamp(2.5rem, 2rem + 2vw, 4rem);
+  margin-bottom: clamp(1.75rem, 1.25rem + 2vw, 2.75rem);
 }
 
 .sectionMark {
   flex-shrink: 0;
-  width: clamp(2.25rem, 1.8rem + 1.5vw, 3rem);
-  height: auto;
+  width: 0.875rem;
+  height: 0.875rem;
+  background: var(--color-orange);
+  clip-path: polygon(0 0, 100% 0, 100% 60%, 60% 100%, 0 100%);
 }
 
 .sectionHeading {
   margin: 0;
-  font-size: clamp(2rem, 1.3rem + 2.8vw, 3.5rem);
+  color: var(--color-orange);
+  font-size: clamp(1.375rem, 1.05rem + 1.4vw, 2.25rem);
   font-weight: 700;
-  letter-spacing: -0.035em;
+  letter-spacing: 0.06em;
 }
 
+/* A rule with tick marks, like the edge of a ruler, that fades out to the right. */
 .sectionRule {
   flex: 1;
-  height: 1px;
+  align-self: center;
   min-width: 2rem;
-  background: linear-gradient(90deg, var(--color-purple-deep), transparent);
+  height: 0.5rem;
+  margin-top: 0.25rem;
+  background:
+    linear-gradient(90deg, var(--color-orange), var(--color-orange)) left bottom / 100% 2px no-repeat,
+    repeating-linear-gradient(90deg, rgb(255 122 26 / 0.6) 0 1px, transparent 1px var(--grid-fine)) left bottom / 100%
+      0.5rem no-repeat;
+  -webkit-mask-image: linear-gradient(90deg, #000 10%, transparent 95%);
+  mask-image: linear-gradient(90deg, #000 10%, transparent 95%);
+  transform-origin: left center;
 }
 
-/* ---------- Work rows ---------- */
+/* ---------- Work grid and software cards ---------- */
 
 .summaries {
   display: grid;
-  gap: clamp(4rem, 3rem + 4vw, 7.5rem);
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.25rem, 1rem + 1vw, 1.75rem);
 }
 
-.summary {
-  position: relative;
+.cards {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-8);
-  align-items: center;
+  gap: clamp(1.25rem, 1rem + 1vw, 1.75rem);
 }
 
-.summaryMedia {
+.summary,
+.card {
   position: relative;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  padding: 0 1.25rem 1.25rem 0;
+  background: var(--color-border);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut))
+  );
+  transition: background-color 0.3s ease;
 }
 
-/* A soft offset shape behind the image, for depth. */
-.summaryShape {
+.summary::before,
+.card::before {
+  content: "";
   position: absolute;
-  inset: 1.25rem 0 0 1.25rem;
-  background: linear-gradient(135deg, var(--color-purple-dark), rgb(42 10 64 / 0.2));
-  border-radius: var(--radius-blade);
-  opacity: 0.8;
+  inset: 1px;
+  background: linear-gradient(180deg, var(--color-surface-raised), var(--color-surface) 60%);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut) + 0.4px) 0,
+    100% calc(var(--cut) - 0.4px),
+    100% 100%,
+    calc(var(--cut) - 0.4px) 100%,
+    0 calc(100% - var(--cut) + 0.4px)
+  );
 }
 
-.summaryFrame {
+/* The edge lights orange on hover. */
+.summary:not(.featured):hover,
+.card:hover {
+  background: var(--color-orange);
+}
+
+.summaryMedia,
+.cardMedia {
+  position: relative;
+  z-index: 1;
+  margin: 1px 1px 0;
+  --mark-inset: 0.75rem;
+}
+
+.summary:hover :global(.corner-marks)::before,
+.card:hover :global(.corner-marks)::before {
+  translate: -0.375rem -0.375rem;
+}
+
+.summary:hover :global(.corner-marks)::after,
+.card:hover :global(.corner-marks)::after {
+  translate: 0.375rem 0.375rem;
+}
+
+.summaryFrame,
+.cardFrame {
   position: relative;
   overflow: hidden;
-  border-radius: var(--radius-blade);
-  box-shadow: var(--shadow-soft);
+  aspect-ratio: 16 / 10;
   background: var(--color-surface);
+  view-timeline: --frame block;
 }
 
-.summaryImage {
+.summaryImage,
+.cardImage {
   width: 100%;
-  height: auto;
-  max-height: 34rem;
+  height: 100%;
   object-fit: cover;
+  filter: saturate(0.92) contrast(1.04);
   transition: transform 0.9s var(--ease-out);
 }
 
-.summaryBody {
-  min-width: 0;
+.cardImage {
+  object-position: top;
 }
 
-.summaryTitle {
-  margin-bottom: var(--space-4);
-  font-size: clamp(1.625rem, 1.2rem + 1.6vw, 2.5rem);
-  font-weight: 650;
-  letter-spacing: -0.03em;
+/* The scan line: an orange line with a fading trail that sweeps down the image
+   once as it comes into view, and again on hover. Hidden at rest. */
+.scan {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent calc(100% - 5rem),
+    rgb(255 122 26 / 0.22) calc(100% - 2px),
+    var(--color-orange) calc(100% - 2px)
+  );
+  opacity: 0;
+  transform: translateY(-100%);
+}
+
+.summaryBody,
+.cardBody {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  padding: clamp(1.25rem, 1rem + 1vw, 1.75rem) clamp(1.25rem, 1rem + 1vw, 1.75rem) clamp(1.5rem, 1.25rem + 1vw, 2rem);
+}
+
+.summaryTitle,
+.cardTitle {
+  margin-bottom: var(--space-3);
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.1875rem);
+  letter-spacing: 0.05em;
 }
 
 .skills {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-6) !important;
+  gap: 0.375rem;
+  margin-bottom: var(--space-4) !important;
 }
 
 .skills li {
-  padding: 0.3rem 0.85rem;
+  padding: 0.125rem 0.5rem;
   color: var(--color-accent);
-  font-family: var(--font-display);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  line-height: 1.5;
-  background: rgb(199 125 255 / 0.08);
-  border: 1px solid rgb(199 125 255 / 0.28);
-  border-radius: 999px;
+  font-size: 0.6875rem;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid rgb(255 122 26 / 0.5);
 }
 
 .summaryText {
-  max-width: 38rem;
-  margin-bottom: var(--space-4);
+  max-width: var(--measure);
+  margin-bottom: var(--space-3);
   color: var(--color-text-muted);
-  font-size: 1.0625rem;
+  font-size: 0.875rem;
+  line-height: 1.75;
 }
 
 .summaryText > p:last-child {
   margin-bottom: 0;
 }
 
-/* The featured (first) experience: a purple panel. */
+.summaryBody > a {
+  margin-top: auto;
+}
+
+/* The featured (first) experience: purple, full width, image left and text right. */
 .featured {
   --focus-ring: var(--color-on-purple);
   --color-heading: var(--color-on-purple);
   --color-link: var(--color-on-purple);
-  isolation: isolate;
-  overflow: clip;
-  padding: clamp(1.25rem, 0.5rem + 3vw, 3.5rem);
+  grid-column: 1 / -1;
   color: var(--color-on-purple);
-  background:
-    radial-gradient(30rem 24rem at 0% 0%, rgb(179 76 224 / 0.55), transparent 70%),
-    linear-gradient(135deg, var(--color-purple-deep) 0%, var(--color-purple-dark) 55%, var(--color-purple-ink) 100%);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-glow);
+  background: linear-gradient(115deg, var(--color-purple-deep) 0%, var(--color-purple-dark) 55%, var(--color-purple-ink) 100%);
+  box-shadow: 0 2rem 4rem -2rem rgb(141 32 196 / 0.6);
 }
 
-.featured .summaryShape {
-  background: linear-gradient(135deg, rgb(255 255 255 / 0.22), rgb(255 255 255 / 0.04));
+.featured::before {
+  display: none;
+}
+
+.featured .summaryMedia {
+  margin: 0;
+}
+
+.featured .summaryTitle {
+  font-size: clamp(1.375rem, 1rem + 1.4vw, 2rem);
+  font-weight: 800;
+  line-height: 1.12;
 }
 
 .featured .skills li {
   color: var(--color-on-purple);
-  background: rgb(255 255 255 / 0.1);
-  border-color: rgb(255 255 255 / 0.35);
+  border-color: rgb(255 255 255 / 0.55);
 }
 
 .featured .summaryText {
   color: var(--color-on-purple-muted);
+  font-size: 0.9375rem;
 }
 
 .featured .summaryText a {
   color: var(--color-on-purple);
 }
 
-/* ---------- Software cards ---------- */
-
-.cards {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-6);
-}
-
-.card {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  padding: var(--space-3);
-  background: linear-gradient(180deg, var(--color-surface-raised), var(--color-surface));
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  transition:
-    transform 0.4s var(--ease-out),
-    border-color 0.3s ease,
-    box-shadow 0.4s ease;
-}
-
-.card:hover {
-  border-color: rgb(199 125 255 / 0.45);
-  box-shadow: var(--shadow-glow);
-}
-
-.cardFrame {
-  overflow: hidden;
-  border-radius: var(--radius-lg);
-}
-
-.cardImage {
-  width: 100%;
-  height: auto;
-  max-height: 20rem;
-  object-fit: cover;
-  object-position: top;
-  transition: transform 0.9s var(--ease-out);
-}
-
-.cardBody {
-  min-width: 0;
-  padding: var(--space-4) var(--space-3) var(--space-3);
-  color: var(--color-text-muted);
+.featured .summaryBody > a {
+  margin-top: var(--space-4);
+  align-self: flex-start;
+  margin-left: 0.375rem;
 }
 
 .cardTitle {
   margin-bottom: var(--space-2);
-  font-size: 1.375rem;
+}
+
+.cardBody {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
 }
 
 .cardLink {
@@ -486,14 +612,13 @@
 }
 
 .cardLink:hover {
-  color: var(--color-link);
-  text-decoration: underline;
+  color: var(--color-orange);
 }
 
 .cardLinkIcon {
   width: 1.125rem;
   height: 1.125rem;
-  color: var(--color-accent);
+  color: var(--color-orange);
   transition: transform 0.3s var(--ease-out);
 }
 
@@ -504,33 +629,53 @@
 /* ---------- About ---------- */
 
 .about {
+  position: relative;
+  overflow: clip;
   display: grid;
   gap: var(--space-8);
-  padding: clamp(1.5rem, 1rem + 3vw, 4rem);
+  padding: clamp(1.5rem, 1rem + 3vw, 3.5rem);
+  background: var(--color-border);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut))
+  );
+}
+
+.about::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
   background:
-    radial-gradient(28rem 20rem at 0% 0%, rgb(141 32 196 / 0.18), transparent 70%),
+    radial-gradient(28rem 20rem at 0% 0%, rgb(141 32 196 / 0.2), transparent 70%),
     var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut) + 0.4px) 0,
+    100% calc(var(--cut) - 0.4px),
+    100% 100%,
+    calc(var(--cut) - 0.4px) 100%,
+    0 calc(100% - var(--cut) + 0.4px)
+  );
 }
 
+/* The aperture of the logo inside orange crop marks: a pure graphic. */
 .aboutAside {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-6);
-}
-
-.aboutHeading {
-  margin: 0;
-  font-size: clamp(2rem, 1.3rem + 2.8vw, 3.5rem);
-  font-weight: 700;
-  letter-spacing: -0.035em;
+  position: relative;
+  z-index: 1;
+  width: clamp(6rem, 4rem + 8vw, 13rem);
+  aspect-ratio: 1;
+  padding: 12%;
+  --mark-inset: 0;
+  --mark-size: 1.5rem;
 }
 
 .aboutMarkTurn {
-  flex-shrink: 0;
-  width: clamp(4rem, 2rem + 8vw, 11rem);
+  width: 100%;
+  height: 100%;
 }
 
 .aboutMark {
@@ -539,8 +684,10 @@
 }
 
 .aboutText {
+  position: relative;
+  z-index: 1;
   min-width: 0;
-  max-width: 44rem;
+  max-width: var(--measure);
 }
 
 .prose {
@@ -555,19 +702,29 @@
   margin-top: var(--space-6);
 }
 
+/* The first intro paragraph: a little larger and brighter, with an orange edge
+   in the panel padding, so every paragraph starts at the same left edge. */
 .lead {
+  position: relative;
   color: var(--color-heading);
-  font-family: var(--font-display);
-  font-size: clamp(1.1875rem, 1rem + 0.7vw, 1.5rem);
-  font-weight: 400;
-  line-height: 1.5;
-  letter-spacing: -0.01em;
+  font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem);
+  line-height: 1.7;
+}
+
+.lead::before {
+  content: "";
+  position: absolute;
+  top: 0.35em;
+  bottom: 0.35em;
+  left: calc(-1 * clamp(0.75rem, 0.5rem + 1vw, 1.25rem));
+  width: 3px;
+  background: var(--color-orange);
 }
 
 /* ---------- 404 and the empty site ---------- */
 
 .notFound {
-  padding: var(--space-2) var(--panel-inset) 0;
+  padding-top: clamp(1.25rem, 0.75rem + 2vw, 2.5rem);
 }
 
 .notFoundPanel {
@@ -578,12 +735,18 @@
   overflow: clip;
   display: grid;
   align-items: center;
-  min-height: clamp(26rem, 60svh, 40rem);
-  padding-block: var(--space-16);
-  background:
-    radial-gradient(30rem 24rem at 90% 50%, rgb(179 76 224 / 0.45), transparent 70%),
-    linear-gradient(140deg, var(--color-purple-deep) 0%, var(--color-purple-dark) 50%, var(--color-purple-ink) 100%);
-  border-radius: var(--radius-xl);
+  min-height: clamp(24rem, 55svh, 34rem);
+  padding: clamp(2.5rem, 1.5rem + 4vw, 5rem) clamp(1.25rem, 0.5rem + 3.5vw, 4.5rem);
+  color: var(--color-on-purple);
+  background: linear-gradient(115deg, var(--color-purple-deep) 0%, var(--color-purple-dark) 50%, var(--color-purple-ink) 100%);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut))
+  );
 }
 
 .notFoundMarkTurn {
@@ -591,14 +754,16 @@
   z-index: -1;
   right: -6rem;
   top: 50%;
-  width: clamp(20rem, 14rem + 22vw, 36rem);
+  width: clamp(18rem, 12rem + 22vw, 34rem);
   aspect-ratio: 1;
   translate: 0 -50%;
 }
 
+/* The ring can sit under the title: it stays faint, so white text keeps at least 4.5:1. */
 .notFoundMark {
   width: 100%;
   height: 100%;
+  opacity: 0.35;
 }
 
 .notFoundBody {
@@ -606,18 +771,19 @@
 }
 
 .notFoundTitle {
-  max-width: 12ch;
+  max-width: 14ch;
   margin-bottom: var(--space-8);
-  font-size: clamp(2.5rem, 1.4rem + 5vw, 5.5rem);
-  line-height: 1;
-  letter-spacing: -0.045em;
+  font-size: clamp(2.125rem, 1.2rem + 4.2vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1.04;
 }
 
 .notFoundBody p {
   margin: 0;
+  padding-left: 0.375rem;
 }
 
-/* ---------- Wide screens ---------- */
+/* ---------- Wider screens ---------- */
 
 @media (min-width: 640px) {
   .cards {
@@ -626,46 +792,69 @@
 }
 
 @media (min-width: 900px) {
+  .heroPanel {
+    background: linear-gradient(100deg, var(--color-purple-deep) 0%, var(--color-purple-dark) 48%, var(--color-purple-ink) 100%);
+  }
+
   .heroLayout {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-    gap: var(--space-8);
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: var(--space-12);
+    min-height: clamp(22rem, 52svh, 30rem);
   }
 
   .heroVisual {
-    width: min(100%, 32rem);
+    width: min(100% - 2rem, 25rem);
     justify-self: end;
+    margin-right: 1rem;
   }
 
-  .summary {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-    gap: clamp(2.5rem, 1rem + 4vw, 5rem);
+  .summaries {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .reverse .summaryMedia {
-    order: 2;
-    padding: 0 0 1.25rem 1.25rem;
+  /* The featured card, and a last card without a partner, lie flat: image left, text right. */
+  .featured,
+  .summary:not(.featured):nth-child(even):last-child {
+    grid-column: 1 / -1;
+    flex-direction: row;
   }
 
-  .reverse .summaryShape {
-    inset: 1.25rem 1.25rem 0 0;
+  .featured .summaryMedia,
+  .summary:not(.featured):nth-child(even):last-child .summaryMedia {
+    flex: 0 0 52%;
   }
 
-  .featured {
-    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  .summary:not(.featured):nth-child(even):last-child .summaryMedia {
+    flex-basis: 46%;
+    margin: 1px 0 1px 1px;
+  }
+
+  .featured .summaryFrame,
+  .summary:not(.featured):nth-child(even):last-child .summaryFrame {
+    height: 100%;
+    min-height: 22rem;
+    aspect-ratio: auto;
+  }
+
+  .featured .summaryBody {
+    align-self: center;
+    padding: clamp(2rem, 1rem + 2.5vw, 3.5rem);
+  }
+
+  .summary:not(.featured):nth-child(even):last-child .summaryBody {
+    align-self: center;
+    padding: clamp(1.75rem, 1rem + 2vw, 3rem);
   }
 
   .about {
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.6fr);
-    gap: var(--space-12);
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: clamp(2.5rem, 1rem + 4vw, 5rem);
     align-items: start;
   }
 
   .aboutAside {
     position: sticky;
     top: calc(var(--header-height) + var(--space-8));
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-8);
   }
 }
 
@@ -681,71 +870,107 @@
     animation: hero-rise 0.9s var(--ease-out) 0.55s both;
   }
 
-  .heroPhotoFrame {
-    animation: hero-iris 1.4s var(--ease-in-out) 0.25s both;
+  .heroPanel {
+    animation: panel-wipe 1s var(--ease-snap) both;
+  }
+
+  .heroHex,
+  .heroVisual::before {
+    animation: hex-open 1.3s var(--ease-in-out) 0.35s both;
   }
 
   .heroRingTurn {
-    animation: hero-spin 1.6s var(--ease-out) both;
+    animation: ring-in 1.6s var(--ease-out) 0.2s both;
+  }
+
+  .heroMarks::before {
+    animation: mark-in-tl 0.8s var(--ease-snap) 1.1s both;
+  }
+
+  .heroMarks::after {
+    animation: mark-in-br 0.8s var(--ease-snap) 1.1s both;
+  }
+
+  .heroTicks::before,
+  .panelTicks::before {
+    animation: tick-draw 0.7s var(--ease-snap) 0.6s both;
+    transform-origin: top left;
+  }
+
+  .heroTicks::after,
+  .panelTicks::after {
+    animation: tick-draw 0.7s var(--ease-snap) 0.75s both;
+    transform-origin: bottom right;
   }
 
   .heroGrid {
     animation: hero-fade 2s ease 0.3s both;
   }
 
-  .buttonLight:hover,
-  .buttonGhost:hover {
-    transform: translateY(-2px);
+  .buttonPrimary:hover::before,
+  .buttonLight:hover::before,
+  .buttonGhost:hover::before {
+    transform: skewX(-20deg) translateX(2px);
   }
 
+  .buttonPrimary:hover .arrow,
   .buttonLight:hover .arrow,
   .arrowLink:hover .arrow {
     transform: translateX(4px);
   }
 
+  .buttonPrimary:hover .buttonIconDown,
   .buttonGhost:hover .buttonIconDown {
     transform: translateY(3px);
   }
 
   .summary:hover .summaryImage,
   .card:hover .cardImage {
-    transform: scale(1.045);
+    transform: scale(1.04);
   }
 
-  .card:hover {
-    transform: translateY(-6px);
+  /* The scan line sweeps again on hover. */
+  .summary:hover .scan,
+  .card:hover .scan {
+    animation: scan-sweep 0.9s var(--ease-in-out) both;
+    animation-timeline: auto;
   }
 
   @supports (animation-timeline: view()) {
-    /* The ring keeps turning as the hero scrolls away; the glows drift. */
+    /* The aperture keeps turning as the hero scrolls away. */
     .heroRing {
       animation: ring-scroll linear both;
       animation-timeline: view();
-      animation-range: exit 0% exit 100%;
+      animation-range: cover 40% exit 100%;
     }
 
-    .heroBlobA {
-      animation: blob-drift-a linear both;
-      animation-timeline: view();
-      animation-range: cover 0% cover 100%;
-    }
-
-    .heroBlobB {
-      animation: blob-drift-b linear both;
-      animation-timeline: view();
-      animation-range: cover 0% cover 100%;
-    }
-
-    .sectionMark,
-    .aboutMark {
+    .sectionMark {
       animation: mark-turn linear both;
       animation-timeline: view();
+      animation-range: entry 20% cover 35%;
+    }
+
+    /* The ruler draws in from the left. */
+    .sectionRule {
+      animation: rule-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 40%;
+    }
+
+    .aboutMark {
+      animation: about-turn linear both;
+      animation-timeline: view();
+    }
+
+    .scan {
+      animation: scan-sweep linear both;
+      animation-timeline: --frame;
+      animation-range: entry 40% cover 55%;
     }
 
     /* The skills slide sideways with the scroll; the rows go opposite ways. */
     .marqueeRow {
       flex-wrap: nowrap;
-      justify-content: center;
       width: max-content;
       min-width: 100%;
       animation: marquee-left linear both;
@@ -757,10 +982,25 @@
       animation-name: marquee-right;
     }
 
-    .summaryShape {
-      animation: shape-shift linear both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 60%;
+    .summary:hover .scan,
+    .card:hover .scan {
+      animation: scan-sweep 0.9s var(--ease-in-out) both;
+      animation-timeline: auto;
+    }
+  }
+
+  @supports not (animation-timeline: view()) {
+    :global(html[data-motion="io"]) [data-shown] > .scan {
+      animation: scan-sweep 1.2s var(--ease-in-out) 0.35s both;
+    }
+
+    :global(html[data-motion="io"]) .sectionRule {
+      transform: scaleX(0);
+      transition: transform 1s var(--ease-snap) 0.2s;
+    }
+
+    :global(html[data-motion="io"]) [data-shown] > .sectionRule {
+      transform: none;
     }
   }
 }
@@ -778,19 +1018,58 @@
   }
 }
 
-@keyframes hero-iris {
+/* The hero panel opens with a diagonal cut, keeping its chamfered corners. */
+@keyframes panel-wipe {
   from {
-    clip-path: circle(0% at 50% 50%);
+    clip-path: polygon(0 0, 0 0, 0 0, 0 0, 0 0, 0 0);
   }
   to {
-    clip-path: circle(50% at 50% 50%);
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--cut)) 0,
+      100% var(--cut),
+      100% 100%,
+      var(--cut) 100%,
+      0 calc(100% - var(--cut))
+    );
   }
 }
 
-@keyframes hero-spin {
+/* The hexagon opens from its centre, like the aperture of the logo. */
+@keyframes hex-open {
+  from {
+    clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%);
+  }
+  to {
+    clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  }
+}
+
+@keyframes ring-in {
   from {
     opacity: 0;
     transform: rotate(-120deg) scale(0.85);
+  }
+}
+
+@keyframes mark-in-tl {
+  from {
+    opacity: 0;
+    translate: -1.5rem -1.5rem;
+  }
+}
+
+@keyframes mark-in-br {
+  from {
+    opacity: 0;
+    translate: 1.5rem 1.5rem;
+  }
+}
+
+@keyframes tick-draw {
+  from {
+    opacity: 0;
+    transform: scale(0);
   }
 }
 
@@ -800,25 +1079,20 @@
   }
 }
 
-@keyframes blob-drift-a {
-  from {
-    transform: translate(4rem, -2rem) scale(0.9);
-  }
-  to {
-    transform: translate(-8rem, 6rem) scale(1.15);
-  }
-}
-
-@keyframes blob-drift-b {
-  from {
-    transform: translateX(-6rem);
-  }
-  to {
-    transform: translateX(8rem);
-  }
-}
-
 @keyframes mark-turn {
+  from {
+    transform: rotate(-180deg) scale(0.4);
+    opacity: 0;
+  }
+}
+
+@keyframes rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes about-turn {
   from {
     transform: rotate(-90deg);
   }
@@ -827,7 +1101,21 @@
   }
 }
 
-/* From 4rem right of the start to 4rem past the far end, so every chip comes into view and short rows still drift. */
+@keyframes scan-sweep {
+  0% {
+    opacity: 1;
+    transform: translateY(-100%);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+
+/* From 4rem right of the start to 4rem past the far end, so every tag comes into view and short rows still drift. */
 @keyframes marquee-left {
   from {
     transform: translateX(4rem);
@@ -846,27 +1134,21 @@
   }
 }
 
-@keyframes shape-shift {
-  from {
-    /* Up and smaller, never sideways: the shape must not reach past the screen edge. */
-    transform: translateY(1.5rem) scale(0.92);
-    opacity: 0;
-  }
-  to {
-    transform: none;
-    opacity: 0.8;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .buttonLight,
-  .buttonGhost,
+  .buttonPrimary::before,
+  .buttonLight::before,
+  .buttonGhost::before,
   .arrow,
-  .arrowLink,
-  .summaryImage,
+  .arrowLink::after,
+  .summary,
   .card,
+  .summaryImage,
   .cardImage,
   .cardLinkIcon {
     transition: none;
+  }
+
+  .scan {
+    display: none;
   }
 }

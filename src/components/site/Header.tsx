@@ -25,10 +25,12 @@ export interface HeaderProps {
   navLabel?: string;
 }
 
-// The logo is two images: the aperture ring (logo-mark.png), which turns on
-// load and as the page scrolls, and the lettering of logo-full.png, shown
-// without its own ring. The lettering image carries the alt text; the ring is
-// decorative (alt="").
+// The top bar of design A (docs/design/Reference1.png): a solid black bar, frozen
+// to the top, with an angled left edge and three orange slashes (pure graphics,
+// aria-hidden, no text). The logo is two images: the aperture ring
+// (logo-mark.png), which turns on load and as the page scrolls, and the
+// lettering of logo-full.png, shown without its own ring. The lettering image
+// carries the alt text; the ring is decorative (alt="").
 
 export function Header({ logoAlt, links, resume, menuLabel, navLabel }: HeaderProps) {
   const [open, setOpen] = useState(false);
@@ -60,7 +62,10 @@ export function Header({ logoAlt, links, resume, menuLabel, navLabel }: HeaderPr
 
   return (
     <header className={styles.header}>
-      <div className={`container ${styles.bar}`}>
+      <div className={styles.bar}>
+        <svg className={styles.slashes} viewBox="0 0 100 64" aria-hidden="true" focusable="false">
+          <path d="M26 9 44.5 55M43 9l18.5 46M60 9l18.5 46" />
+        </svg>
         <Link href="/" className={styles.logoLink}>
           <span className={styles.markSpin}>
             <Image src={logoMark} alt="" className={styles.mark} sizes="48px" loading="eager" />
@@ -92,7 +97,7 @@ export function Header({ logoAlt, links, resume, menuLabel, navLabel }: HeaderPr
               {links.map((link) => (
                 <li key={`${link.href}|${link.label}`}>
                   <Link href={link.href} className={styles.link} onClick={close}>
-                    {link.label}
+                    <span className={styles.linkText}>{link.label}</span>
                   </Link>
                 </li>
               ))}
@@ -101,7 +106,7 @@ export function Header({ logoAlt, links, resume, menuLabel, navLabel }: HeaderPr
                   <a href={resume.href} className={`${styles.link} ${styles.resume}`} onClick={close}>
                     {resume.label}
                     <svg className={styles.resumeIcon} viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-                      <path d="M8 2v8m0 0 3.5-3.5M8 10 4.5 6.5M3 13h10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M8 2v8m0 0 3.5-3.5M8 10 4.5 6.5M3 13h10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="square" strokeLinejoin="miter" />
                     </svg>
                   </a>
                 </li>

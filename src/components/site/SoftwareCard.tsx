@@ -15,7 +15,7 @@ export interface SoftwareCardProps {
 }
 
 /**
- * A small software card: screenshot, name, and overview (0.1.4). The name links
+ * A small software card with cut corners: screenshot, name, and overview (0.1.4). The name links
  * to the project in a new tab when a link exists. A card never links to a full
  * page (0.1.5).
  */
@@ -23,12 +23,16 @@ export function SoftwareCard({ card, linkBase, index = 0 }: SoftwareCardProps) {
   return (
     <article className={styles.card} data-reveal="" style={{ "--i": index } as CSSProperties}>
       {card.screenshot && (
-        <div className={styles.cardFrame}>
-          <MediaImage
-            media={card.screenshot}
-            sizes="(min-width: 800px) 36rem, 100vw"
-            className={styles.cardImage}
-          />
+        <div className={styles.cardMedia}>
+          <div className={styles.cardFrame} data-reveal="wipe">
+            <MediaImage
+              media={card.screenshot}
+              sizes="(min-width: 800px) 36rem, 100vw"
+              className={styles.cardImage}
+            />
+            <span className={styles.scan} aria-hidden="true" />
+          </div>
+          <span className="corner-marks" aria-hidden="true" />
         </div>
       )}
       <div className={styles.cardBody}>

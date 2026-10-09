@@ -21,19 +21,21 @@ function LinkIcon({ href }: { href: string }) {
 }
 
 /**
- * The site footer: a purple closing panel with the contact links. It renders
- * nothing when no link is supplied (0.1.8).
+ * The site footer (design A): a dark purple band with cut corners and the
+ * contact links as rows with an orange edge. It renders nothing when no link
+ * is supplied (0.1.8). Every decoration is aria-hidden and holds no text.
  */
 export function Footer({ links, heading, id }: FooterProps) {
   if (links.length === 0) return null;
   const headingId = id ? `${id}-heading` : undefined;
   return (
-    <footer id={id} className={styles.footer} aria-labelledby={heading ? headingId : undefined}>
+    <footer id={id} className={`container ${styles.footer}`} aria-labelledby={heading ? headingId : undefined}>
       <div className={styles.panel}>
         <div className={styles.markTurn} aria-hidden="true">
           <Aperture id="footer-aperture" tone="ghost" className={styles.mark} />
         </div>
-        <div className={`container ${styles.inner}`}>
+        <span className={`corner-marks ${styles.ticks}`} aria-hidden="true" />
+        <div className={styles.inner}>
           {heading && (
             <h2 id={headingId} className={styles.heading} data-reveal="">
               {heading}

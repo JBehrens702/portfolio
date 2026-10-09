@@ -1,8 +1,12 @@
-/* The closing contact panel: purple, the highest emphasis, like the hero. */
+/*
+ * The contact band (design A): dark purple with cut corners, the highest
+ * emphasis at the end of each page. Only purple-dark and purple-ink sit under
+ * the orange edges, so they keep 3:1 or more (contrast.test.ts).
+ */
 
 .footer {
   margin-top: clamp(4rem, 3rem + 4vw, 7rem);
-  padding: 0 var(--panel-inset) var(--panel-inset);
+  padding-bottom: clamp(1.5rem, 1rem + 2vw, 3rem);
 }
 
 .panel {
@@ -11,12 +15,23 @@
   position: relative;
   isolation: isolate;
   overflow: clip;
-  padding-block: clamp(3rem, 2rem + 5vw, 6.5rem);
+  padding: clamp(2.5rem, 1.5rem + 4vw, 4.5rem) clamp(1.25rem, 0.5rem + 3.5vw, 4.5rem);
   color: var(--color-on-purple);
-  background:
-    radial-gradient(36rem 26rem at 0% 100%, rgb(179 76 224 / 0.5), transparent 65%),
-    linear-gradient(110deg, var(--color-purple-deep) 0%, var(--color-purple-dark) 50%, var(--color-purple-ink) 100%);
-  border-radius: var(--radius-xl);
+  background: linear-gradient(110deg, var(--color-purple-dark) 0%, #3f0f5e 55%, var(--color-purple-ink) 100%);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut))
+  );
+}
+
+.ticks {
+  --mark-color: rgb(255 255 255 / 0.6);
+  --mark-inset: 0.875rem;
+  --mark-size: 1.5rem;
 }
 
 .markTurn {
@@ -24,7 +39,7 @@
   z-index: -1;
   left: -8rem;
   bottom: -10rem;
-  width: clamp(18rem, 12rem + 22vw, 32rem);
+  width: clamp(18rem, 12rem + 22vw, 30rem);
   aspect-ratio: 1;
   pointer-events: none;
 }
@@ -32,17 +47,12 @@
 .mark {
   width: 100%;
   height: 100%;
-  opacity: 0.55;
-}
-
-/* On narrow screens the links sit over the ring: keep it faint, so white text keeps at least 4.5:1. */
-@media (max-width: 899px) {
-  .mark {
-    opacity: 0.3;
-  }
+  /* The ring can sit under the heading or the links: it stays faint, so white text keeps at least 4.5:1. */
+  opacity: 0.25;
 }
 
 .inner {
+  position: relative;
   display: grid;
   gap: var(--space-8);
   align-items: center;
@@ -50,11 +60,10 @@
 
 .heading {
   margin: 0;
-  max-width: 14ch;
-  font-size: clamp(2.25rem, 1.4rem + 4vw, 4.5rem);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.04em;
+  max-width: 16ch;
+  font-size: clamp(1.75rem, 1.2rem + 2.6vw, 3.25rem);
+  font-weight: 900;
+  line-height: 1.05;
 }
 
 .list {
@@ -65,36 +74,48 @@
   list-style: none;
 }
 
+/* A contact row: a dark strip with an orange edge that widens on hover. */
 .link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  min-height: 3.5rem;
-  padding: var(--space-2) var(--space-6) var(--space-2) var(--space-4);
+  min-height: 3.25rem;
+  padding: var(--space-2) var(--space-4) var(--space-2) calc(var(--space-4) + 4px);
   color: var(--color-on-purple);
-  font-family: var(--font-display);
-  font-weight: 500;
+  font-size: 0.9375rem;
   text-decoration: none;
-  background: rgb(255 255 255 / 0.1);
-  border: 1px solid rgb(255 255 255 / 0.28);
-  border-radius: 999px;
-  backdrop-filter: blur(6px);
-  transition:
-    background-color 0.25s ease,
-    color 0.25s ease,
-    transform 0.35s var(--ease-out);
+  background: rgb(0 0 0 / 0.28);
+  transition: background-color 0.25s ease;
+}
+
+.link::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--color-orange);
+  transform-origin: left center;
+  transition: transform 0.3s var(--ease-out);
 }
 
 .link:hover {
-  color: var(--color-purple-dark);
-  background: var(--color-on-purple);
+  color: var(--color-on-purple);
+  background: rgb(0 0 0 / 0.45);
+}
+
+.link:hover::before,
+.link:focus-visible::before {
+  transform: scaleX(2);
 }
 
 .icon,
 .go {
   flex-shrink: 0;
-  width: 1.375rem;
-  height: 1.375rem;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .linkText {
@@ -103,10 +124,10 @@
 }
 
 .go {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1rem;
+  height: 1rem;
   margin-left: auto;
-  opacity: 0.8;
+  opacity: 0.85;
   transition: transform 0.3s var(--ease-out);
 }
 
@@ -122,10 +143,6 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .link:hover {
-    transform: translateX(4px);
-  }
-
   @supports (animation-timeline: view()) {
     .markTurn {
       animation: footer-turn linear both;
@@ -145,6 +162,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .link,
+  .link::before,
   .go {
     transition: none;
   }

@@ -37,7 +37,8 @@ function Item({ item, linkBase, downloadLabel }: { item: BodyItem; linkBase: str
 }
 
 /**
- * The full page of one experience: a purple title band, the owner's blocks in
+ * The full page of one experience (design A): a purple title band with cut
+ * corners, white crop marks, and an orange hazard stripe; the owner's blocks in
  * segments, then the next-experience link (0.1.2, 0.1.10). On wide screens each
  * heading sits in a sticky column beside its blocks; a fact list sits in
  * a light panel beside the image before it. The block order never changes.
@@ -49,7 +50,7 @@ export function ExperiencePage({ site, experience, linkBase }: ExperiencePagePro
   const segments = segmentBlocks(experience.blocks);
   return (
     <article className={styles.page}>
-      <header className={styles.band}>
+      <header className={`container ${styles.band}`}>
         <div className={styles.bandPanel}>
           <div className={styles.bandBackdrop} aria-hidden="true">
             <span className={styles.bandGrid} />
@@ -57,7 +58,8 @@ export function ExperiencePage({ site, experience, linkBase }: ExperiencePagePro
               <Aperture id={`band-${experience.slug}`} tone="ghost" className={styles.bandMark} />
             </span>
           </div>
-          <div className={`container ${styles.bandInner}`}>
+          <span className={`corner-marks ${styles.bandTicks}`} aria-hidden="true" />
+          <div className={styles.bandInner}>
             <h1 className={styles.title}>{experience.pageTitle}</h1>
             {experience.subtitle && <p className={styles.subtitle}>{experience.subtitle}</p>}
             {experience.skills.length > 0 && (
@@ -70,6 +72,7 @@ export function ExperiencePage({ site, experience, linkBase }: ExperiencePagePro
               </ul>
             )}
           </div>
+          <span className="hazard" aria-hidden="true" />
         </div>
       </header>
 
@@ -105,6 +108,7 @@ export function ExperiencePage({ site, experience, linkBase }: ExperiencePagePro
       {next && nextLabel && (
         <nav className={`container ${styles.next}`} aria-label={nextLabel}>
           <Link href={experienceHref(linkBase, next.slug)} className={styles.nextLink} data-reveal="">
+            <span className="corner-marks" aria-hidden="true" />
             {next.cardImage && (
               <span className={styles.nextThumb}>
                 <MediaImage media={next.cardImage} sizes="10rem" className={styles.nextImage} decorative />

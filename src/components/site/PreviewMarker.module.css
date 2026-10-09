@@ -10,9 +10,11 @@
   padding: var(--space-2) var(--space-4);
   background: var(--color-purple-deep);
   color: var(--color-text);
-  font-weight: 700;
-  border: 2px solid var(--color-lavender);
-  border-radius: 999px;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 2px solid var(--color-orange);
   box-shadow: 0 0.25rem 1rem rgb(0 0 0 / 0.5);
   pointer-events: none;
 }

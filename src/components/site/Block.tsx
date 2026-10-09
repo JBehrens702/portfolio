@@ -40,8 +40,10 @@ function Images({ block, variant }: { block: ImagesBlock; variant: ImagesVariant
       : single
         ? "(min-width: 1024px) 52rem, 100vw"
         : `(min-width: 1024px) ${Math.round(56 / items.length)}rem, (min-width: 640px) ${Math.round(100 / items.length)}vw, 100vw`;
-  // A key image opens like an aperture; the images of a row rise one after another.
-  const reveal = variant === "logo" ? "fade" : single ? "iris" : "";
+  // Photos open with a diagonal wipe and a scan line, under orange crop marks;
+  // logos only fade in. The marks and the line are aria-hidden graphics without text.
+  const reveal = variant === "logo" ? "fade" : "wipe";
+  const marked = variant !== "logo";
   return (
     <figure className={styles.figure}>
       <div className={galleryClass}>
@@ -51,6 +53,8 @@ function Images({ block, variant }: { block: ImagesBlock; variant: ImagesVariant
           return (
             <div key={i} className={styles.galleryItem} style={style} data-reveal={reveal}>
               <MediaImage media={item.image!} sizes={sizes} className={styles.image} />
+              {marked && <span className={styles.scan} aria-hidden="true" />}
+              {marked && <span className="corner-marks" aria-hidden="true" />}
             </div>
           );
         })}

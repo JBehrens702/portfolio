@@ -12,28 +12,32 @@ export interface ExperienceSummaryProps {
   linkBase: string;
   /** The approved "Read more" label; the link is hidden without it (0.1.1, 0.1.8). */
   readMore: string | null;
-  /** The first experience: a purple panel, the highest emphasis on the page. */
+  /** The first experience: a full-width purple card, the highest emphasis on the page. */
   featured?: boolean;
-  /** Image on the right instead of the left, for the zig-zag rows. */
-  reverse?: boolean;
 }
 
-/** One home page block: key image, title, skills, first paragraph, and a link to the full page (0.1.1). */
-export function ExperienceSummary({ experience, linkBase, readMore, featured, reverse }: ExperienceSummaryProps) {
+/**
+ * One home page card: key image, title, skills, first paragraph, and a link to
+ * the full page (0.1.1). A charcoal card with cut corners; the featured card is
+ * purple and spans the full width. The orange corner marks and the scan line
+ * over the image are aria-hidden graphics without text.
+ */
+export function ExperienceSummary({ experience, linkBase, readMore, featured }: ExperienceSummaryProps) {
   const titleId = `work-${experience.slug}`;
-  const classes = [styles.summary, featured ? styles.featured : "", reverse ? styles.reverse : ""].join(" ");
+  const classes = [styles.summary, featured ? styles.featured : "", experience.cardImage ? "" : styles.noMedia].join(" ");
   return (
     <article className={classes} data-reveal="">
       {experience.cardImage && (
         <div className={styles.summaryMedia}>
-          <span className={styles.summaryShape} aria-hidden="true" />
-          <div className={styles.summaryFrame} data-reveal="iris">
+          <div className={styles.summaryFrame} data-reveal="wipe">
             <MediaImage
               media={experience.cardImage}
-              sizes="(min-width: 1024px) 34rem, (min-width: 640px) 80vw, 100vw"
+              sizes={featured ? "(min-width: 900px) 40rem, 100vw" : "(min-width: 900px) 38rem, 100vw"}
               className={styles.summaryImage}
             />
+            <span className={styles.scan} aria-hidden="true" />
           </div>
+          <span className="corner-marks" aria-hidden="true" />
         </div>
       )}
       <div className={styles.summaryBody}>

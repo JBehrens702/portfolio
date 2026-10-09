@@ -10,8 +10,8 @@ const common = {
   fill: "none",
   stroke: "currentColor",
   strokeWidth: 1.8,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
+  strokeLinecap: "square" as const,
+  strokeLinejoin: "miter" as const,
   "aria-hidden": true,
   focusable: false,
 };
@@ -38,7 +38,7 @@ export function ExternalIcon({ className }: IconProps) {
 export function FileIcon({ className }: IconProps) {
   return (
     <svg {...common} className={className}>
-      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3H5v18h14V8z" />
       <path d="M14 3v5h5M12 11v6m0 0 2.5-2.5M12 17l-2.5-2.5" />
     </svg>
   );
@@ -48,7 +48,7 @@ export function FileIcon({ className }: IconProps) {
 export function MailIcon({ className }: IconProps) {
   return (
     <svg {...common} className={className}>
-      <rect x="3" y="5" width="18" height="14" rx="2.5" />
+      <rect x="3" y="5" width="18" height="14" />
       <path d="m4 7 8 6 8-6" />
     </svg>
   );
@@ -58,7 +58,7 @@ export function MailIcon({ className }: IconProps) {
 export function ProfileIcon({ className }: IconProps) {
   return (
     <svg {...common} className={className}>
-      <rect x="3" y="4" width="18" height="16" rx="2.5" />
+      <rect x="3" y="4" width="18" height="16" />
       <circle cx="9" cy="11" r="2.5" />
       <path d="M5.5 17c.8-1.8 2-2.6 3.5-2.6s2.7.8 3.5 2.6M15 9.5h3M15 13h3" />
     </svg>

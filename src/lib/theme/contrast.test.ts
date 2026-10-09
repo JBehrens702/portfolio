@@ -67,4 +67,27 @@ describe("theme colours", () => {
     expect(has("--color-text", "--color-surface-raised", 4.5)).toBe(true);
     expect(has("--color-focus", "--color-surface-raised", 3)).toBe(true);
   });
+
+  it("checks the orange accents of design A: headings, the button, the top bar, and graphics on purple", () => {
+    const has = (fg: string, bg: string, min: number) =>
+      contrastRules.some((r) => r.fg === fg && r.bg === bg && r.min >= min);
+    // Orange text on the dark page and the cards, and the dark text on the orange button.
+    for (const bg of ["--color-bg", "--color-surface", "--color-surface-raised"]) {
+      expect(has("--color-orange", bg, 4.5), bg).toBe(true);
+    }
+    expect(has("--color-on-orange", "--color-orange", 4.5)).toBe(true);
+    // The top bar: white and orange menu text, and the focus outline.
+    expect(has("--color-text", "--color-bar", 4.5)).toBe(true);
+    expect(has("--color-orange", "--color-bar", 4.5)).toBe(true);
+    expect(has("--color-focus", "--color-bar", 3)).toBe(true);
+    // Orange graphics only on the darker purple steps, at 3:1 or more.
+    expect(has("--color-orange", "--color-purple-dark", 3)).toBe(true);
+    expect(has("--color-orange", "--color-purple-ink", 3)).toBe(true);
+  });
+
+  it("never pairs orange text with deep purple, where it stays under 3:1", () => {
+    const ratio = contrastRatio(themeColors["--color-orange"], themeColors["--color-purple-deep"]);
+    expect(ratio).toBeLessThan(3);
+    expect(contrastRules.some((r) => r.fg === "--color-orange" && r.bg === "--color-purple-deep")).toBe(false);
+  });
 });
