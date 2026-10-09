@@ -84,7 +84,7 @@ describe("content source from the environment", () => {
   });
 
   it("selects Blob when this environment's store is configured, or when CONTENT_SOURCE=blob", () => {
-    expect(contentSourceFromEnv({ DEV_STORE_ID: "store_dev" })).toEqual({ kind: "blob" });
+    expect(contentSourceFromEnv({ DEVDOCS_STORE_ID: "store_devdocs" })).toEqual({ kind: "blob" });
     expect(contentSourceFromEnv({ CONTENT_SOURCE: "blob" })).toEqual({ kind: "blob" });
   });
 

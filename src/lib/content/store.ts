@@ -190,15 +190,31 @@ export function createMemoryContentStore(
  */
 export type BlobCredentials = { token: string } | { storeId: string };
 
-export function blobCredentialsFromEnv(
-  env: Record<string, string | undefined> = process.env,
-): BlobCredentials | undefined {
-  const prefix = env.VERCEL_ENV === "production" ? "BLOB" : "DEV";
+function credentialsForPrefix(env: Record<string, string | undefined>, prefix: string): BlobCredentials | undefined {
   const token = env[`${prefix}_READ_WRITE_TOKEN`]?.trim();
   if (token) return { token };
   const storeId = env[`${prefix}_STORE_ID`]?.trim();
   if (storeId) return { storeId };
   return undefined;
+}
+
+/** The PUBLIC media store (images and files that visitors load): prefix BLOB on Production, DEV elsewhere. */
+export function blobCredentialsFromEnv(
+  env: Record<string, string | undefined> = process.env,
+): BlobCredentials | undefined {
+  return credentialsForPrefix(env, env.VERCEL_ENV === "production" ? "BLOB" : "DEV");
+}
+
+/**
+ * The PRIVATE documents store (draft, published, and history JSON): prefix
+ * DOCS on Production, DEVDOCS elsewhere. A public store serves reads through
+ * its CDN, which returned old versions for up to 73 s (U6); a private store
+ * with `useCache: false` reads the current version at once.
+ */
+export function docsCredentialsFromEnv(
+  env: Record<string, string | undefined> = process.env,
+): BlobCredentials | undefined {
+  return credentialsForPrefix(env, env.VERCEL_ENV === "production" ? "DOCS" : "DEVDOCS");
 }
 
 export interface BlobBackendOptions {
@@ -227,11 +243,17 @@ export function createBlobBackend(options: BlobBackendOptions = {}): JsonBackend
   const auth = options.credentials ?? blobCredentialsFromEnv();
   if (!auth) {
     throw new Error(
-      "No Blob store for this environment: set DEV_STORE_ID or DEV_READ_WRITE_TOKEN (BLOB_STORE_ID or BLOB_READ_WRITE_TOKEN on Production).",
+      "No Blob store given and none for this environment: pass credentials, or set DEV_STORE_ID / DEV_READ_WRITE_TOKEN (BLOB_* on Production).",
     );
   }
   return {
     async read(pathname) {
+      if (access === "private") {
+        // A private store honours useCache: false and reads the current version.
+        const result = await get(pathname, { access, useCache: false, ...auth });
+        if (result === null || result.statusCode !== 200) return null;
+        return JSON.parse(await new Response(result.stream).text());
+      }
       // The Blob CDN can return the version from before an overwrite (KTD2), and
       // `useCache: false` bypasses it only for PRIVATE blobs; this store is public.
       // Measured on the development store (U6): a read right after an overwrite
@@ -273,7 +295,7 @@ export function createBlobBackend(options: BlobBackendOptions = {}): JsonBackend
         addRandomSuffix: false,
         allowOverwrite: true,
         // The shortest CDN cache that Blob allows; the server never reads through it.
-        cacheControlMaxAge: 60,
+        ...(access === "public" ? { cacheControlMaxAge: 60 } : {}),
       });
     },
     async list(prefix) {
@@ -363,7 +385,7 @@ export type ContentSource = { kind: "file"; folder: string } | { kind: "blob" } 
 /**
  * Reads CONTENT_SOURCE. "file:<folder>" selects local JSON files (local
  * development and tests). "blob", or no value while this environment's Blob
- * store is configured (blobCredentialsFromEnv), selects Vercel Blob. With neither, no content is configured: the site
+ * documents store is configured (docsCredentialsFromEnv), selects Vercel Blob. With neither, no content is configured: the site
  * then renders no content, and `next build` still passes.
  */
 export function contentSourceFromEnv(env: Record<string, string | undefined> = process.env): ContentSource {
@@ -375,7 +397,7 @@ export function contentSourceFromEnv(env: Record<string, string | undefined> = p
   }
   if (source === "blob") return { kind: "blob" };
   if (source !== "") throw new Error(`CONTENT_SOURCE must be "blob" or "file:<folder>", not "${source}".`);
-  return blobCredentialsFromEnv(env) ? { kind: "blob" } : { kind: "none" };
+  return docsCredentialsFromEnv(env) ? { kind: "blob" } : { kind: "none" };
 }
 
 /** The content store that the environment selects, or null when no content source is configured. */
@@ -387,5 +409,5 @@ export function createContentStoreFromEnv(
   if (source.kind === "none") return null;
   const config = contentConfigFromEnv(env);
   if (source.kind === "file") return createContentStore(createFileBackend(source.folder), config, options);
-  return createBlobContentStore(config, { ...options, credentials: blobCredentialsFromEnv(env) });
+  return createBlobContentStore(config, { ...options, credentials: docsCredentialsFromEnv(env), access: "private" });
 }

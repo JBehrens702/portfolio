@@ -9,9 +9,9 @@
 //       pass the Production store's credentials and the Production
 //       CONTENT_PATH_SECRET as env vars for this one run - never put them in a file
 //
-// Credentials come from blobCredentialsFromEnv: the development store is
-// DEV_STORE_ID (or DEV_READ_WRITE_TOKEN), the Production store is BLOB_STORE_ID
-// (or BLOB_READ_WRITE_TOKEN). A store ID needs VERCEL_OIDC_TOKEN, which
+// Media go to the public media store (DEV_STORE_ID, or BLOB_STORE_ID on
+// Production); the draft goes to the private documents store (DEVDOCS_STORE_ID,
+// or DOCS_STORE_ID on Production). Each may use a _READ_WRITE_TOKEN instead. A store ID needs VERCEL_OIDC_TOKEN, which
 // `vercel env pull` writes. It also reads CONTENT_ROOT and CONTENT_PATH_SECRET from the
 // environment (or from the --env-file). It writes only the draft, never the
 // published document, and it never prints or saves the token or the secret.
@@ -19,7 +19,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { put } from "@vercel/blob";
-import { blobCredentialsFromEnv, contentConfigFromEnv, createBlobContentStore } from "../src/lib/content/store";
+import { blobCredentialsFromEnv, contentConfigFromEnv, createBlobContentStore, docsCredentialsFromEnv } from "../src/lib/content/store";
 import { DraftExistsError, checkSeed, seedDraft, type ManifestEntry, type Uploader } from "./seed/core";
 
 const SEED_DIR = path.resolve("content/seed");
@@ -52,20 +52,20 @@ async function main(): Promise<void> {
   }
 
   if (options.envFile) process.loadEnvFile(options.envFile);
-  const credentials = blobCredentialsFromEnv({
-    ...process.env,
-    VERCEL_ENV: options.store === "production" ? "production" : undefined,
-  });
-  if (!credentials) {
-    const prefix = options.store === "production" ? "BLOB" : "DEV";
-    throw new Error(`${prefix}_STORE_ID or ${prefix}_READ_WRITE_TOKEN must be set for --store=${options.store}.`);
+  const storeEnv = { ...process.env, VERCEL_ENV: options.store === "production" ? "production" : undefined };
+  // Images and files go to the public media store; the draft goes to the private documents store.
+  const credentials = blobCredentialsFromEnv(storeEnv);
+  const docsCredentials = docsCredentialsFromEnv(storeEnv);
+  if (!credentials || !docsCredentials) {
+    const [media, docs] = options.store === "production" ? ["BLOB", "DOCS"] : ["DEV", "DEVDOCS"];
+    throw new Error(`${media}_STORE_ID and ${docs}_STORE_ID (or their _READ_WRITE_TOKEN) must be set for --store=${options.store}.`);
   }
-  if ("storeId" in credentials && !process.env.VERCEL_OIDC_TOKEN?.trim()) {
+  if (("storeId" in credentials || "storeId" in docsCredentials) && !process.env.VERCEL_OIDC_TOKEN?.trim()) {
     throw new Error("VERCEL_OIDC_TOKEN must be set to use a store ID. Run `vercel env pull` again; the token lasts about 12 hours.");
   }
   console.log(`Seeding the ${options.store === "production" ? "PRODUCTION" : "development"} store.`);
   const config = contentConfigFromEnv();
-  const store = createBlobContentStore(config, { credentials });
+  const store = createBlobContentStore(config, { credentials: docsCredentials, access: "private" });
 
   const upload: Uploader = async ({ pathname, contentType, data }) => {
     const blob = await put(pathname, Buffer.from(data), { access: "public", addRandomSuffix: true, contentType, ...credentials });
