@@ -1,0 +1,289 @@
+{
+  "schemaVersion": 1,
+  "profile": {
+    "name": "Fixture Owner",
+    "tagline": "Hi, I'm Fixture Owner",
+    "heroPhoto": {
+      "url": "https://media.e2e.test/e2e/media/hero.png",
+      "pathname": "e2e/media/hero.png",
+      "contentType": "image/png",
+      "width": 1200,
+      "height": 900,
+      "alt": "Fixture hero photo"
+    },
+    "introParagraphs": [
+      "Fixture intro paragraph one.",
+      "Fixture intro paragraph two with [an intro link](https://example.com/intro)."
+    ]
+  },
+  "contact": {
+    "linkedin": "https://www.linkedin.com/in/fixture-owner/",
+    "email": "fixture@example.com",
+    "rise": "https://app.joinrise.co/professional/fixture-owner"
+  },
+  "labels": {
+    "selectedWork": {
+      "text": "Selected Work",
+      "approved": true
+    },
+    "nextExperience": {
+      "text": "Next Experience",
+      "approved": true
+    },
+    "contactHeading": {
+      "text": "Get in touch:",
+      "approved": true
+    },
+    "readMore": {
+      "text": "Read more",
+      "approved": true
+    },
+    "resume": {
+      "text": "Resume",
+      "approved": true
+    },
+    "softwareHeading": {
+      "text": "Software Projects",
+      "approved": true
+    },
+    "aboutHeading": {
+      "text": "About Me",
+      "approved": true
+    },
+    "navWork": {
+      "text": "Work",
+      "approved": true
+    },
+    "navAbout": {
+      "text": "About",
+      "approved": true
+    },
+    "navContact": {
+      "text": "Contact",
+      "approved": true
+    },
+    "menu": {
+      "text": "Menu",
+      "approved": true
+    },
+    "logoAlt": {
+      "text": "Fixture logo",
+      "approved": true
+    },
+    "notFoundTitle": {
+      "text": "Page not found",
+      "approved": true
+    },
+    "backHome": {
+      "text": "Back to home",
+      "approved": true
+    },
+    "downloadFile": {
+      "text": "Download",
+      "approved": true
+    },
+    "previewMarker": {
+      "text": "Preview",
+      "approved": true
+    }
+  },
+  "experiences": [
+    {
+      "slug": "alpha-project",
+      "homeTitle": "Alpha Project",
+      "pageTitle": "Alpha Project Page",
+      "subtitle": "Alpha subtitle",
+      "cardImage": {
+        "url": "https://media.e2e.test/e2e/media/alpha-card.png",
+        "pathname": "e2e/media/alpha-card.png",
+        "contentType": "image/png",
+        "width": 800,
+        "height": 600,
+        "alt": "Alpha card image"
+      },
+      "skills": [
+        "CAD",
+        "FEA",
+        ""
+      ],
+      "homeText": "Alpha home paragraph.",
+      "blocks": [
+        {
+          "id": "a-h1",
+          "type": "heading",
+          "text": "Alpha overview",
+          "level": 2
+        },
+        {
+          "id": "a-t1",
+          "type": "text",
+          "text": "Alpha text with [a block link](https://example.com/block)."
+        },
+        {
+          "id": "a-t2",
+          "type": "text",
+          "text": "Raw <b>bold</b> and <script>window.__xss = 1</script> stay text."
+        },
+        {
+          "id": "a-t4",
+          "type": "text",
+          "text": "<https://www.example.com/video>"
+        },
+        {
+          "id": "a-t5",
+          "type": "text",
+          "text": "See the [gamma page](/experiences/gamma-project)."
+        },
+        {
+          "id": "a-h2",
+          "type": "heading",
+          "text": "Alpha details",
+          "level": 3
+        },
+        {
+          "id": "a-f1",
+          "type": "facts",
+          "items": [
+            {
+              "label": "Skills Demonstrated",
+              "value": "CAD, FEA"
+            },
+            {
+              "label": "Client",
+              "value": "Dr. Fixture Client\nProfessor, Fixture University"
+            },
+            {
+              "label": "Empty fact",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "id": "a-i1",
+          "type": "images",
+          "items": [
+            {
+              "image": {
+                "url": "https://media.e2e.test/e2e/media/alpha-1.png",
+                "pathname": "e2e/media/alpha-1.png",
+                "contentType": "image/png",
+                "alt": "Alpha figure one"
+              }
+            },
+            {
+              "image": {
+                "url": "https://media.e2e.test/e2e/media/alpha-2.png",
+                "pathname": "e2e/media/alpha-2.png",
+                "contentType": "image/png"
+              }
+            },
+            {}
+          ],
+          "caption": "Alpha figure caption"
+        },
+        {
+          "id": "a-file",
+          "type": "file",
+          "label": "Alpha report",
+          "file": {
+            "url": "https://media.e2e.test/e2e/media/alpha-report.pdf",
+            "pathname": "e2e/media/alpha-report.pdf",
+            "contentType": "application/pdf",
+            "fileName": "Alpha report.pdf"
+          }
+        },
+        {
+          "id": "a-file-empty",
+          "type": "file",
+          "label": "Missing file"
+        },
+        {
+          "id": "a-q1",
+          "type": "quote",
+          "text": "Alpha quoted problem statement."
+        },
+        {
+          "id": "a-h3",
+          "type": "heading",
+          "text": "Hidden empty section",
+          "level": 2
+        },
+        {
+          "id": "a-t3",
+          "type": "text",
+          "text": "   "
+        }
+      ]
+    },
+    {
+      "slug": "beta-project",
+      "homeTitle": "Beta Project",
+      "pageTitle": "Beta Project Page",
+      "cardImage": {
+        "url": "https://media.e2e.test/e2e/media/beta-card.png",
+        "pathname": "e2e/media/beta-card.png",
+        "contentType": "image/png",
+        "width": 800,
+        "height": 600
+      },
+      "skills": [],
+      "homeText": "Beta home paragraph.",
+      "blocks": [
+        {
+          "id": "b-t1",
+          "type": "text",
+          "text": "Beta body text."
+        }
+      ]
+    },
+    {
+      "slug": "gamma-project",
+      "homeTitle": "Gamma Project",
+      "pageTitle": "Gamma Project Page",
+      "cardImage": {
+        "url": "https://media.e2e.test/e2e/media/gamma-card.png",
+        "pathname": "e2e/media/gamma-card.png",
+        "contentType": "image/png",
+        "alt": "Gamma card image"
+      },
+      "skills": [
+        "Leadership",
+        "Volunteering"
+      ],
+      "homeText": "Gamma home paragraph.",
+      "blocks": [
+        {
+          "id": "g-t1",
+          "type": "text",
+          "text": "Gamma body text."
+        }
+      ]
+    }
+  ],
+  "software": [
+    {
+      "id": "dashboard",
+      "name": "Dashboard",
+      "overview": "Dashboard overview text.",
+      "screenshot": {
+        "url": "https://media.e2e.test/e2e/media/dashboard.png",
+        "pathname": "e2e/media/dashboard.png",
+        "contentType": "image/png",
+        "width": 1280,
+        "height": 800,
+        "alt": "Dashboard screenshot"
+      }
+    },
+    {
+      "id": "unquotable",
+      "name": "[UN]Quotable",
+      "overview": "Unquotable overview text.",
+      "link": "https://unquotable.626house.casa"
+    },
+    {
+      "id": "hidden-card",
+      "name": "Hidden Card",
+      "overview": ""
+    }
+  ]
+}

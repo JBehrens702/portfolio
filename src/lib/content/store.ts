@@ -1,4 +1,6 @@
 import { get, list, put, type BlobAccessType } from "@vercel/blob";
+import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { assertSite, parseSite, type ParseResult, type Site } from "./schema";
 
 // The content store (KTD2). One JSON document holds the draft, one holds the
@@ -226,4 +228,97 @@ export function createBlobContentStore(
   options: BlobBackendOptions & ContentStoreOptions = {},
 ): ContentStore {
   return createContentStore(createBlobBackend(options), config, options);
+}
+
+// ---- Local JSON files, for local development and the Playwright tests ----
+
+const PATHNAME_SEGMENT = /^[A-Za-z0-9_.-]+$/;
+
+/** Rejects a pathname that could leave the folder: empty, absolute, or with "." or ".." segments. */
+function safeSegments(pathname: string): string[] {
+  const segments = pathname.split("/");
+  const ok =
+    segments.length > 0 &&
+    segments.every((segment) => PATHNAME_SEGMENT.test(segment) && segment !== "." && segment !== "..");
+  if (!ok) throw new Error(`Unsafe content pathname: ${pathname}`);
+  return segments;
+}
+
+async function walk(folder: string, relative: string[] = []): Promise<string[]> {
+  let entries;
+  try {
+    entries = await readdir(path.join(folder, ...relative), { withFileTypes: true });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw error;
+  }
+  const found: string[] = [];
+  for (const entry of entries) {
+    const next = [...relative, entry.name];
+    if (entry.isDirectory()) found.push(...(await walk(folder, next)));
+    else if (entry.isFile() && !entry.name.endsWith(".tmp")) found.push(next.join("/"));
+  }
+  return found;
+}
+
+/**
+ * JSON documents as files under one folder: the pathname "site/published.json"
+ * is the file "<folder>/site/published.json". Reads are never cached.
+ */
+export function createFileBackend(folder: string): JsonBackend {
+  const root = path.resolve(folder);
+  return {
+    async read(pathname) {
+      try {
+        return JSON.parse(await readFile(path.join(root, ...safeSegments(pathname)), "utf8"));
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+        throw error;
+      }
+    },
+    async write(pathname, value) {
+      const file = path.join(root, ...safeSegments(pathname));
+      await mkdir(path.dirname(file), { recursive: true });
+      // Write a temporary file, then rename it, so a reader never sees half a document.
+      const temporary = `${file}.${crypto.randomUUID().slice(0, 8)}.tmp`;
+      await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+      await rename(temporary, file);
+    },
+    async list(prefix) {
+      return (await walk(root)).filter((pathname) => pathname.startsWith(prefix));
+    },
+  };
+}
+
+/** Where the content comes from, from the environment. */
+export type ContentSource = { kind: "file"; folder: string } | { kind: "blob" } | { kind: "none" };
+
+/**
+ * Reads CONTENT_SOURCE. "file:<folder>" selects local JSON files (local
+ * development and tests). "blob", or no value while BLOB_READ_WRITE_TOKEN is
+ * set, selects Vercel Blob. With neither, no content is configured: the site
+ * then renders no content, and `next build` still passes.
+ */
+export function contentSourceFromEnv(env: Record<string, string | undefined> = process.env): ContentSource {
+  const source = env.CONTENT_SOURCE?.trim() ?? "";
+  if (source.startsWith("file:")) {
+    const folder = source.slice("file:".length).trim();
+    if (!folder) throw new Error('CONTENT_SOURCE "file:" needs a folder, for example "file:e2e/fixtures/content".');
+    return { kind: "file", folder };
+  }
+  if (source === "blob") return { kind: "blob" };
+  if (source !== "") throw new Error(`CONTENT_SOURCE must be "blob" or "file:<folder>", not "${source}".`);
+  return env.BLOB_READ_WRITE_TOKEN?.trim() ? { kind: "blob" } : { kind: "none" };
+}
+
+/** The content store that the environment selects, or null when no content source is configured. */
+export function createContentStoreFromEnv(
+  env: Record<string, string | undefined> = process.env,
+  options: ContentStoreOptions = {},
+): ContentStore | null {
+  const source = contentSourceFromEnv(env);
+  if (source.kind === "none") return null;
+  const config = contentConfigFromEnv(env);
+  if (source.kind === "file") return createContentStore(createFileBackend(source.folder), config, options);
+  return createBlobContentStore(config, options);
 }

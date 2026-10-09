@@ -1,0 +1,195 @@
+/* Home page: hero, experience blocks, software cards, intro. Theme variables come from globals.css. */
+
+.hero {
+  padding-block: var(--space-8) var(--space-12);
+  border-bottom: 1px solid var(--color-border);
+  background: radial-gradient(
+    ellipse at 85% 0%,
+    color-mix(in srgb, var(--color-purple-deep) 22%, transparent),
+    transparent 60%
+  );
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-8);
+  align-items: center;
+}
+
+.heroText {
+  min-width: 0;
+}
+
+.heroName {
+  margin-bottom: var(--space-3);
+}
+
+.heroPhoto {
+  width: 100%;
+  height: auto;
+  max-height: 32rem;
+  object-fit: cover;
+  border-radius: calc(var(--radius) * 2);
+  border: 1px solid var(--color-border);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-size);
+  padding: var(--space-2) var(--space-6);
+  background: var(--color-purple-deep);
+  color: var(--color-text);
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: var(--radius);
+}
+
+.button:hover {
+  background: color-mix(in srgb, var(--color-purple-deep) 85%, black);
+  color: var(--color-text);
+}
+
+.section {
+  padding-top: var(--space-12);
+}
+
+.sectionHeading {
+  margin-bottom: var(--space-6);
+}
+
+.summaries {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-8);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--radius) * 2);
+}
+
+.summaryImage {
+  width: 100%;
+  height: auto;
+  max-height: 22rem;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
+
+.summaryBody {
+  min-width: 0;
+}
+
+.summaryBody h3 {
+  margin-bottom: var(--space-3);
+  font-size: 1.375rem;
+}
+
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4) !important;
+}
+
+.skills li {
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--color-lavender);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.prose {
+  min-width: 0;
+}
+
+.prose > p:last-child {
+  margin-bottom: 0;
+}
+
+.prose + .prose {
+  margin-top: var(--space-4);
+}
+
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+  margin-top: var(--space-2);
+  font-weight: 700;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+.card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.cardImage {
+  width: 100%;
+  height: auto;
+  max-height: 14rem;
+  object-fit: cover;
+  object-position: top;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cardBody {
+  min-width: 0;
+  padding: var(--space-4);
+  font-size: 0.9375rem;
+}
+
+.cardBody h3 {
+  margin-bottom: var(--space-2);
+  font-size: 1.125rem;
+}
+
+.cardBody h3 a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+}
+
+.about {
+  max-width: 48rem;
+}
+
+.notFound {
+  padding-block: var(--space-12);
+}
+
+@media (min-width: 800px) {
+  .heroGrid {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+
+  .summary {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: var(--space-6);
+    padding: var(--space-6);
+  }
+
+  .cards {
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  }
+}

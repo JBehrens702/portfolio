@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { SITE_TITLE } from "@/components/site/site-title";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Jonathan Behrens' Portfolio",
+  title: { default: SITE_TITLE, template: `%s | ${SITE_TITLE}` },
 };
 
 export default function RootLayout({
@@ -11,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body>{children}</body>
     </html>
   );

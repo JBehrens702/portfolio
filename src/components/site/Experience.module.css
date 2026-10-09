@@ -1,0 +1,157 @@
+/* The full page of one experience. Theme variables come from globals.css. */
+
+.page {
+  padding-block: var(--space-8) 0;
+}
+
+.intro {
+  max-width: 48rem;
+  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+  margin-bottom: var(--space-2);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 1.1875rem;
+}
+
+.blocks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 48rem;
+}
+
+.blocks > * {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.heading {
+  margin-top: var(--space-6);
+}
+
+.subheading {
+  margin-top: var(--space-2);
+}
+
+.prose > p:last-child {
+  margin-bottom: 0;
+}
+
+.quote {
+  margin: 0;
+  padding: var(--space-4) var(--space-6);
+  font-style: italic;
+  background: var(--color-surface);
+  border-left: 4px solid var(--color-purple-bright);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.quote p:last-child {
+  margin-bottom: 0;
+}
+
+.facts {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.fact dt {
+  color: var(--color-lavender);
+  font-weight: 700;
+}
+
+.fact dd {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.figure {
+  margin: 0;
+}
+
+.imageGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.image {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+}
+
+.caption {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
+.file {
+  margin: 0;
+}
+
+.fileLink {
+  /* inline-block, not flex, so the space after the "Download" label stays. */
+  display: inline-block;
+  min-height: var(--tap-size);
+  padding: 0.625rem var(--space-4);
+  font-weight: 700;
+  line-height: 1.4;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.fileAction {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.next {
+  max-width: 48rem;
+  margin-top: var(--space-12);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+
+.nextLink {
+  display: inline-flex;
+  flex-direction: column;
+  min-height: var(--tap-size);
+  text-decoration: none;
+}
+
+.nextLink:hover .nextTitle {
+  text-decoration: underline;
+}
+
+.nextLabel {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.nextTitle {
+  color: var(--color-link);
+  font-size: 1.375rem;
+  font-weight: 700;
+}
+
+@media (min-width: 640px) {
+  .imageGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
