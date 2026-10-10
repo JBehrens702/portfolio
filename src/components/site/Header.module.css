@@ -44,7 +44,7 @@
   fill: none;
   stroke: var(--color-orange);
   stroke-width: 6;
-  stroke-linecap: square;
+  stroke-linecap: round;
 }
 
 .logoLink {
