@@ -4,6 +4,7 @@ import { move, type Direction } from "@/lib/content/order";
 import type { Block, BlockType, FactsBlock, FileBlock, ImagesBlock, Media } from "@/lib/content/schema";
 import { AltTextField } from "./AltTextField";
 import { MediaField } from "./MediaField";
+import { placeUploadedImage, withCurrentAlt } from "./media-merge";
 import { omit } from "./omit";
 import { OrderButtons } from "./OrderButtons";
 import styles from "./admin.module.css";
@@ -194,7 +195,7 @@ function FileFields(props: BlockEditorProps & { block: FileBlock }) {
         confirm={props.confirm}
         beginUpload={props.beginUpload}
         endUpload={props.endUpload}
-        onUploaded={(file) => onFileChange(typed<FileBlock>("file", (b) => ({ ...b, file })))}
+        onUploaded={(file) => onFileChange(typed<FileBlock>("file", (b) => ({ ...b, file: withCurrentAlt(file, b.file) })))}
         onRemove={() => onFileChange(typed<FileBlock>("file", (b) => omit(b, "file")))}
       />
     </div>
@@ -315,7 +316,9 @@ function ImagesFields(props: BlockEditorProps & { block: ImagesBlock }) {
               confirm={props.confirm}
               beginUpload={props.beginUpload}
               endUpload={props.endUpload}
-              onUploaded={(image) => setImage(i, true, () => image)}
+              // `item` is this item as it was when the upload started; the
+              // result goes to that item wherever it is now (not to index i).
+              onUploaded={(image) => items(true, (list) => placeUploadedImage(list, item, image))}
             />
             <AltTextField
               label="Alt text (what the image shows, for screen readers)"

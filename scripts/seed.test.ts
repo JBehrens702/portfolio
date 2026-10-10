@@ -16,6 +16,7 @@ import {
   type ManifestEntry,
   type UploadRequest,
 } from "./seed/core";
+import { parseSeedArgs, seedTargets } from "./seed/options";
 
 // U7: the seed must hold every word of the Google Site, word for word, except
 // the fixes listed in docs/text-fixes.md (1.2.1 to 1.2.4, 1.2.7).
@@ -570,5 +571,68 @@ describe("seed references", () => {
     expect(seedRefs(doc)).toEqual(["x.jpg", "y.png"]);
     expect(resolveSeedMedia(doc, () => media)).toEqual({ a: media, b: [media, { seed: "z", other: 1 }], c: "seed" });
     expect(doc.a).toEqual({ seed: "x.jpg" });
+  });
+});
+
+describe("seed options: the Production store takes its values from the environment only (U8)", () => {
+  const DEV_SECRET = "development-secret-0123456789";
+  const PROD_SECRET = "production-secret-0123456789";
+  const productionEnv = {
+    BLOB_STORE_ID: "store_prod_media",
+    DOCS_STORE_ID: "store_prod_docs",
+    VERCEL_OIDC_TOKEN: "oidc",
+    CONTENT_ROOT: "site",
+    CONTENT_PATH_SECRET: PROD_SECRET,
+    // The development values sit beside them, as after `vercel env pull`.
+    DEV_STORE_ID: "store_dev_media",
+    DEVDOCS_STORE_ID: "store_dev_docs",
+  };
+
+  it("refuses --env-file with --store=production, in either order", () => {
+    const message = "--store=production takes its values from the environment only; do not pass --env-file";
+    expect(() => parseSeedArgs(["--store=production", "--env-file=.env.local"])).toThrow(message);
+    expect(() => parseSeedArgs(["--env-file=.env.local", "--force", "--store=production"])).toThrow(message);
+  });
+
+  it("accepts --env-file for the development store, and --store=production alone", () => {
+    expect(parseSeedArgs(["--env-file=.env.local", "--force"])).toEqual({
+      force: true,
+      check: false,
+      envFile: ".env.local",
+      store: "dev",
+    });
+    expect(parseSeedArgs(["--store=production"])).toMatchObject({ store: "production", envFile: undefined });
+    expect(() => parseSeedArgs(["--nope"])).toThrow(/Unknown option/);
+  });
+
+  it("refuses the Production store without CONTENT_PATH_SECRET or CONTENT_ROOT in the environment", () => {
+    const options = parseSeedArgs(["--store=production"]);
+    for (const name of ["CONTENT_PATH_SECRET", "CONTENT_ROOT"] as const) {
+      const env: Record<string, string | undefined> = { ...productionEnv };
+      delete env[name];
+      expect(() => seedTargets(options, env)).toThrow(name);
+      expect(() => seedTargets(options, { ...env, [name]: "  " })).toThrow(name);
+    }
+  });
+
+  it("uses the Production stores and the Production secret from the same environment", () => {
+    const targets = seedTargets(parseSeedArgs(["--store=production"]), productionEnv);
+    expect(targets.media).toEqual({ storeId: "store_prod_media" });
+    expect(targets.docs).toEqual({ storeId: "store_prod_docs" });
+    expect(targets.config).toEqual({ root: "site", secret: PROD_SECRET });
+  });
+
+  it("uses the development stores for --store=dev, even when VERCEL_ENV says production", () => {
+    const env = { ...productionEnv, CONTENT_PATH_SECRET: DEV_SECRET, VERCEL_ENV: "production" };
+    const targets = seedTargets(parseSeedArgs([]), env);
+    expect(targets.media).toEqual({ storeId: "store_dev_media" });
+    expect(targets.docs).toEqual({ storeId: "store_dev_docs" });
+    expect(targets.config).toEqual({ root: "site", secret: DEV_SECRET });
+  });
+
+  it("needs VERCEL_OIDC_TOKEN for a store ID", () => {
+    const env: Record<string, string | undefined> = { ...productionEnv };
+    delete env.VERCEL_OIDC_TOKEN;
+    expect(() => seedTargets(parseSeedArgs(["--store=production"]), env)).toThrow(/VERCEL_OIDC_TOKEN/);
   });
 });

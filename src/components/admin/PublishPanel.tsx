@@ -61,7 +61,7 @@ export function PublishPanel() {
       {state.kind === "failed" ? (
         <p role="alert" className={styles.error}>
           The connection failed. Nothing was published.{" "}
-          <button type="button" className={`${styles.button} ${styles.small}`} onClick={publish}>
+          <button type="button" className={`${styles.button} ${styles.small}`} onClick={publish} disabled={pending}>
             Retry
           </button>
         </p>

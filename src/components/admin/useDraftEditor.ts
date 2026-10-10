@@ -17,6 +17,21 @@ export type SaveStatus =
 
 export const NETWORK_FAILURE = "Not saved: the connection failed. Your draft is unchanged.";
 
+/** A save result. With `value`, the server stored a value that differs from the one sent. */
+export type SaveResult<T> = ActionResult | { ok: true; savedAt: string; value: T };
+
+/**
+ * Takes the stored value into the editor. `sent` is the value of the save and
+ * `latest` the editor's value now: they differ when the owner edited while the
+ * save ran. The default keeps those edits and takes the stored value only when
+ * nothing changed.
+ */
+export type Adopt<T> = (stored: T, sent: T, latest: T) => T;
+
+function adoptUnchanged<T>(stored: T, sent: T, latest: T): T {
+  return latest === sent ? stored : latest;
+}
+
 export interface DraftEditor<T> {
   value: T;
   /** Changes the value and marks it unsaved. */
@@ -32,7 +47,11 @@ export interface DraftEditor<T> {
   endUpload: () => void;
 }
 
-export function useDraftEditor<T>(initial: T, persist: (value: T) => Promise<ActionResult>): DraftEditor<T> {
+export function useDraftEditor<T>(
+  initial: T,
+  persist: (value: T) => Promise<SaveResult<T>>,
+  adopt: Adopt<T> = adoptUnchanged,
+): DraftEditor<T> {
   const [value, setValue] = useState(initial);
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState<SaveStatus>({ kind: "idle" });
@@ -56,7 +75,12 @@ export function useDraftEditor<T>(initial: T, persist: (value: T) => Promise<Act
         if (result.ok) {
           setStatus({ kind: "saved", at: result.savedAt });
           // Edits made while the save ran stay unsaved.
-          if (latest.current === target) setDirty(false);
+          const unchanged = latest.current === target;
+          if ("value" in result) {
+            latest.current = adopt(result.value, target, latest.current);
+            setValue(latest.current);
+          }
+          if (unchanged) setDirty(false);
           return true;
         }
         setStatus({ kind: "refused", message: result.message, issues: result.issues });
@@ -65,7 +89,7 @@ export function useDraftEditor<T>(initial: T, persist: (value: T) => Promise<Act
       }
       return false;
     },
-    [persist],
+    [persist, adopt],
   );
 
   const save = useCallback(() => send(latest.current), [send]);

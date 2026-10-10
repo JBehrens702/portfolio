@@ -41,6 +41,7 @@ function SiteChrome({
         menuLabel={labelText(site, "menu") ?? ""}
         links={navLinks(site, linkBase, onHome)}
         resume={resumeLink(site)}
+        homeHref={homeHref(linkBase)}
       />
       <SheetZones />
       {children}

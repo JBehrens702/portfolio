@@ -7,6 +7,7 @@ import type { SoftwareCard } from "@/lib/content/schema";
 import { AltTextField } from "./AltTextField";
 import { useConfirm } from "./ConfirmDialog";
 import { MediaField } from "./MediaField";
+import { withCurrentAlt } from "./media-merge";
 import { omit } from "./omit";
 import { OrderButtons } from "./OrderButtons";
 import { SaveBar } from "./SaveBar";
@@ -97,7 +98,9 @@ export function SoftwareEditor({ initial, mediaPrefix }: { initial: SoftwareCard
               confirm={confirm}
               beginUpload={editor.beginUpload}
               endUpload={editor.endUpload}
-              onUploaded={(screenshot) => card(item.id, (c) => ({ ...c, screenshot }), true)}
+              onUploaded={(screenshot) =>
+                card(item.id, (c) => ({ ...c, screenshot: withCurrentAlt(screenshot, c.screenshot) }), true)
+              }
               onRemove={() => card(item.id, (c) => omit(c, "screenshot"), true)}
             />
             <AltTextField

@@ -1,7 +1,7 @@
 import { get, list, put, type ListBlobResultBlob } from "@vercel/blob";
 import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { assertSite, parseSite, type ParseResult, type Site } from "./schema";
+import { assertSite, type Site } from "./schema";
 
 // The content store (KTD2). One JSON document holds the draft, one holds the
 // published site, and each Publish keeps a copy of the old published document
@@ -131,14 +131,6 @@ export function createContentStore(
       return backend.read(pathname);
     },
   };
-}
-
-/** Validates and saves the draft. Returns the problems instead of throwing, for the admin forms. */
-export async function saveDraft(store: ContentStore, input: unknown): Promise<ParseResult> {
-  const result = parseSite(input);
-  if (!result.ok) return result;
-  await store.writeDraft(result.site);
-  return result;
 }
 
 // ---- In-memory fake, for tests ----

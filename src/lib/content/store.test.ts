@@ -4,7 +4,6 @@ import {
   contentConfigFromEnv,
   contentPaths,
   createMemoryContentStore,
-  saveDraft,
 } from "./store";
 import { makeSite } from "./test-fixtures";
 
@@ -103,25 +102,5 @@ describe("in-memory content store", () => {
     expect(first).toMatch(new RegExp(`^test-root/${config.secret}/history/2026-10-08T12-00-0\\dZ?.*\\.json$`));
     expect(await store.listHistory()).toEqual([first, second]);
     expect(await store.readHistory(first!)).toEqual(published);
-  });
-});
-
-describe("saveDraft", () => {
-  it("saves a valid draft and returns it", async () => {
-    const { store } = createMemoryContentStore(config);
-    const result = await saveDraft(store, makeSite());
-    expect(result.ok).toBe(true);
-    expect(await store.readDraft()).toEqual(makeSite());
-  });
-
-  it("refuses an invalid draft, names the problem, and leaves the draft unchanged", async () => {
-    const { store } = createMemoryContentStore(config);
-    await store.writeDraft(makeSite());
-    const invalid = makeSite();
-    invalid.experiences[1].homeTitle = " ";
-    const result = await saveDraft(store, invalid);
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.issues.join("\n")).toContain("experiences.1.homeTitle");
-    expect(await store.readDraft()).toEqual(makeSite());
   });
 });

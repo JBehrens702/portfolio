@@ -6,42 +6,32 @@
 //                                              into the DEVELOPMENT store
 //   npm run seed -- --env-file=.env.local --force   overwrite an existing draft
 //   npm run seed -- --store=production         seed the PRODUCTION store (U8 only);
-//       pass the Production store's credentials and the Production
-//       CONTENT_PATH_SECRET as env vars for this one run - never put them in a file
+//       pass the Production store's credentials, CONTENT_ROOT, and the Production
+//       CONTENT_PATH_SECRET as env vars for this one run - never put them in a file.
+//       --env-file is refused here: it holds the development values.
 //
 // Media go to the public media store (DEV_STORE_ID, or BLOB_STORE_ID on
 // Production); the draft goes to the private documents store (DEVDOCS_STORE_ID,
 // or DOCS_STORE_ID on Production). Each may use a _READ_WRITE_TOKEN instead. A store ID needs VERCEL_OIDC_TOKEN, which
 // `vercel env pull` writes. It also reads CONTENT_ROOT and CONTENT_PATH_SECRET from the
-// environment (or from the --env-file). It writes only the draft, never the
+// environment (or, for the development store only, from the --env-file). It writes only the draft, never the
 // published document, and it never prints or saves the token or the secret.
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { put } from "@vercel/blob";
-import { blobCredentialsFromEnv, contentConfigFromEnv, createBlobContentStore, docsCredentialsFromEnv } from "../src/lib/content/store";
+import { createBlobContentStore } from "../src/lib/content/store";
 import { DraftExistsError, checkSeed, seedDraft, type ManifestEntry, type Uploader } from "./seed/core";
+import { parseSeedArgs, seedTargets } from "./seed/options";
 
 const SEED_DIR = path.resolve("content/seed");
-
-function parseArgs(argv: string[]) {
-  const options = { force: false, check: false, envFile: undefined as string | undefined, store: "dev" as "dev" | "production" };
-  for (const arg of argv) {
-    if (arg === "--force") options.force = true;
-    else if (arg === "--check") options.check = true;
-    else if (arg.startsWith("--env-file=")) options.envFile = arg.slice("--env-file=".length);
-    else if (arg === "--store=dev" || arg === "--store=production") options.store = arg.slice("--store=".length) as "dev" | "production";
-    else throw new Error(`Unknown option: ${arg}. Use --check, --force, --store=dev|production, or --env-file=<path>.`);
-  }
-  return options;
-}
 
 async function readJson(file: string): Promise<unknown> {
   return JSON.parse(await readFile(path.join(SEED_DIR, file), "utf8"));
 }
 
 async function main(): Promise<void> {
-  const options = parseArgs(process.argv.slice(2));
+  const options = parseSeedArgs(process.argv.slice(2));
   const input = await readJson("site.json");
   const manifest = (await readJson("media/manifest.json")) as ManifestEntry[];
 
@@ -51,20 +41,12 @@ async function main(): Promise<void> {
     return;
   }
 
+  // parseSeedArgs refuses --env-file with --store=production.
   if (options.envFile) process.loadEnvFile(options.envFile);
-  const storeEnv = { ...process.env, VERCEL_ENV: options.store === "production" ? "production" : undefined };
-  // Images and files go to the public media store; the draft goes to the private documents store.
-  const credentials = blobCredentialsFromEnv(storeEnv);
-  const docsCredentials = docsCredentialsFromEnv(storeEnv);
-  if (!credentials || !docsCredentials) {
-    const [media, docs] = options.store === "production" ? ["BLOB", "DOCS"] : ["DEV", "DEVDOCS"];
-    throw new Error(`${media}_STORE_ID and ${docs}_STORE_ID (or their _READ_WRITE_TOKEN) must be set for --store=${options.store}.`);
-  }
-  if (("storeId" in credentials || "storeId" in docsCredentials) && !process.env.VERCEL_OIDC_TOKEN?.trim()) {
-    throw new Error("VERCEL_OIDC_TOKEN must be set to use a store ID. Run `vercel env pull` again; the token lasts about 12 hours.");
-  }
+  // Images and files go to the public media store; the draft goes to the private
+  // documents store. The stores and the content config come from one environment.
+  const { media: credentials, docs: docsCredentials, config } = seedTargets(options, process.env);
   console.log(`Seeding the ${options.store === "production" ? "PRODUCTION" : "development"} store.`);
-  const config = contentConfigFromEnv();
   const store = createBlobContentStore(config, { credentials: docsCredentials });
 
   const upload: Uploader = async ({ pathname, contentType, data }) => {

@@ -6,6 +6,7 @@ import type { Media, Site } from "@/lib/content/schema";
 import { AltTextField } from "./AltTextField";
 import { useConfirm } from "./ConfirmDialog";
 import { MediaField } from "./MediaField";
+import { withCurrentAlt } from "./media-merge";
 import { SaveBar } from "./SaveBar";
 import { useDraftEditor } from "./useDraftEditor";
 import styles from "./admin.module.css";
@@ -62,8 +63,9 @@ export function ProfileEditor({ site, mediaPrefix }: { site: Site; mediaPrefix: 
       update((s) => ({ ...s, [key]: v }));
     },
   });
-  const setFile = (key: "heroPhoto" | "resumeFile", media: Media | undefined) => {
-    update((s) => ({ ...s, [key]: media }));
+  /** A file change, applied to the latest state and saved at once. */
+  const setFile = (key: "heroPhoto" | "resumeFile", file: (current: Media | undefined) => Media | undefined) => {
+    update((s) => ({ ...s, [key]: file(s[key]) }));
     void editor.save();
   };
 
@@ -93,8 +95,8 @@ export function ProfileEditor({ site, mediaPrefix }: { site: Site; mediaPrefix: 
           confirm={confirm}
           beginUpload={editor.beginUpload}
           endUpload={editor.endUpload}
-          onUploaded={(media) => setFile("heroPhoto", media)}
-          onRemove={() => setFile("heroPhoto", undefined)}
+          onUploaded={(media) => setFile("heroPhoto", (current) => withCurrentAlt(media, current))}
+          onRemove={() => setFile("heroPhoto", () => undefined)}
         />
         <AltTextField
           label="Photo alt text (what the photo shows, for screen readers)"
@@ -109,8 +111,8 @@ export function ProfileEditor({ site, mediaPrefix }: { site: Site; mediaPrefix: 
           confirm={confirm}
           beginUpload={editor.beginUpload}
           endUpload={editor.endUpload}
-          onUploaded={(media) => setFile("resumeFile", media)}
-          onRemove={() => setFile("resumeFile", undefined)}
+          onUploaded={(media) => setFile("resumeFile", (current) => withCurrentAlt(media, current))}
+          onRemove={() => setFile("resumeFile", () => undefined)}
         />
       </section>
 

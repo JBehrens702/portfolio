@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryContentStore, type ContentStore, type MemoryBackend } from "@/lib/content/store";
 import { experience, headingBlock, makeSite, media, software, textBlock } from "@/lib/content/test-fixtures";
 import type { MediaStorage, StoredMedia } from "@/lib/content/media-gc";
-import type { Media, Site } from "@/lib/content/schema";
+import type { Media, Site, SoftwareCard } from "@/lib/content/schema";
 
 // U6 action scenarios with the in-memory store and a replaced owner check, so
 // no Clerk session and no Blob store are needed. The browser-only scenarios
@@ -43,7 +43,14 @@ import {
   saveLabels,
   saveProfile,
   saveSoftware,
+  type LabelsInput,
+  type ProfileInput,
 } from "./actions";
+
+/** The labels as the editor loads them: each with the text it loaded (baseText). */
+function asLoaded(labels: Site["labels"]): LabelsInput {
+  return Object.fromEntries(Object.entries(labels).map(([key, label]) => [key, { ...label, baseText: label.text }]));
+}
 
 const ROOT = { root: "memory", secret: "memory-secret-segment" };
 const PREFIX = "memory/media/";
@@ -263,8 +270,8 @@ describe("labels and Publish (1.2.7, KTD9)", () => {
 
   it("AE6: after the owner approves one label and rewrites the other, Publish works", async () => {
     expect((await approveLabel("readMore")).ok).toBe(true);
-    const site = await draft();
-    const labels = { ...site.labels, resume: { text: "Download my resume", approved: false } };
+    const labels = asLoaded((await draft()).labels);
+    labels.resume = { ...labels.resume, text: "Download my resume", approved: false };
     expect((await saveLabels(labels)).ok).toBe(true);
     expect((await draft()).labels.resume).toEqual({ text: "Download my resume", approved: true });
 
@@ -273,21 +280,107 @@ describe("labels and Publish (1.2.7, KTD9)", () => {
     expect((await store.readPublished())!.labels.readMore.approved).toBe(true);
   });
 
+  it("a rewritten label stays approved when the editor saves again with another edit, and Publish works", async () => {
+    // The editor sends each label with the text it loaded (baseText).
+    const loaded = asLoaded((await draft()).labels);
+    loaded.resume = { ...loaded.resume, text: "Download my resume", approved: false };
+    const first = await saveLabels(loaded);
+    if (!first.ok) throw new Error(first.message);
+    // The save returns the stored labels, so the editor shows the server's approval state.
+    expect(first.labels.resume).toEqual({ text: "Download my resume", approved: true });
+
+    // The editor replaces its value with the stored labels, then the owner approves another label.
+    const next = asLoaded(first.labels);
+    next.readMore = { ...next.readMore, approved: true };
+    expect((await saveLabels(next)).ok).toBe(true);
+    expect((await draft()).labels.resume).toEqual({ text: "Download my resume", approved: true });
+    expect((await draft()).labels.readMore.approved).toBe(true);
+    expect((await publishSite()).ok).toBe(true);
+  });
+
+  it("refuses a save from a stale tab whose loaded text is not the draft's, and changes nothing", async () => {
+    const staleTab = asLoaded((await draft()).labels);
+    // A second tab rewrites the label and saves.
+    const otherTab = asLoaded((await draft()).labels);
+    otherTab.resume = { ...otherTab.resume, text: "My CV" };
+    expect((await saveLabels(otherTab)).ok).toBe(true);
+
+    const before = draftText();
+    staleTab.resume = { ...staleTab.resume, text: "Get the resume" };
+    staleTab.readMore = { ...staleTab.readMore, approved: true };
+    const result = await saveLabels(staleTab);
+    expect(result).toEqual({ ok: false, message: "The labels changed in another tab. Reload the page." });
+    expect(draftText()).toBe(before);
+  });
+
+  it("approves a label as it is with a plain save", async () => {
+    const labels = asLoaded((await draft()).labels);
+    labels.readMore = { ...labels.readMore, approved: true };
+    const result = await saveLabels(labels);
+    expect(result.ok).toBe(true);
+    expect((await draft()).labels.readMore).toEqual({ text: "Read more", approved: true });
+    expect((await draft()).labels.resume).toEqual({ text: "Resume", approved: false });
+  });
+
   it("refuses a label save that adds or drops a key, or approves an unknown label", async () => {
     const before = draftText();
-    const site = await draft();
-    expect((await saveLabels({ ...site.labels, extra: { text: "x", approved: true } })).ok).toBe(false);
-    const { readMore: _dropped, ...fewer } = site.labels;
+    const labels = asLoaded((await draft()).labels);
+    expect((await saveLabels({ ...labels, extra: { text: "x", approved: true, baseText: "x" } })).ok).toBe(false);
+    const { readMore: _dropped, ...fewer } = labels;
     void _dropped;
     expect((await saveLabels(fewer)).ok).toBe(false);
     expect((await approveLabel("nope")).ok).toBe(false);
     expect(draftText()).toBe(before);
   });
 
-  it("an owner can also take an approval back", async () => {
+  it("refuses a label without its loaded text, and changes nothing", async () => {
+    const before = draftText();
     const site = await draft();
-    await saveLabels({ ...site.labels, selectedWork: { text: "Selected Work", approved: false } });
+    expect((await saveLabels(site.labels as unknown as LabelsInput)).ok).toBe(false);
+    expect(draftText()).toBe(before);
+  });
+
+  it("an owner can also take an approval back", async () => {
+    const labels = asLoaded((await draft()).labels);
+    await saveLabels({ ...labels, selectedWork: { ...labels.selectedWork, approved: false } });
     expect((await draft()).labels.selectedWork.approved).toBe(false);
+  });
+});
+
+describe("malformed arguments are refused and change nothing", () => {
+  // Every argument of a server action comes from the browser, so its type is not guaranteed.
+  const untyped = <T>(value: unknown) => value as T;
+
+  it("approveLabel with a key that is not a string", async () => {
+    await setDraft(makeSite({ labels: { readMore: { text: "Read more", approved: false } } }));
+    const before = draftText();
+    expect((await approveLabel(untyped<string>(1))).ok).toBe(false);
+    expect((await approveLabel(untyped<string>({ toString: () => "readMore" }))).ok).toBe(false);
+    expect(draftText()).toBe(before);
+  });
+
+  it("moveExperience with a direction that is not up or down", async () => {
+    const before = draftText();
+    for (const direction of ["sideways", "", null, 1, { up: true }]) {
+      expect((await moveExperience("second", untyped<"up">(direction))).ok).toBe(false);
+    }
+    expect(draftText()).toBe(before);
+  });
+
+  it("saveSoftware with a value that is not a list", async () => {
+    const before = draftText();
+    for (const cards of [null, "dashboard", { 0: software("dashboard"), length: 1 }]) {
+      expect((await saveSoftware(untyped<SoftwareCard[]>(cards))).ok).toBe(false);
+    }
+    expect(draftText()).toBe(before);
+  });
+
+  it("saveProfile with a value that is not an object", async () => {
+    const before = draftText();
+    for (const input of [null, "profile", ["Jonathan Behrens"], 42]) {
+      expect((await saveProfile(untyped<ProfileInput>(input))).ok).toBe(false);
+    }
+    expect(draftText()).toBe(before);
   });
 });
 
@@ -310,7 +403,7 @@ describe("the owner check comes first (3.4.1)", () => {
     const site = await draft();
     const calls = [
       saveProfile({ ...site.profile, contact: site.contact }),
-      saveLabels(site.labels),
+      saveLabels(asLoaded(site.labels)),
       approveLabel("selectedWork"),
       addExperience("New"),
       removeExperience("first"),

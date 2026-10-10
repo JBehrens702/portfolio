@@ -88,15 +88,23 @@ function isUploadedMedia(media: Media, mediaPrefix: string): boolean {
   }
 }
 
+type Committed = { ok: true; savedAt: string; site: Site } | Refusal;
+
 /** Validates the changed document and writes it as the draft, or refuses and writes nothing. */
-async function commit(store: ContentStore, before: Site, next: unknown): Promise<ActionResult> {
+async function commitSite(store: ContentStore, before: Site, next: unknown): Promise<Committed> {
   const parsed = parseSite(next);
   if (!parsed.ok) return refused("Not saved: the change is not valid.", parsed.issues);
   const problems = mediaProblems(parsed.site, before, store.paths.mediaPrefix);
   if (problems.length > 0) return refused("Not saved: a file is not valid.", problems);
   // The store validates again at its boundary; the document already passed parseSite.
   await store.writeDraft(parsed.site);
-  return { ok: true, savedAt: new Date().toISOString() };
+  return { ok: true, savedAt: new Date().toISOString(), site: parsed.site };
+}
+
+/** As commitSite, without the saved document in the result. */
+async function commit(store: ContentStore, before: Site, next: unknown): Promise<ActionResult> {
+  const result = await commitSite(store, before, next);
+  return result.ok ? { ok: true, savedAt: result.savedAt } : result;
 }
 
 // ---- Profile, contact, and labels ----
@@ -130,14 +138,24 @@ export async function saveProfile(input: ProfileInput): Promise<ActionResult> {
   return commit(store, draft, { ...draft, profile, contact: input.contact });
 }
 
-export type LabelsInput = Record<string, { text: string; approved: boolean }>;
+/**
+ * The labels as the editor sends them. `baseText` is the text that the editor
+ * loaded or last saved: the save compares the draft with it, so a rewrite is
+ * known even after an earlier save, and a stale tab cannot overwrite a newer text.
+ */
+export type LabelsInput = Record<string, { text: string; approved: boolean; baseText: string }>;
+
+export type LabelsActionResult = { ok: true; savedAt: string; labels: Site["labels"] } | Refusal;
+
+const STALE_LABELS_MESSAGE = "The labels changed in another tab. Reload the page.";
 
 /**
  * Saves the label texts and approvals (KTD9). The set of label keys is fixed by
  * the layout: a save must send exactly the draft's keys. A label whose text the
- * owner rewrote counts as approved, because the owner wrote it (1.2.7).
+ * owner rewrote counts as approved, because the owner wrote it (1.2.7). The
+ * result holds the stored labels, so the editor shows the server's approval state.
  */
-export async function saveLabels(input: LabelsInput): Promise<ActionResult> {
+export async function saveLabels(input: LabelsInput): Promise<LabelsActionResult> {
   await requireOwner();
   const loaded = await loadDraft();
   if (!loaded.ok) return loaded;
@@ -146,16 +164,27 @@ export async function saveLabels(input: LabelsInput): Promise<ActionResult> {
   const keys = Object.keys(draft.labels).sort();
   const sent = Object.keys(input).sort();
   if (keys.join("\n") !== sent.join("\n")) return refused("Not saved: the labels do not match the draft. Reload the page.");
+  for (const key of keys) {
+    const label = input[key];
+    if (
+      !isRecord(label) ||
+      typeof label.text !== "string" ||
+      typeof label.approved !== "boolean" ||
+      typeof label.baseText !== "string"
+    ) {
+      return refused(`Not saved: label "${key}" is not valid.`);
+    }
+  }
+  // Another tab saved a different text since this editor loaded it: refuse all, change nothing.
+  if (keys.some((key) => draft.labels[key].text !== input[key].baseText)) return refused(STALE_LABELS_MESSAGE);
   const labels: Record<string, unknown> = {};
   for (const key of keys) {
     const label = input[key];
-    if (!isRecord(label) || typeof label.text !== "string" || typeof label.approved !== "boolean") {
-      return refused(`Not saved: label "${key}" is not valid.`);
-    }
-    const rewritten = label.text !== draft.labels[key].text;
-    labels[key] = { text: label.text, approved: rewritten || label.approved };
+    const rewritten = label.text !== label.baseText;
+    labels[key] = { text: label.text, approved: label.approved || rewritten };
   }
-  return commit(store, draft, { ...draft, labels });
+  const result = await commitSite(store, draft, { ...draft, labels });
+  return result.ok ? { ok: true, savedAt: result.savedAt, labels: result.site.labels } : result;
 }
 
 /** Approves one label as it is (AE6). */

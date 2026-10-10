@@ -8,6 +8,7 @@ import { AltTextField } from "./AltTextField";
 import { BLOCK_TYPES, BlockEditor, type BlockChange } from "./BlockEditor";
 import { useConfirm } from "./ConfirmDialog";
 import { MediaField } from "./MediaField";
+import { withCurrentAlt } from "./media-merge";
 import { omit } from "./omit";
 import { SaveBar } from "./SaveBar";
 import { useDraftEditor } from "./useDraftEditor";
@@ -60,7 +61,7 @@ export function ExperienceEditor({ initial, mediaPrefix }: { initial: Experience
           beginUpload={editor.beginUpload}
           endUpload={editor.endUpload}
           onUploaded={(cardImage) => {
-            update((e) => ({ ...e, cardImage }));
+            update((e) => ({ ...e, cardImage: withCurrentAlt(cardImage, e.cardImage) }));
             void editor.save();
           }}
           onRemove={() => {

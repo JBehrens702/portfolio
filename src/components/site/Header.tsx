@@ -23,6 +23,8 @@ export interface HeaderProps {
   menuLabel: string;
   /** Accessible name of the navigation landmark. */
   navLabel?: string;
+  /** The address of the logo link: "/" on the public site (the default), "/preview" in the preview. */
+  homeHref?: string;
 }
 
 // The top bar of design A (docs/design/Reference1.png): a solid black bar, frozen
@@ -32,7 +34,7 @@ export interface HeaderProps {
 // lettering of logo-full.png, shown without its own ring. The lettering image
 // carries the alt text; the ring is decorative (alt="").
 
-export function Header({ logoAlt, links, resume, menuLabel, navLabel }: HeaderProps) {
+export function Header({ logoAlt, links, resume, menuLabel, navLabel, homeHref = "/" }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const listId = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -66,7 +68,7 @@ export function Header({ logoAlt, links, resume, menuLabel, navLabel }: HeaderPr
         <svg className={styles.slashes} viewBox="0 0 100 64" aria-hidden="true" focusable="false">
           <path d="M26 9 44.5 55M43 9l18.5 46M60 9l18.5 46" />
         </svg>
-        <Link href="/" className={styles.logoLink}>
+        <Link href={homeHref} className={styles.logoLink}>
           <span className={styles.markSpin}>
             <Image src={logoMark} alt="" className={styles.mark} sizes="48px" loading="eager" />
           </span>

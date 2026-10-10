@@ -1,16 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import { saveLabels, type LabelsInput } from "@/app/admin/actions";
+import type { Site } from "@/lib/content/schema";
+import { adoptStoredLabels, withBaseText } from "./labels-state";
 import { SaveBar } from "./SaveBar";
-import { useDraftEditor } from "./useDraftEditor";
+import { useDraftEditor, type SaveResult } from "./useDraftEditor";
 import styles from "./admin.module.css";
 
 // The UI labels (1.2.7, KTD9): each short text of the layout, with its
 // approval. Publish is refused while any label is not approved. A label that
-// the owner rewrites counts as approved when it is saved.
+// the owner rewrites counts as approved when it is saved. After each save the
+// editor shows the stored labels, so it shows the server's approval state.
 
-export function LabelsEditor({ initial }: { initial: LabelsInput }) {
-  const editor = useDraftEditor(initial, saveLabels);
+async function persist(value: LabelsInput): Promise<SaveResult<LabelsInput>> {
+  const result = await saveLabels(value);
+  return result.ok ? { ok: true, savedAt: result.savedAt, value: withBaseText(result.labels) } : result;
+}
+
+export function LabelsEditor({ initial }: { initial: Site["labels"] }) {
+  const [loaded] = useState(() => withBaseText(initial));
+  const editor = useDraftEditor(loaded, persist, adoptStoredLabels);
   const { value, update } = editor;
   // Unapproved labels first, in the order of the page load, so a label does not jump when it is approved.
   const keys = Object.keys(initial).sort(

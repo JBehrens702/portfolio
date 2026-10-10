@@ -21,6 +21,8 @@ import styles from "./admin.module.css";
 // (2.4.3). The browser uploads straight to Blob with a presigned URL from
 // /api/admin/upload; the parent editor then saves the returned file
 // information into the draft. A failed upload leaves the draft unchanged.
+// The parent applies the result to its LATEST state (see media-merge.ts): the
+// owner can type alt text or move items while the upload runs.
 
 type UploadState =
   | { kind: "idle" }
@@ -34,7 +36,11 @@ export interface MediaFieldProps {
   kind: "image" | "file";
   value: Media | undefined;
   mediaPrefix: string;
-  /** Called with the uploaded file. The parent saves it into the draft. */
+  /**
+   * Called with the uploaded file, which has no alt text. The parent saves it
+   * into the draft, with the alt text that the replaced image has at that time
+   * (withCurrentAlt inside its update).
+   */
   onUploaded: (media: Media) => void;
   /** Called after the owner confirmed the removal. Omit it where a file cannot be removed alone. */
   onRemove?: () => void;
@@ -87,8 +93,6 @@ export function MediaField(props: MediaFieldProps) {
         media.width = prepared.width;
         media.height = prepared.height;
       }
-      // A replaced image keeps the alt text that the owner wrote for it.
-      if (value?.alt) media.alt = value.alt;
       setState({ kind: "idle" });
       onUploaded(media);
     } catch (error) {

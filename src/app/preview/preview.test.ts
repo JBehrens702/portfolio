@@ -59,6 +59,12 @@ async function html(page: Promise<ReactElement>) {
   return renderToStaticMarkup(await page);
 }
 
+/** The address of the logo link: the first link in the header. */
+function logoHref(page: string): string | undefined {
+  const header = page.slice(page.indexOf("<header"), page.indexOf("</header>"));
+  return /<a [^>]*href="([^"]*)"/.exec(header)?.[1];
+}
+
 beforeEach(async () => {
   requireOwnerPage.mockReset().mockResolvedValue("user_owner");
   const { store } = createMemoryContentStore();
@@ -75,6 +81,7 @@ describe("preview home", () => {
     expect(page).toContain('data-testid="preview-marker"');
     expect(page).toContain('href="/preview/experiences/victaulic"');
     expect(page).not.toContain('href="/experiences/victaulic"');
+    expect(logoHref(page)).toBe("/preview");
   });
 
   it("hides the marker when the previewMarker label is missing (1.2.4)", async () => {
@@ -98,6 +105,7 @@ describe("preview experience page", () => {
     expect(requireOwnerPage).toHaveBeenCalledOnce();
     expect(page).toContain(DRAFT_ONLY);
     expect(page).toContain('data-testid="preview-marker"');
+    expect(logoHref(page)).toBe("/preview");
   });
 
   it("gives 404 for an unknown slug", async () => {
