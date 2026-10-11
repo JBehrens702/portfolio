@@ -300,12 +300,28 @@
 
 /* ---------- Facts: a light callout panel ---------- */
 
-.spread,
-.spreadAlone {
+/* ---------- Rows (KTD1): one column, or two columns from 800 px ---------- */
+
+.row {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
   align-items: start;
+}
+
+/* A cell of flowing blocks keeps the column's block gap. */
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+/* Below 800 px the cells stack (0.1.12); an empty cell then takes no space. */
+@media (max-width: 799.98px) {
+  .row > [data-empty] {
+    display: none;
+  }
 }
 
 .spreadMedia {
@@ -687,18 +703,31 @@
 }
 
 @media (min-width: 800px) {
-  .spread {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  .rowHalves,
+  .rowThirdTwo,
+  .rowTwoThird {
     gap: var(--space-8);
   }
 
-  .spreadAlone .panel {
+  .rowHalves {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .rowThirdTwo {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  }
+
+  .rowTwoThird {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+
+  .rowOne .panel {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
     column-gap: var(--space-8);
   }
 
-  .spreadAlone .panel > .facts + .facts {
+  .rowOne .panel > .facts + .facts {
     padding-top: 0;
     border-top: 0;
   }

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import type { Experience, Site } from "@/lib/content/schema";
-import { layoutBlocks } from "@/lib/content/layout";
 import { nextExperience } from "@/lib/content/order";
 import { labelText } from "@/lib/content/visibility";
 import { Aperture } from "./Aperture";
@@ -11,7 +10,8 @@ import { experienceHref } from "./links";
 import { refMark, sectionMark } from "./markings";
 import { MediaImage } from "./MediaImage";
 import { Readout } from "./Readout";
-import { segmentBlocks, type BodyItem } from "./segments";
+import { LayoutRow } from "./LayoutRow";
+import { sectionItems } from "./segments";
 import styles from "./Experience.module.css";
 
 export interface ExperiencePageProps {
@@ -21,30 +21,12 @@ export interface ExperiencePageProps {
   linkBase: string;
 }
 
-function Item({ item, linkBase, downloadLabel }: { item: BodyItem; linkBase: string; downloadLabel: string | null }) {
-  if (item.kind === "block") return <Block block={item.block} linkBase={linkBase} downloadLabel={downloadLabel} />;
-  return (
-    <div className={item.media ? styles.spread : styles.spreadAlone}>
-      {item.media && (
-        <div className={styles.spreadMedia}>
-          <Block block={item.media} linkBase={linkBase} downloadLabel={downloadLabel} variant="spread" />
-        </div>
-      )}
-      <div className={styles.panel} data-reveal="">
-        {item.aside.map((block) => (
-          <Block key={block.id} block={block} linkBase={linkBase} downloadLabel={downloadLabel} variant="logo" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /**
  * The full page of one experience (design A): a purple title band with cut
- * corners, white crop marks, and an orange hazard stripe; the owner's blocks in
- * segments, then the next-experience link (0.1.2, 0.1.10). On wide screens each
- * heading sits in a sticky column beside its blocks; a fact list sits in
- * a light panel beside the image before it. The block order never changes.
+ * corners, white crop marks, and an orange hazard stripe; the owner's layout in
+ * sections, then the next-experience link (0.1.2, 0.1.10). On wide screens each
+ * heading sits in a sticky column beside its rows, and each row shows the
+ * columns the owner chose (0.1.11, see LayoutRow). The owner's order never changes.
  * Decorative markings (aria-hidden, see markings.ts): the reference number in
  * the band ("REF 03/05", from the order of the experiences) and a section
  * number beside each level-2 heading ("N°01", from the order of the sections).
@@ -53,7 +35,7 @@ export function ExperiencePage({ site, experience, linkBase }: ExperiencePagePro
   const next = nextExperience(site, experience.slug);
   const nextLabel = labelText(site, "nextExperience");
   const downloadLabel = labelText(site, "downloadFile");
-  const segments = segmentBlocks(layoutBlocks(experience.layout));
+  const segments = sectionItems(experience.layout);
   const index = site.experiences.findIndex((e) => e.slug === experience.slug);
   // The section number of each segment that starts with a level-2 heading, else null.
   let sections = 0;
@@ -106,14 +88,11 @@ export function ExperiencePage({ site, experience, linkBase }: ExperiencePagePro
               </div>
             )}
             <div className={styles.main}>
-              {segment.items.map((item, i) => (
-                <Item
-                  key={item.kind === "block" ? item.block.id : `spread-${item.aside[0].id}-${i}`}
-                  item={item}
-                  linkBase={linkBase}
-                  downloadLabel={downloadLabel}
-                />
-              ))}
+              {segment.items.map((item) =>
+                item.type === "row" ? (
+                  <LayoutRow key={item.id} row={item} linkBase={linkBase} downloadLabel={downloadLabel} />
+                ) : null,
+              )}
             </div>
           </div>
         ))}

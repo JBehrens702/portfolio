@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "profile": {
     "name": "Fixture Owner",
     "tagline": "Hi, I'm Fixture Owner",
@@ -87,179 +87,6 @@
       "approved": true
     }
   },
-  "experiences": [
-    {
-      "slug": "alpha-project",
-      "homeTitle": "Alpha Project",
-      "pageTitle": "Alpha Project Page",
-      "subtitle": "Alpha subtitle",
-      "cardImage": {
-        "url": "https://media.e2e.test/e2e/media/alpha-card.png",
-        "pathname": "e2e/media/alpha-card.png",
-        "contentType": "image/png",
-        "width": 800,
-        "height": 600,
-        "alt": "Alpha card image"
-      },
-      "skills": [
-        "CAD",
-        "FEA",
-        ""
-      ],
-      "homeText": "Alpha home paragraph.",
-      "blocks": [
-        {
-          "id": "a-h1",
-          "type": "heading",
-          "text": "Alpha overview",
-          "level": 2
-        },
-        {
-          "id": "a-t1",
-          "type": "text",
-          "text": "Alpha text with [a block link](https://example.com/block)."
-        },
-        {
-          "id": "a-t2",
-          "type": "text",
-          "text": "Raw <b>bold</b> and <script>window.__xss = 1</script> stay text."
-        },
-        {
-          "id": "a-t4",
-          "type": "text",
-          "text": "<https://www.example.com/video>"
-        },
-        {
-          "id": "a-t5",
-          "type": "text",
-          "text": "See the [gamma page](/experiences/gamma-project)."
-        },
-        {
-          "id": "a-h2",
-          "type": "heading",
-          "text": "Alpha details",
-          "level": 3
-        },
-        {
-          "id": "a-f1",
-          "type": "facts",
-          "items": [
-            {
-              "label": "Skills Demonstrated",
-              "value": "CAD, FEA"
-            },
-            {
-              "label": "Client",
-              "value": "Dr. Fixture Client\nProfessor, Fixture University"
-            },
-            {
-              "label": "Empty fact",
-              "value": ""
-            }
-          ]
-        },
-        {
-          "id": "a-i1",
-          "type": "images",
-          "items": [
-            {
-              "image": {
-                "url": "https://media.e2e.test/e2e/media/alpha-1.png",
-                "pathname": "e2e/media/alpha-1.png",
-                "contentType": "image/png",
-                "alt": "Alpha figure one"
-              }
-            },
-            {
-              "image": {
-                "url": "https://media.e2e.test/e2e/media/alpha-2.png",
-                "pathname": "e2e/media/alpha-2.png",
-                "contentType": "image/png"
-              }
-            },
-            {}
-          ],
-          "caption": "Alpha figure caption"
-        },
-        {
-          "id": "a-file",
-          "type": "file",
-          "label": "Alpha report",
-          "file": {
-            "url": "https://media.e2e.test/e2e/media/alpha-report.pdf",
-            "pathname": "e2e/media/alpha-report.pdf",
-            "contentType": "application/pdf",
-            "fileName": "Alpha report.pdf"
-          }
-        },
-        {
-          "id": "a-file-empty",
-          "type": "file",
-          "label": "Missing file"
-        },
-        {
-          "id": "a-q1",
-          "type": "quote",
-          "text": "Alpha quoted problem statement."
-        },
-        {
-          "id": "a-h3",
-          "type": "heading",
-          "text": "Hidden empty section",
-          "level": 2
-        },
-        {
-          "id": "a-t3",
-          "type": "text",
-          "text": "   "
-        }
-      ]
-    },
-    {
-      "slug": "beta-project",
-      "homeTitle": "Beta Project",
-      "pageTitle": "Beta Project Page",
-      "cardImage": {
-        "url": "https://media.e2e.test/e2e/media/beta-card.png",
-        "pathname": "e2e/media/beta-card.png",
-        "contentType": "image/png",
-        "width": 800,
-        "height": 600
-      },
-      "skills": [],
-      "homeText": "Beta home paragraph.",
-      "blocks": [
-        {
-          "id": "b-t1",
-          "type": "text",
-          "text": "Beta body text."
-        }
-      ]
-    },
-    {
-      "slug": "gamma-project",
-      "homeTitle": "Gamma Project",
-      "pageTitle": "Gamma Project Page",
-      "cardImage": {
-        "url": "https://media.e2e.test/e2e/media/gamma-card.png",
-        "pathname": "e2e/media/gamma-card.png",
-        "contentType": "image/png",
-        "alt": "Gamma card image"
-      },
-      "skills": [
-        "Leadership",
-        "Volunteering"
-      ],
-      "homeText": "Gamma home paragraph.",
-      "blocks": [
-        {
-          "id": "g-t1",
-          "type": "text",
-          "text": "Gamma body text."
-        }
-      ]
-    }
-  ],
   "software": [
     {
       "id": "dashboard",
@@ -284,6 +111,366 @@
       "id": "hidden-card",
       "name": "Hidden Card",
       "overview": ""
+    }
+  ],
+  "experiences": [
+    {
+      "slug": "alpha-project",
+      "homeTitle": "Alpha Project",
+      "pageTitle": "Alpha Project Page",
+      "subtitle": "Alpha subtitle",
+      "cardImage": {
+        "url": "https://media.e2e.test/e2e/media/alpha-card.png",
+        "pathname": "e2e/media/alpha-card.png",
+        "contentType": "image/png",
+        "width": 800,
+        "height": 600,
+        "alt": "Alpha card image"
+      },
+      "skills": [
+        "CAD",
+        "FEA",
+        ""
+      ],
+      "homeText": "Alpha home paragraph.",
+      "layout": [
+        {
+          "id": "a-h1",
+          "type": "heading",
+          "text": "Alpha overview",
+          "level": 2
+        },
+        {
+          "id": "row-a-t1",
+          "type": "row",
+          "layout": "one",
+          "cells": [
+            [
+              {
+                "id": "a-t1",
+                "type": "text",
+                "text": "Alpha text with [a block link](https://example.com/block)."
+              }
+            ]
+          ]
+        },
+        {
+          "id": "row-a-t2",
+          "type": "row",
+          "layout": "one",
+          "cells": [
+            [
+              {
+                "id": "a-t2",
+                "type": "text",
+                "text": "Raw <b>bold</b> and <script>window.__xss = 1</script> stay text."
+              }
+            ]
+          ]
+        },
+        {
+          "id": "row-a-t4",
+          "type": "row",
+          "layout": "one",
+          "cells": [
+            [
+              {
+                "id": "a-t4",
+                "type": "text",
+                "text": "<https://www.example.com/video>"
+              }
+            ]
+          ]
+        },
+        {
+          "id": "row-a-t5",
+          "type": "row",
+          "layout": "one",
+          "cells": [
+            [
+              {
+                "id": "a-t5",
+                "type": "text",
+                "text": "See the [gamma page](/experiences/gamma-project)."
+              }
+            ]
+          ]
+        },
+        {
+          "id": "a-h2",
+          "type": "heading",
+          "text": "Alpha details",
+          "level": 3
+        },
+        {
+          "id": "row-a-f1",
+          "type": "row",
+          "layout": "one",
+          "cells": [
+            [
+              {
+                "id": "a-f1",
+                "type": "facts",
+                "items": [
+                  {
+                    "label": "Skills Demonstrated",
+                    "value": "CAD, FEA"
+                  },
+                  {
+                    "label": "Client",
+                    "value": "Dr. Fixture Client\nProfessor, Fixture University"
+                  },
+                  {
+                    "label": "Empty fact",
+                    "value": ""
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "id": "row-a-i1",
+          "type": "row",
+          "layout": "one",
+          "cells": [
+            [
+              {
+                "id": "a-i1",
+                "type": "images",
+                "items": [
+                  {
+                    "image": {
+                      "url": "https://media.e2e.test/e2e/media/alpha-1.png",
+                      "pathname": "e2e/media/alpha-1.png",
+                      "contentType": "image/png",
+                      "alt": "Alpha figure one"
+                    }
+                  },
+                  {
+                    "image": {
+                      "url": "https://media.e2e.test/e2e/media/alpha-2.png",
+                      "pathname": "e2e/media/alpha-2.png",
+                      "contentType": "image/png"
+                    }
+                  },
+                  {}
+                ],
+                "caption": "Alpha figure caption"
+              }
+            ]
+          ]
+        },
+        {
+          "id": "row-a-file",
+          "type": "row",
+          "layout": "one",
+          "cells": [
+            [
+              {
+                "id": "a-file",
+                "type": "file",
+                "label": "Alpha report",
+                "file": {
+                  "url": "https://media.e2e.test/e2e/media/alpha-report.pdf",
+                  "pathname": "e2e/media/alpha-report.pdf",
+                  "contentType": "application/pdf",
+                  "fileName": "Alpha report.pdf"
+                }
+              }
+            ]
+          ]
+        },
+        {
+          "id": "row-a-file-empty",
+          "type": "row",
+          "layout": "one",
+          "cells": [
+            [
+              {
+                "id": "a-file-empty",
+                "type": "file",
+                "label": "Missing file"
+              }
+            ]
+          ]
+        },
+        {
+          "id": "row-a-q1",
+          "type": "row",
+          "layout": "one",
+          "cells": [
+            [
+              {
+                "id": "a-q1",
+                "type": "quote",
+                "text": "Alpha quoted problem statement."
+              }
+            ]
+          ]
+        },
+        {
+          "id": "a-h3",
+          "type": "heading",
+          "text": "Hidden empty section",
+          "level": 2
+        },
+        {
+          "id": "row-a-t3",
+          "type": "row",
+          "layout": "one",
+          "cells": [
+            [
+              {
+                "id": "a-t3",
+                "type": "text",
+                "text": "   "
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "beta-project",
+      "homeTitle": "Beta Project",
+      "pageTitle": "Beta Project Page",
+      "cardImage": {
+        "url": "https://media.e2e.test/e2e/media/beta-card.png",
+        "pathname": "e2e/media/beta-card.png",
+        "contentType": "image/png",
+        "width": 800,
+        "height": 600
+      },
+      "skills": [],
+      "homeText": "Beta home paragraph.",
+      "layout": [
+        {
+          "id": "row-b-t1",
+          "type": "row",
+          "layout": "one",
+          "cells": [
+            [
+              {
+                "id": "b-t1",
+                "type": "text",
+                "text": "Beta body text."
+              }
+            ]
+          ]
+        },
+        {
+          "id": "b-h-rows",
+          "type": "heading",
+          "text": "Beta rows",
+          "level": 2
+        },
+        {
+          "id": "b-r-pair",
+          "type": "row",
+          "layout": "halves",
+          "cells": [
+            [
+              {
+                "id": "b-img",
+                "type": "images",
+                "items": [
+                  {
+                    "image": {
+                      "url": "https://media.e2e.test/e2e/media/beta-pair.png",
+                      "pathname": "e2e/media/beta-pair.png",
+                      "contentType": "image/png",
+                      "width": 800,
+                      "height": 600,
+                      "alt": "Beta beta-pair.png"
+                    }
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "id": "b-facts",
+                "type": "facts",
+                "items": [
+                  {
+                    "label": "Beta fact",
+                    "value": "Beta value"
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "id": "b-r-third",
+          "type": "row",
+          "layout": "third-two",
+          "cells": [
+            [
+              {
+                "id": "b-narrow",
+                "type": "text",
+                "text": "Beta narrow cell."
+              }
+            ],
+            [
+              {
+                "id": "b-wide",
+                "type": "text",
+                "text": "Beta wide cell."
+              }
+            ]
+          ]
+        },
+        {
+          "id": "b-r-half",
+          "type": "row",
+          "layout": "halves",
+          "cells": [
+            [
+              {
+                "id": "b-half",
+                "type": "text",
+                "text": "Beta half cell."
+              }
+            ],
+            []
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "gamma-project",
+      "homeTitle": "Gamma Project",
+      "pageTitle": "Gamma Project Page",
+      "cardImage": {
+        "url": "https://media.e2e.test/e2e/media/gamma-card.png",
+        "pathname": "e2e/media/gamma-card.png",
+        "contentType": "image/png",
+        "alt": "Gamma card image"
+      },
+      "skills": [
+        "Leadership",
+        "Volunteering"
+      ],
+      "homeText": "Gamma home paragraph.",
+      "layout": [
+        {
+          "id": "row-g-t1",
+          "type": "row",
+          "layout": "one",
+          "cells": [
+            [
+              {
+                "id": "g-t1",
+                "type": "text",
+                "text": "Gamma body text."
+              }
+            ]
+          ]
+        }
+      ]
     }
   ]
 }

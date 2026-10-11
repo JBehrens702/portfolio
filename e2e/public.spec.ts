@@ -307,3 +307,40 @@ test("AE1: no resume button without a resume; after a publish with one, the butt
     await page.request.get("/", { headers: { "cache-control": "no-cache" } });
   }
 });
+
+// U2: rows on the public experience page (0.1.11, 0.1.12, KTD5).
+test("rows stack on a phone and show their columns on a wide screen", async ({ page }) => {
+  await page.goto("/experiences/beta-project");
+  const main = page.locator("main");
+  const box = async (text: string) => (await main.getByText(text, { exact: true }).boundingBox())!;
+  const image = (await main.getByAltText("Beta beta-pair.png").boundingBox())!;
+  const facts = (await main.locator("dl", { hasText: "Beta value" }).boundingBox())!;
+  const narrow = await box("Beta narrow cell.");
+  const wide = await box("Beta wide cell.");
+  const half = await box("Beta half cell.");
+  const width = page.viewportSize()!.width;
+
+  if (width < 800) {
+    // Covers AE2: the left cell above the right cell, each at full width.
+    expect(image.y + image.height).toBeLessThanOrEqual(facts.y + 1);
+    expect(narrow.y).toBeLessThan(wide.y);
+    expect(await sidewaysOverflow(page)).toBeLessThanOrEqual(0);
+  } else {
+    // Side by side: the image left of the facts, the narrow cell left of the wide one.
+    expect(image.x + image.width).toBeLessThanOrEqual(facts.x);
+    expect(narrow.x + narrow.width).toBeLessThanOrEqual(wide.x);
+    expect(Math.abs(narrow.y - wide.y)).toBeLessThan(4);
+    const rowOf = async (text: string) =>
+      (await main.getByText(text, { exact: true }).locator("xpath=ancestor::div[contains(@class, '__row')][1]").boundingBox())!;
+    const thirds = await rowOf("Beta narrow cell.");
+    const narrowCell = (await main.getByText("Beta narrow cell.", { exact: true }).locator("xpath=ancestor::div[contains(@class, '__cell')][1]").boundingBox())!;
+    expect(narrowCell.width / thirds.width).toBeGreaterThan(0.25);
+    expect(narrowCell.width / thirds.width).toBeLessThan(0.4);
+    // A halves row with an empty right cell keeps the left cell at half width (KTD5).
+    const halves = await rowOf("Beta half cell.");
+    const halfCell = (await main.getByText("Beta half cell.", { exact: true }).locator("xpath=ancestor::div[contains(@class, '__cell')][1]").boundingBox())!;
+    expect(halfCell.width / halves.width).toBeGreaterThan(0.4);
+    expect(halfCell.width / halves.width).toBeLessThan(0.55);
+    expect(half.x).toBeGreaterThanOrEqual(halves.x - 1);
+  }
+});

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { segmentBlocks } from "@/components/site/segments";
+import { segmentBlocks } from "./segments-v1";
 import { layoutBlocks, upgradeBlocks } from "./layout";
 import type { Block, ImagesBlock, LayoutItem, Row } from "./schema";
 import { visibleBlocks } from "./visibility";
