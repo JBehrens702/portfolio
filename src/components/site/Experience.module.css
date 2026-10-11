@@ -678,6 +678,162 @@
   height: 1.375rem;
 }
 
+/* ---------- Carousel (KTD8): a frame pinned mid-screen, one scroll step per slide ---------- */
+
+.carousel {
+  /* The frame fits the screen below the header; each slide adds one step of scroll. */
+  min-width: 0;
+  --frame-h: min(36rem, calc(100svh - var(--header-height) - 4rem));
+  --step: 65svh;
+  position: relative;
+}
+
+.carouselFrame {
+  position: sticky;
+  top: calc(var(--header-height) + (100svh - var(--header-height) - var(--frame-h)) / 2);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--space-4);
+  height: var(--frame-h);
+}
+
+.carouselSpacer {
+  height: calc((var(--slides) - 1) * var(--step));
+}
+
+.carouselSlides {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+}
+
+.slide,
+.slideStatic {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+}
+
+.slide {
+  grid-area: 1 / 1;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.4s ease,
+    visibility 0s linear 0.4s;
+}
+
+.slideActive {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.4s ease;
+}
+
+.slideStatic {
+  grid-template-rows: auto;
+}
+
+.slideMedia {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  height: 100%;
+}
+
+.slideImage {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.slideStatic .slideMedia {
+  height: auto;
+}
+
+.slideText {
+  align-self: center;
+}
+
+.carouselControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+/* Narrow screens: the two buttons and the count share one line. */
+@media (max-width: 799.98px) {
+  .carouselControls {
+    flex-wrap: wrap;
+  }
+
+  .carouselControls button {
+    padding-inline: 1.25rem;
+  }
+}
+
+.carouselControls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.carouselCount {
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The skip link shows only when it has keyboard focus. */
+.carouselSkip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-on-orange);
+  background: var(--color-orange);
+  transform: translateY(-200%);
+}
+
+.carouselSkip:focus-visible {
+  transform: none;
+}
+
+.carouselAfter {
+  display: block;
+  height: 0;
+  outline: none;
+}
+
+@media (min-width: 800px) {
+  .slide,
+  .slideStatic {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-8);
+  }
+
+  .slideStatic {
+    grid-template-rows: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide,
+  .slideActive {
+    transition: none;
+  }
+}
+
 /* ---------- Wider screens ---------- */
 
 @media (min-width: 640px) {

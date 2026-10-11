@@ -85,6 +85,18 @@
     "previewMarker": {
       "text": "Preview",
       "approved": true
+    },
+    "carouselPrevious": {
+      "text": "Previous",
+      "approved": true
+    },
+    "carouselNext": {
+      "text": "Next",
+      "approved": true
+    },
+    "carouselSkip": {
+      "text": "Skip the slides",
+      "approved": true
     }
   },
   "software": [
@@ -437,6 +449,24 @@
             ],
             []
           ]
+        },
+        {
+          "id": "b-car",
+          "type": "carousel",
+          "slides": [
+            {
+              "id": "b-s1",
+              "image": {
+                "url": "https://media.e2e.test/e2e/media/beta-only.png",
+                "pathname": "e2e/media/beta-only.png",
+                "contentType": "image/png",
+                "width": 1200,
+                "height": 800,
+                "alt": "Beta single slide"
+              },
+              "text": "Beta single slide text."
+            }
+          ]
         }
       ]
     },
@@ -466,6 +496,68 @@
                 "id": "g-t1",
                 "type": "text",
                 "text": "Gamma body text."
+              }
+            ]
+          ]
+        },
+        {
+          "id": "g-h-rev",
+          "type": "heading",
+          "text": "Gamma revisions",
+          "level": 2
+        },
+        {
+          "id": "g-car",
+          "type": "carousel",
+          "slides": [
+            {
+              "id": "g-s1",
+              "image": {
+                "url": "https://media.e2e.test/e2e/media/gamma-v1.png",
+                "pathname": "e2e/media/gamma-v1.png",
+                "contentType": "image/png",
+                "width": 1200,
+                "height": 800,
+                "alt": "Gamma version 1"
+              },
+              "text": "Gamma revision 1 description."
+            },
+            {
+              "id": "g-s2",
+              "image": {
+                "url": "https://media.e2e.test/e2e/media/gamma-v2.png",
+                "pathname": "e2e/media/gamma-v2.png",
+                "contentType": "image/png",
+                "width": 1200,
+                "height": 800,
+                "alt": "Gamma version 2"
+              },
+              "text": "Gamma revision 2 description."
+            },
+            {
+              "id": "g-s3",
+              "image": {
+                "url": "https://media.e2e.test/e2e/media/gamma-v3.png",
+                "pathname": "e2e/media/gamma-v3.png",
+                "contentType": "image/png",
+                "width": 1200,
+                "height": 800,
+                "alt": "Gamma version 3"
+              },
+              "text": "Gamma revision 3 description."
+            }
+          ]
+        },
+        {
+          "id": "g-r-after",
+          "type": "row",
+          "layout": "one",
+          "cells": [
+            [
+              {
+                "id": "g-after",
+                "type": "text",
+                "text": "Gamma text after the slides."
               }
             ]
           ]

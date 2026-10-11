@@ -5,6 +5,7 @@ import { nextExperience } from "@/lib/content/order";
 import { labelText } from "@/lib/content/visibility";
 import { Aperture } from "./Aperture";
 import { Block } from "./Block";
+import { Carousel } from "./Carousel";
 import { ArrowIcon } from "./icons";
 import { experienceHref } from "./links";
 import { refMark, sectionMark } from "./markings";
@@ -35,6 +36,11 @@ export function ExperiencePage({ site, experience, linkBase }: ExperiencePagePro
   const next = nextExperience(site, experience.slug);
   const nextLabel = labelText(site, "nextExperience");
   const downloadLabel = labelText(site, "downloadFile");
+  const carouselLabels = {
+    previous: labelText(site, "carouselPrevious"),
+    next: labelText(site, "carouselNext"),
+    skip: labelText(site, "carouselSkip"),
+  };
   const segments = sectionItems(experience.layout);
   const index = site.experiences.findIndex((e) => e.slug === experience.slug);
   // The section number of each segment that starts with a level-2 heading, else null.
@@ -91,7 +97,9 @@ export function ExperiencePage({ site, experience, linkBase }: ExperiencePagePro
               {segment.items.map((item) =>
                 item.type === "row" ? (
                   <LayoutRow key={item.id} row={item} linkBase={linkBase} downloadLabel={downloadLabel} />
-                ) : null,
+                ) : (
+                  <Carousel key={item.id} carousel={item} linkBase={linkBase} labels={carouselLabels} />
+                ),
               )}
             </div>
           </div>
