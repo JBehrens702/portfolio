@@ -1,0 +1,30 @@
+{
+  "order": [
+    "h2:Project Overview:",
+    "img:turbine-testing-stand-01.jpg",
+    "dl:Skills DemonstratedMechanical De",
+    "img:turbine-testing-stand-02.png",
+    "img:turbine-testing-stand-03.png",
+    "dl:ClientsWindAid Institute (Peru),",
+    "h3:Problem Statement",
+    "blockquote:\"It would be beneficial to the S",
+    "img:turbine-testing-stand-04.jpg",
+    "img:turbine-testing-stand-05.jpg",
+    "img:turbine-testing-stand-06.jpg",
+    "img:turbine-testing-stand-07.jpg",
+    "img:turbine-testing-stand-08.png"
+  ],
+  "beside": [
+    "h2:Project Overview: | dl:Skills DemonstratedMechanical De",
+    "h2:Project Overview: | img:turbine-testing-stand-01.jpg",
+    "h3:Problem Statement | blockquote:\"It would be beneficial to the S",
+    "img:turbine-testing-stand-01.jpg | dl:ClientsWindAid Institute (Peru),",
+    "img:turbine-testing-stand-01.jpg | dl:Skills DemonstratedMechanical De",
+    "img:turbine-testing-stand-01.jpg | img:turbine-testing-stand-02.png",
+    "img:turbine-testing-stand-01.jpg | img:turbine-testing-stand-03.png",
+    "img:turbine-testing-stand-04.jpg | img:turbine-testing-stand-05.jpg",
+    "img:turbine-testing-stand-04.jpg | img:turbine-testing-stand-06.jpg",
+    "img:turbine-testing-stand-05.jpg | img:turbine-testing-stand-06.jpg",
+    "img:turbine-testing-stand-07.jpg | img:turbine-testing-stand-08.png"
+  ]
+}

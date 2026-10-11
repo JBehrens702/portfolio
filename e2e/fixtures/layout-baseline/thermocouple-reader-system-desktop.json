@@ -1,0 +1,28 @@
+{
+  "order": [
+    "h2:Project Overview:",
+    "img:thermocouple-reader-system-01.jpg",
+    "dl:Skills DemonstratedProject Manag",
+    "img:thermocouple-reader-system-02.png",
+    "dl:ClientDr. Tim Burdett\nProfessor,",
+    "h3:Problem Statement",
+    "blockquote:\"In the past, the Heat Transfer ",
+    "img:thermocouple-reader-system-03.jpg",
+    "img:thermocouple-reader-system-04.png",
+    "img:thermocouple-reader-system-05.jpg",
+    "img:thermocouple-reader-system-06.png",
+    "img:thermocouple-reader-system-07.png"
+  ],
+  "beside": [
+    "h2:Project Overview: | dl:Skills DemonstratedProject Manag",
+    "h2:Project Overview: | img:thermocouple-reader-system-01.jpg",
+    "h3:Problem Statement | blockquote:\"In the past, the Heat Transfer ",
+    "img:thermocouple-reader-system-01.jpg | dl:ClientDr. Tim Burdett\nProfessor,",
+    "img:thermocouple-reader-system-01.jpg | dl:Skills DemonstratedProject Manag",
+    "img:thermocouple-reader-system-01.jpg | img:thermocouple-reader-system-02.png",
+    "img:thermocouple-reader-system-03.jpg | img:thermocouple-reader-system-04.png",
+    "img:thermocouple-reader-system-03.jpg | img:thermocouple-reader-system-05.jpg",
+    "img:thermocouple-reader-system-04.png | img:thermocouple-reader-system-05.jpg",
+    "img:thermocouple-reader-system-06.png | img:thermocouple-reader-system-07.png"
+  ]
+}
