@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { parseSite, unapprovedLabels, type Block, type Experience, type Media, type Site } from "../src/lib/content/schema";
+import { layoutBlocks } from "../src/lib/content/layout";
 import { createMemoryContentStore } from "../src/lib/content/store";
 import { makeSite } from "../src/lib/content/test-fixtures";
 import {
@@ -117,7 +118,7 @@ const removedFiles = (page: string) => (OWNER_REMOVED[page] ?? []).filter((t) =>
 function experienceTexts(e: Experience): string[] {
   const texts = [e.pageTitle];
   if (e.subtitle !== undefined) texts.push(e.subtitle);
-  for (const block of e.blocks) texts.push(...blockTexts(block));
+  for (const block of layoutBlocks(e.layout)) texts.push(...blockTexts(block));
   return texts;
 }
 
@@ -143,7 +144,7 @@ const allSeedText = [
   ...site.profile.introParagraphs,
   ...Object.values(site.labels).map((label) => label.text),
   ...site.experiences.flatMap((e) => [e.homeTitle, e.homeText, ...e.skills, ...experienceTexts(e)]),
-  ...site.experiences.flatMap((e) => e.blocks.flatMap((b) => (b.type === "file" ? [b.label] : []))),
+  ...site.experiences.flatMap((e) => layoutBlocks(e.layout).flatMap((b) => (b.type === "file" ? [b.label] : []))),
 ].join("\n");
 
 describe("seed document", () => {
@@ -190,8 +191,8 @@ describe("seed document", () => {
     for (const page of PAGES) {
       const embeds = raw(page).filter((b) => b.type === "embed");
       const e = experience(page);
-      const files = e.blocks.filter((b) => b.type === "file");
-      const videos = e.blocks.filter((b) => b.type === "text" && VIDEO_LINK.test(b.text));
+      const files = layoutBlocks(e.layout).filter((b) => b.type === "file");
+      const videos = layoutBlocks(e.layout).filter((b) => b.type === "text" && VIDEO_LINK.test(b.text));
       expect(files.length + videos.length, page).toBe(embeds.length - removedFiles(page));
       expect(files.length, page).toBe(embeds.filter((b) => b.src?.includes("drive.google.com")).length - removedFiles(page));
       for (const file of files) {
@@ -212,8 +213,9 @@ describe("seed document", () => {
       ["dashboard", "Dashboard", null, null, null],
     ]);
     const victaulic = experience("victaulic-internship");
-    const summary = victaulic.blocks.findIndex((b) => b.type === "heading" && b.text === "Summary");
-    expect(victaulic.blocks[summary + 1]).toMatchObject({ type: "text", text: "" });
+    const victaulicBlocks = layoutBlocks(victaulic.layout);
+    const summary = victaulicBlocks.findIndex((b) => b.type === "heading" && b.text === "Summary");
+    expect(victaulicBlocks[summary + 1]).toMatchObject({ type: "text", text: "" });
     expect(site.profile.resumeFile).toBeUndefined();
     expect(JSON.stringify(input)).not.toMatch(/"alt"\s*:/);
   });
@@ -286,7 +288,7 @@ describe("word for word (1.2.2, 1.2.4)", () => {
   it("each internal link in a text block goes to an experience that exists", () => {
     const slugs = new Set(site.experiences.map((e) => e.slug));
     for (const e of site.experiences) {
-      for (const block of e.blocks) {
+      for (const block of layoutBlocks(e.layout)) {
         if (block.type !== "text") continue;
         for (const [, , href] of block.text.matchAll(/\[([^\]]*)\]\(([^)]*)\)/g)) {
           expect(href).toMatch(/^\/experiences\/[a-z0-9-]+$/);
@@ -501,6 +503,7 @@ describe("seedDraft", () => {
       expect(call.contentType).toBe(manifest.find((m) => m.file === call.file)!.contentType);
     }
     expect(backend.writes).toEqual([store.paths.draft]);
+    expect(result.site.schemaVersion).toBe(2);
     expect(await store.readPublished()).toBeNull();
     const draft = (await store.readDraft())!;
     expect(draft.profile.heroPhoto).toMatchObject({

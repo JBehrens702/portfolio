@@ -17,9 +17,13 @@ export function siteMedia(site: Site): Media[] {
   add(site.profile.resumeFile);
   for (const experience of site.experiences) {
     add(experience.cardImage);
-    for (const block of experience.blocks) {
-      if (block.type === "images") block.items.forEach((item) => add(item.image));
-      if (block.type === "file") add(block.file);
+    for (const item of experience.layout) {
+      if (item.type === "carousel") item.slides.forEach((slide) => add(slide.image));
+      if (item.type !== "row") continue;
+      for (const block of item.cells.flat()) {
+        if (block.type === "images") block.items.forEach((entry) => add(entry.image));
+        if (block.type === "file") add(block.file);
+      }
     }
   }
   site.software.forEach((card) => add(card.screenshot));

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseSite, unapprovedLabels } from "./schema";
-import { experience, makeSite, media, textBlock } from "./test-fixtures";
+import { experience, headingBlock, makeSite, media, textBlock } from "./test-fixtures";
 
 describe("parseSite", () => {
   it("accepts a valid document", () => {
@@ -60,9 +60,74 @@ describe("parseSite", () => {
   });
 
   it("refuses an unknown block type", () => {
-    const site = makeSite() as unknown as { experiences: { blocks: unknown[] }[] };
-    site.experiences[0].blocks = [{ id: "v", type: "video", url: "https://example.com" }];
+    const site = makeSite() as unknown as { experiences: { layout: unknown[] }[] };
+    site.experiences[0].layout = [
+      { id: "r", type: "row", layout: "one", cells: [[{ id: "v", type: "video", url: "https://example.com" }]] },
+    ];
     expect(parseSite(site).ok).toBe(false);
+  });
+
+  it("refuses a heading inside a cell", () => {
+    const site = makeSite() as unknown as { experiences: { layout: unknown[] }[] };
+    site.experiences[0].layout = [{ id: "r", type: "row", layout: "one", cells: [[headingBlock("h", "Title")]] }];
+    expect(parseSite(site).ok).toBe(false);
+  });
+
+  it("refuses a row whose number of cells does not match its layout", () => {
+    const site = makeSite() as unknown as { experiences: { layout: unknown[] }[] };
+    site.experiences[0].layout = [{ id: "r", type: "row", layout: "halves", cells: [[textBlock("t", "x")]] }];
+    const result = parseSite(site);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.issues.join("\n")).toContain("layout.0.cells");
+  });
+
+  it("refuses two slides with the same id in one carousel", () => {
+    const site = makeSite({
+      experiences: [
+        experience("x", {
+          layout: [{ id: "c", type: "carousel", slides: [{ id: "s", text: "a" }, { id: "s", text: "b" }] }],
+        }),
+      ],
+    });
+    expect(parseSite(site).ok).toBe(false);
+  });
+
+  it("accepts a carousel and every row layout", () => {
+    const site = makeSite({
+      experiences: [
+        experience("x", {
+          layout: [
+            { id: "c", type: "carousel", slides: [{ id: "s1", image: media("v1.jpg", { alt: "Version 1" }), text: "First." }] },
+            { id: "r1", type: "row", layout: "one", cells: [[textBlock("t1", "a")]] },
+            { id: "r2", type: "row", layout: "halves", cells: [[textBlock("t2", "b")], []] },
+            { id: "r3", type: "row", layout: "third-two", cells: [[], [textBlock("t3", "c")]] },
+            { id: "r4", type: "row", layout: "two-third", cells: [[], []] },
+          ],
+        }),
+      ],
+    });
+    expect(parseSite(site).ok).toBe(true);
+  });
+
+  it("upgrades a version-1 document to version 2 (KTD2)", () => {
+    const v1 = {
+      ...makeSite(),
+      schemaVersion: 1,
+      experiences: [
+        { ...experience("x"), layout: undefined, blocks: [headingBlock("h", "Design"), textBlock("t", "A paragraph.")] },
+      ],
+    };
+    const result = parseSite(v1);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.site.schemaVersion).toBe(2);
+    expect(result.site.experiences[0].layout.map((item) => item.type)).toEqual(["heading", "row"]);
+    expect("blocks" in result.site.experiences[0]).toBe(false);
+  });
+
+  it("refuses an invalid version-1 document instead of upgrading it", () => {
+    const v1 = { ...makeSite(), schemaVersion: 1, experiences: [{ ...experience("x"), blocks: [textBlock("b", "a"), textBlock("b", "b")] }] };
+    expect(parseSite(v1).ok).toBe(false);
   });
 
   it("refuses a media file that is not an https URL", () => {
@@ -77,7 +142,7 @@ describe("parseSite", () => {
   });
 
   it("refuses a wrong schema version and a non-object", () => {
-    expect(parseSite({ ...makeSite(), schemaVersion: 2 }).ok).toBe(false);
+    expect(parseSite({ ...makeSite(), schemaVersion: 3 }).ok).toBe(false);
     expect(parseSite(null).ok).toBe(false);
     expect(parseSite("text").ok).toBe(false);
   });

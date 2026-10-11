@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { saveExperience } from "@/app/admin/actions";
+import { layoutBlocks, upgradeBlocks } from "@/lib/content/layout";
 import { move, newBlock } from "@/lib/content/order";
 import type { Block, BlockType, Experience } from "@/lib/content/schema";
 import { AltTextField } from "./AltTextField";
@@ -33,10 +34,11 @@ export function ExperienceEditor({ initial, mediaPrefix }: { initial: Experience
 
   const set = <K extends keyof Experience>(key: K, v: Experience[K]) => update((e) => ({ ...e, [key]: v }));
   const blockChange = (id: string, save: boolean): BlockChange => (f) => {
-    update((e) => ({ ...e, blocks: e.blocks.map((b) => (b.id === id ? f(b) : b)) }));
+    update((e) => ({ ...e, layout: upgradeBlocks(layoutBlocks(e.layout).map((b) => (b.id === id ? f(b) : b))) }));
     if (save) void editor.save();
   };
-  const blocks = (f: (list: Block[]) => Block[]) => update((e) => ({ ...e, blocks: f(e.blocks) }));
+  const blocks = (f: (list: Block[]) => Block[]) => update((e) => ({ ...e, layout: upgradeBlocks(f(layoutBlocks(e.layout))) }));
+  const blockList = layoutBlocks(value.layout);
 
   return (
     <div className={styles.stack}>
@@ -103,12 +105,12 @@ export function ExperienceEditor({ initial, mediaPrefix }: { initial: Experience
         </label>
 
         <ol className={styles.list} aria-label="Blocks">
-          {value.blocks.map((block, index) => (
+          {blockList.map((block, index) => (
             <BlockEditor
               key={block.id}
               block={block}
               index={index}
-              count={value.blocks.length}
+              count={blockList.length}
               onChange={blockChange(block.id, false)}
               onFileChange={blockChange(block.id, true)}
               onMove={(direction) => blocks((list) => move(list, list.findIndex((b) => b.id === block.id), direction))}
@@ -132,7 +134,7 @@ export function ExperienceEditor({ initial, mediaPrefix }: { initial: Experience
               ))}
             </select>
           </label>
-          <button type="button" className={styles.button} onClick={() => blocks((list) => [...list, newBlock(newType, list)])}>
+          <button type="button" className={styles.button} onClick={() => blocks((list) => [...list, newBlock(newType, list.map((b) => b.id))])}>
             Add block
           </button>
         </div>

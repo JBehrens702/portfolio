@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import type { Experience, Site } from "@/lib/content/schema";
+import { layoutBlocks } from "@/lib/content/layout";
 import { nextExperience } from "@/lib/content/order";
 import { labelText } from "@/lib/content/visibility";
 import { Aperture } from "./Aperture";
@@ -52,7 +53,7 @@ export function ExperiencePage({ site, experience, linkBase }: ExperiencePagePro
   const next = nextExperience(site, experience.slug);
   const nextLabel = labelText(site, "nextExperience");
   const downloadLabel = labelText(site, "downloadFile");
-  const segments = segmentBlocks(experience.blocks);
+  const segments = segmentBlocks(layoutBlocks(experience.layout));
   const index = site.experiences.findIndex((e) => e.slug === experience.slug);
   // The section number of each segment that starts with a level-2 heading, else null.
   let sections = 0;

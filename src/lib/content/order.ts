@@ -1,4 +1,5 @@
-import type { Block, BlockType, Experience, Site } from "./schema";
+import type { Block, BlockType, Carousel, ContentBlock, ContentBlockType, Experience, Row, RowLayout, Site, Slide } from "./schema";
+import { ROW_COLUMNS } from "./schema";
 
 // Pure helpers for ordered lists and new content: move an item one place, make
 // a unique slug or id, make an empty block, and add, remove, and reorder
@@ -58,7 +59,7 @@ export function addExperience(site: Site, title: string): { site: Site; slug: st
     pageTitle: title,
     skills: [],
     homeText: "",
-    blocks: [],
+    layout: [],
   };
   return { site: { ...site, experiences: [...site.experiences, experience] }, slug };
 }
@@ -98,15 +99,33 @@ function emptyBlock(id: string, type: BlockType): Block {
   }
 }
 
-function newBlockId(taken: Block[]): string {
-  const used = new Set(taken.map((b) => b.id));
+/** A new id with the prefix that is not in `taken`. */
+export function newId(prefix: string, taken: Iterable<string>): string {
+  const used = new Set(taken);
   for (;;) {
-    const id = `b-${crypto.randomUUID().slice(0, 8)}`;
+    const id = `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
     if (!used.has(id)) return id;
   }
 }
 
 /** An empty block of the type, with an id that the list does not use yet. */
-export function newBlock(type: BlockType, taken: Block[]): Block {
-  return emptyBlock(newBlockId(taken), type);
+export function newBlock(type: ContentBlockType, taken: Iterable<string>): ContentBlock;
+export function newBlock(type: BlockType, taken: Iterable<string>): Block;
+export function newBlock(type: BlockType, taken: Iterable<string>): Block {
+  return emptyBlock(newId("b", taken), type);
+}
+
+/** An empty row with the preset's number of cells (KTD1). */
+export function newRow(layout: RowLayout, taken: Iterable<string>): Row {
+  return { id: newId("row", taken), type: "row", layout, cells: Array.from({ length: ROW_COLUMNS[layout] }, () => []) };
+}
+
+export function newSlide(taken: Iterable<string>): Slide {
+  return { id: newId("s", taken), text: "" };
+}
+
+/** A carousel with one empty slide. */
+export function newCarousel(taken: Iterable<string>): Carousel {
+  const id = newId("car", taken);
+  return { id, type: "carousel", slides: [newSlide([...taken, id])] };
 }

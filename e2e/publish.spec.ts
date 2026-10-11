@@ -10,7 +10,8 @@ import {
   type BlobCredentials,
   type ContentStore,
 } from "../src/lib/content/store";
-import type { Site } from "../src/lib/content/schema";
+import { layoutBlocks } from "../src/lib/content/layout";
+import { assertSite, type Site } from "../src/lib/content/schema";
 import { exifSegments, hasGps, withGpsExif } from "./fixtures/exif";
 
 // U6 scenarios in a real browser, signed in as the owner with Clerk's testing
@@ -41,8 +42,9 @@ test.skip(!ENABLED, "set E2E_PUBLISH=1 with CONTENT_SOURCE=blob and a test CONTE
 const VICTAULIC = "victaulic-internship";
 const SUMMARY = "During my internship at Victaulic I tested grooved couplings. (e2e summary)";
 
+/** The e2e draft, written in the version-1 format; assertSite upgrades it (KTD2). */
 function seedSite(): Site {
-  return {
+  return assertSite({
     schemaVersion: 1,
     profile: { name: "E2E Owner", tagline: "Hi, I'm E2E Owner", introParagraphs: ["E2E intro paragraph."] },
     contact: { email: "e2e-owner@example.com" },
@@ -70,7 +72,7 @@ function seedSite(): Site {
       },
     ],
     software: [],
-  };
+  });
 }
 
 let store: ContentStore;
@@ -369,7 +371,8 @@ test("two uploads with the same file name get different pathnames", async () => 
   }
   // Each upload saves the page; wait until the second save is in the draft.
   const imagePaths = async () => {
-    const block = (await draft()).experiences.find((e) => e.slug === "wind-tunnel-rig")!.blocks.find((b) => b.type === "images");
+    const rig = (await draft()).experiences.find((e) => e.slug === "wind-tunnel-rig")!;
+    const block = layoutBlocks(rig.layout).find((b) => b.type === "images");
     return block?.type === "images" ? block.items.map((item) => item.image?.pathname) : [];
   };
   await expect.poll(async () => (await imagePaths()).length, { timeout: 150_000 }).toBe(2);

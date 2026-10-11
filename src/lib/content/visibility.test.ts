@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { layoutBlocks } from "./layout";
 import type { Block, Site } from "./schema";
-import { labelText, visibleBlocks, visibleSite } from "./visibility";
+import { labelText, visibleBlocks, visibleLayout, visibleSite } from "./visibility";
 import { experience, headingBlock, makeSite, media, software, textBlock } from "./test-fixtures";
 
 function blocksOf(site: Site, slug: string): Block[] {
   const found = site.experiences.find((e) => e.slug === slug);
   if (!found) throw new Error(`no experience ${slug}`);
-  return found.blocks;
+  return layoutBlocks(found.layout);
 }
 
 function ids(blocks: Block[]): string[] {
@@ -148,5 +149,37 @@ describe("labelText", () => {
     expect(labelText(site, "a")).toBe("Read more");
     expect(labelText(site, "b")).toBeNull();
     expect(labelText(site, "missing")).toBeNull();
+  });
+});
+
+describe("visibleLayout (KTD5)", () => {
+  const text = (id: string, t: string) => textBlock(id, t);
+
+  it("hides a row whose cells are all empty", () => {
+    const items = visibleLayout([{ id: "r", type: "row", layout: "halves", cells: [[text("a", "")], []] }]);
+    expect(items).toEqual([]);
+  });
+
+  it("keeps both cells of a halves row when one cell is empty", () => {
+    const [row] = visibleLayout([{ id: "r", type: "row", layout: "halves", cells: [[text("a", "x")], [text("b", " ")]] }]);
+    expect(row).toEqual({ id: "r", type: "row", layout: "halves", cells: [[text("a", "x")], []] });
+  });
+
+  it("hides a heading that is followed only by hidden rows", () => {
+    const items = visibleLayout([
+      headingBlock("h", "Summary"),
+      { id: "r", type: "row", layout: "one", cells: [[text("a", "")]] },
+      headingBlock("h2", "Next"),
+      { id: "r2", type: "row", layout: "one", cells: [[text("b", "x")]] },
+    ]);
+    expect(items.map((item) => item.id)).toEqual(["h2", "r2"]);
+  });
+
+  it("hides a carousel whose slides have no image, and drops slides without an image", () => {
+    expect(visibleLayout([{ id: "c", type: "carousel", slides: [{ id: "s", text: "Only text." }] }])).toEqual([]);
+    const [carousel] = visibleLayout([
+      { id: "c", type: "carousel", slides: [{ id: "s1", text: "a", image: media("v1.jpg") }, { id: "s2", text: "b" }] },
+    ]);
+    expect(carousel.type === "carousel" && carousel.slides.map((s) => s.id)).toEqual(["s1"]);
   });
 });

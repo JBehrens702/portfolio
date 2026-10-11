@@ -54,6 +54,30 @@ describe("siteMedia", () => {
       "site/media/shot.jpg",
     ]);
   });
+  it("finds images in both cells of a row and in carousel slides", () => {
+    const site = makeSite({
+      profile: makeSite().profile,
+      experiences: [
+        experience("a", {
+          cardImage: undefined,
+          layout: [
+            {
+              id: "r",
+              type: "row",
+              layout: "halves",
+              cells: [
+                [{ id: "i", type: "images", items: [{ image: media("left.jpg") }] }],
+                [{ id: "f", type: "file", label: "File", file: media("right.pdf") }],
+              ],
+            },
+            { id: "c", type: "carousel", slides: [{ id: "s", text: "v1", image: media("slide.jpg") }] },
+          ],
+        }),
+      ],
+      software: [],
+    });
+    expect(siteMedia(site).map((m) => m.pathname)).toEqual(["site/media/left.jpg", "site/media/right.pdf", "site/media/slide.jpg"]);
+  });
 });
 
 describe("collectMediaGarbage", () => {

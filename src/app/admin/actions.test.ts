@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { layoutBlocks, upgradeBlocks } from "@/lib/content/layout";
 import { createMemoryContentStore, type ContentStore, type MemoryBackend } from "@/lib/content/store";
 import { experience, headingBlock, makeSite, media, software, textBlock } from "@/lib/content/test-fixtures";
 import type { MediaStorage, StoredMedia } from "@/lib/content/media-gc";
@@ -123,20 +124,20 @@ describe("saves keep the draft valid", () => {
       ...current,
       slug: "changed-by-the-browser",
       pageTitle: "New page title",
-      blocks: [headingBlock("h1", "Summary"), textBlock("t1", "The owner's summary.")],
+      layout: upgradeBlocks([headingBlock("h1", "Summary"), textBlock("t1", "The owner's summary.")]),
     });
     expect(result.ok).toBe(true);
     const saved = (await draft()).experiences[1];
     expect(saved.slug).toBe(current.slug);
     expect(saved.pageTitle).toBe("New page title");
-    expect(saved.blocks.map((b) => b.id)).toEqual(["h1", "t1"]);
+    expect(layoutBlocks(saved.layout).map((b) => b.id)).toEqual(["h1", "t1"]);
   });
 
   it("accepts an uploaded file, and refuses a file that this site did not upload", async () => {
     const current = (await draft()).experiences[0];
     const good = await saveExperience(current.slug, {
       ...current,
-      blocks: [{ id: "f1", type: "file", label: "Report", file: uploaded("report-a1b2.pdf", { fileName: "Report.pdf" }) }],
+      layout: upgradeBlocks([{ id: "f1", type: "file", label: "Report", file: uploaded("report-a1b2.pdf", { fileName: "Report.pdf" }) }]),
     });
     expect(good.ok).toBe(true);
 
@@ -227,7 +228,7 @@ describe("add and remove an experience (2.4.4)", () => {
       cardImage: uploaded("rig.jpg", { alt: "The rig" }),
       skills: ["CFD", "Fabrication"],
       homeText: "I built a wind tunnel rig.",
-      blocks: [textBlock("t1", "The full story.")],
+      layout: upgradeBlocks([textBlock("t1", "The full story.")]),
     });
     expect(saved.ok).toBe(true);
     expect((await store.readPublished())!.experiences.map((e) => e.slug)).not.toContain(added.slug);
@@ -388,7 +389,7 @@ describe("AE2 at module level: a saved draft change is public only after Publish
   it("the published document keeps the old text until Publish", async () => {
     await store.writePublished(await draft());
     const current = (await draft()).experiences[0];
-    await saveExperience(current.slug, { ...current, blocks: [textBlock("s", "Victaulic summary.")] });
+    await saveExperience(current.slug, { ...current, layout: upgradeBlocks([textBlock("s", "Victaulic summary.")]) });
     expect(JSON.stringify(await store.readPublished())).not.toContain("Victaulic summary.");
     expect((await publishSite()).ok).toBe(true);
     expect(JSON.stringify(await store.readPublished())).toContain("Victaulic summary.");
@@ -458,7 +459,7 @@ describe("media cleanup after Publish (U6 step 4)", () => {
     const second = (await draft()).experiences[1];
     await saveExperience(second.slug, {
       ...second,
-      blocks: [textBlock("t", `See [the PDF](https://store123.public.blob.vercel-storage.com/${PREFIX}linked.pdf).`)],
+      layout: upgradeBlocks([textBlock("t", `See [the PDF](https://store123.public.blob.vercel-storage.com/${PREFIX}linked.pdf).`)]),
     });
 
     const result = await publishSite();

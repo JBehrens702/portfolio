@@ -1,5 +1,6 @@
 // Small valid documents for the content tests. Not used by the site itself.
-import type { Block, Experience, Media, Site, SoftwareCard } from "./schema";
+import { upgradeBlocks } from "./layout";
+import type { Block, Experience, HeadingBlock, Media, Site, SoftwareCard, TextBlock } from "./schema";
 
 export function media(name = "photo.jpg", extra: Partial<Media> = {}): Media {
   return {
@@ -10,7 +11,12 @@ export function media(name = "photo.jpg", extra: Partial<Media> = {}): Media {
   };
 }
 
-export function experience(slug: string, extra: Partial<Experience> = {}): Experience {
+/**
+ * An experience. `blocks` is a short way to write a layout: the blocks are laid out
+ * as the version-1 upgrade lays them out (KTD3).
+ */
+export function experience(slug: string, extra: Partial<Experience> & { blocks?: Block[] } = {}): Experience {
+  const { blocks, ...rest } = extra;
   return {
     slug,
     homeTitle: `Home ${slug}`,
@@ -18,8 +24,8 @@ export function experience(slug: string, extra: Partial<Experience> = {}): Exper
     skills: ["CAD"],
     homeText: `First paragraph of ${slug}.`,
     cardImage: media(`${slug}.jpg`),
-    blocks: [],
-    ...extra,
+    layout: blocks ? upgradeBlocks(blocks) : [],
+    ...rest,
   };
 }
 
@@ -27,17 +33,17 @@ export function software(id: string, extra: Partial<SoftwareCard> = {}): Softwar
   return { id, name: `Software ${id}`, overview: `Overview of ${id}.`, ...extra };
 }
 
-export function textBlock(id: string, text: string): Block {
+export function textBlock(id: string, text: string): TextBlock {
   return { id, type: "text", text };
 }
 
-export function headingBlock(id: string, text: string, level: 2 | 3 = 2): Block {
+export function headingBlock(id: string, text: string, level: 2 | 3 = 2): HeadingBlock {
   return { id, type: "heading", text, level };
 }
 
 export function makeSite(extra: Partial<Site> = {}): Site {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     profile: {
       name: "Jonathan Behrens",
       tagline: "Mechanical engineering student",

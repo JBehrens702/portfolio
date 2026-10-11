@@ -53,7 +53,7 @@ describe("experiences", () => {
     const { site, slug } = addExperience(makeSite(), "Summer '26 Internship");
     const added = site.experiences.find((e) => e.slug === slug);
     expect(slug).toBe("summer-26-internship");
-    expect(added).toMatchObject({ homeTitle: "Summer '26 Internship", pageTitle: "Summer '26 Internship", skills: [], homeText: "", blocks: [] });
+    expect(added).toMatchObject({ homeTitle: "Summer '26 Internship", pageTitle: "Summer '26 Internship", skills: [], homeText: "", layout: [] });
   });
 
   it("removes an experience from the order and from the next-experience chain", () => {
@@ -114,14 +114,14 @@ describe("newBlock", () => {
       file: { type: "file", label: "" },
     };
     for (const [type, fields] of Object.entries(expected) as [BlockType, Record<string, unknown>][]) {
-      const block = newBlock(type, taken());
+      const block = newBlock(type, taken().map((b) => b.id));
       expect(block).toEqual({ id: block.id, ...fields });
     }
   });
 
   it("gives a new id that the list does not use, and the block is valid in a page", () => {
     const blocks = taken();
-    const block = newBlock("file", blocks);
+    const block = newBlock("file", blocks.map((b) => b.id));
     expect(block.id).toMatch(/^b-[0-9a-f]{8}$/);
     expect(blocks.map((b) => b.id)).not.toContain(block.id);
     const site = makeSite({ experiences: [experience("x", { blocks: [...blocks, block] })] });
@@ -131,7 +131,7 @@ describe("newBlock", () => {
   it("does not change the input list", () => {
     const blocks = taken();
     const before = structuredClone(blocks);
-    newBlock("text", blocks);
+    newBlock("text", blocks.map((b) => b.id));
     expect(blocks).toEqual(before);
   });
 });
