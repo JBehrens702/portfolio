@@ -360,3 +360,159 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
   gap: var(--space-4);
 }
+
+/* ---------- The map of the site on the admin home (U6, 2.4.18 to 2.4.27) ---------- */
+
+/* Keep 720px equal to NARROW_QUERY in site-map-model.ts. */
+.mapLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.mapNested {
+  margin-left: var(--space-6);
+}
+
+.mapTitle {
+  font-weight: 600;
+}
+
+.card[data-selected] {
+  border-color: var(--color-orange);
+}
+
+.mapRemoved {
+  border-style: dashed;
+}
+
+/* The change mark is a word in a box, never a colour alone (2.4.29). */
+.mark {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius);
+}
+
+.mapPicture {
+  position: sticky;
+  top: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.mapLinks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: var(--space-4);
+}
+
+.mapLinksHeading {
+  margin: 0 0 var(--space-2);
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.mapLinkList {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-left: var(--space-6);
+}
+
+.mapOutside {
+  margin-top: var(--space-6);
+}
+
+/* A picture: a 1280 px wide page, scaled to the frame's width (KTD6). SiteMap sets --frame-scale. */
+.frameBox {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1280px;
+  height: calc(100% / var(--frame-scale, 0.5));
+  border: 0;
+  transform: scale(var(--frame-scale, 0.5));
+  transform-origin: 0 0;
+}
+
+/* A wall picture ignores the pointer; the button over it opens the page. */
+.frameStill {
+  pointer-events: none;
+}
+
+.framePlaceholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+}
+
+.wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wallTile {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.wallPicture {
+  position: relative;
+}
+
+.wallOpen {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.wallOpen:hover {
+  border-color: var(--color-purple-bright);
+}
+
+/* Phone width (2.4.27): the list alone, and one picture per line on the wall. */
+@media (max-width: 720px) {
+  .mapLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mapPicture {
+    display: none;
+  }
+
+  .wall {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mapNested {
+    margin-left: var(--space-3);
+  }
+}

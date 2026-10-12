@@ -23,8 +23,11 @@ export function PublishPanel() {
   const publish = () =>
     startTransition(async () => {
       try {
-        setState({ kind: "result", result: await publishSite() });
+        const result = await publishSite();
+        setState({ kind: "result", result });
         setApproved([]);
+        // The map's change marks compare the draft with the published site (2.4.29), so read them again.
+        if (result.ok) router.refresh();
       } catch {
         setState({ kind: "failed" });
       }
