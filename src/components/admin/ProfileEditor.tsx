@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { saveProfile, type ProfileInput } from "@/app/admin/actions";
+import type { Stamps } from "@/lib/content/parts";
 import type { Media, Site } from "@/lib/content/schema";
 import { AltTextField } from "./AltTextField";
 import { useConfirm } from "./ConfirmDialog";
@@ -40,8 +41,11 @@ function toInput(state: ProfileState): ProfileInput {
   };
 }
 
-/** The profile editor's state and its save, shared by the Profile page and the home editor (KTD12). */
-export function useProfileEditor(site: Site, mediaPrefix: string) {
+/**
+ * The profile editor's state and its save, shared by the Profile page and the
+ * home editor (KTD12). `stamps` holds the stamp of the part `profile` (KTD1).
+ */
+export function useProfileEditor(site: Site, mediaPrefix: string, stamps: Stamps) {
   const initial: ProfileState = {
     name: site.profile.name,
     tagline: site.profile.tagline,
@@ -52,8 +56,8 @@ export function useProfileEditor(site: Site, mediaPrefix: string) {
     email: site.contact.email ?? "",
     rise: site.contact.rise ?? "",
   };
-  const persist = useCallback((state: ProfileState) => saveProfile(toInput(state)), []);
-  const editor = useDraftEditor(initial, persist);
+  const persist = useCallback((state: ProfileState, base: Stamps) => saveProfile(toInput(state), base), []);
+  const editor = useDraftEditor(initial, persist, { stamps });
   const { value, update } = editor;
   const { confirm, dialog } = useConfirm();
 
@@ -152,8 +156,8 @@ export function ContactFields({ profile }: { profile: ProfileEditorState }) {
   );
 }
 
-export function ProfileEditor({ site, mediaPrefix }: { site: Site; mediaPrefix: string }) {
-  const profile = useProfileEditor(site, mediaPrefix);
+export function ProfileEditor({ site, mediaPrefix, stamps }: { site: Site; mediaPrefix: string; stamps: Stamps }) {
+  const profile = useProfileEditor(site, mediaPrefix, stamps);
   return (
     <div className={styles.stack}>
       <section className={styles.card} aria-labelledby="profile">

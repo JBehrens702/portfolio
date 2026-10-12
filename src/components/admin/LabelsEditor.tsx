@@ -20,7 +20,7 @@ async function persist(value: LabelsInput): Promise<SaveResult<LabelsInput>> {
 
 export function LabelsEditor({ initial }: { initial: Site["labels"] }) {
   const [loaded] = useState(() => withBaseText(initial));
-  const editor = useDraftEditor(loaded, persist, adoptStoredLabels);
+  const editor = useDraftEditor(loaded, persist, { adopt: adoptStoredLabels });
   const { value, update } = editor;
   // Unapproved labels first, in the order of the page load, so a label does not jump when it is approved.
   const keys = Object.keys(initial).sort(

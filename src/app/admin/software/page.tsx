@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { DraftProblem } from "@/components/admin/DraftProblem";
 import { SoftwareEditor } from "@/components/admin/SoftwareEditor";
+import { StaleProvider } from "@/components/admin/StaleProvider";
 import styles from "@/components/admin/admin.module.css";
 import { requireOwnerPage } from "@/lib/auth/owner";
+import { stampParts } from "@/lib/content/parts";
 import { readDraftState } from "../draft";
 
 export const metadata: Metadata = { title: "Software cards" };
@@ -15,15 +17,18 @@ export default async function AdminSoftware() {
   const state = await readDraftState();
   return (
     <main id="main" className={`container ${styles.page}`} data-testid="admin-software">
-      <p>
-        <a href="/admin">Back to Admin</a>
-      </p>
-      <h1>Software cards</h1>
-      {state.kind === "ok" ? (
-        <SoftwareEditor initial={state.site.software} mediaPrefix={state.mediaPrefix} />
-      ) : (
-        <DraftProblem state={state} />
-      )}
+      {/* The return check of this page (KTD5); the server makes the stamps (KTD1). */}
+      <StaleProvider>
+        <p>
+          <a href="/admin">Back to Admin</a>
+        </p>
+        <h1>Software cards</h1>
+        {state.kind === "ok" ? (
+          <SoftwareEditor initial={state.site.software} mediaPrefix={state.mediaPrefix} stamps={stampParts(state.site, ["software"])} />
+        ) : (
+          <DraftProblem state={state} />
+        )}
+      </StaleProvider>
     </main>
   );
 }

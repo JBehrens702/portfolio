@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DraftProblem } from "@/components/admin/DraftProblem";
 import { ExperienceEditor } from "@/components/admin/ExperienceEditor";
+import { StaleProvider } from "@/components/admin/StaleProvider";
 import styles from "@/components/admin/admin.module.css";
 import { requireOwnerPage } from "@/lib/auth/owner";
+import { experienceKeys, stampParts } from "@/lib/content/parts";
 import { readDraftState } from "../../draft";
 
 interface Props {
@@ -30,11 +32,19 @@ export default async function AdminExperience({ params }: Props) {
   if (!experience) notFound();
   return (
     <main id="main" className={`container ${styles.page}`} data-testid="admin-experience">
-      <p>
-        <a href="/admin">Back to Admin</a>
-      </p>
-      <h1>{experience.pageTitle}</h1>
-      <ExperienceEditor initial={experience} site={state.site} mediaPrefix={state.mediaPrefix} />
+      {/* The return check of this page (KTD5); the server makes the stamps (KTD1). */}
+      <StaleProvider titles={{ [slug]: experience.pageTitle || experience.homeTitle }}>
+        <p>
+          <a href="/admin">Back to Admin</a>
+        </p>
+        <h1>{experience.pageTitle}</h1>
+        <ExperienceEditor
+          initial={experience}
+          site={state.site}
+          mediaPrefix={state.mediaPrefix}
+          stamps={stampParts(state.site, experienceKeys(slug))}
+        />
+      </StaleProvider>
     </main>
   );
 }

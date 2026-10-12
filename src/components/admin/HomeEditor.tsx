@@ -2,6 +2,7 @@
 
 import { useCallback, type ReactNode } from "react";
 import { saveExperienceCard, type ExperienceCardInput } from "@/app/admin/actions";
+import type { Stamps } from "@/lib/content/parts";
 import type { Experience, Site } from "@/lib/content/schema";
 import { labelText } from "@/lib/content/visibility";
 import siteStyles from "@/components/site/Site.module.css";
@@ -41,13 +42,13 @@ function cardInput(experience: Experience): ExperienceCardInput {
   };
 }
 
-function CardEditor({ experience, mediaPrefix }: { experience: Experience; mediaPrefix: string }) {
+function CardEditor({ experience, mediaPrefix, stamps }: { experience: Experience; mediaPrefix: string; stamps: Stamps }) {
   const slug = experience.slug;
   const persist = useCallback(
-    (card: ExperienceCardInput) => saveExperienceCard(slug, { ...card, skills: trimSkills(card.skills) }),
+    (card: ExperienceCardInput, base: Stamps) => saveExperienceCard(slug, { ...card, skills: trimSkills(card.skills) }, base),
     [slug],
   );
-  const editor = useDraftEditor(cardInput(experience), persist);
+  const editor = useDraftEditor(cardInput(experience), persist, { stamps });
   const { value } = editor;
   const { confirm, dialog } = useConfirm();
   return (
@@ -62,8 +63,16 @@ function CardEditor({ experience, mediaPrefix }: { experience: Experience; media
   );
 }
 
-export function HomeEditor({ site, mediaPrefix }: { site: Site; mediaPrefix: string }) {
-  const profile = useProfileEditor(site, mediaPrefix);
+/** The stamps of the parts that the home editor edits, one set for each of its editors (KTD1). */
+export interface HomeStamps {
+  profile: Stamps;
+  /** By experience slug: the stamp of that experience's card part. */
+  cards: Record<string, Stamps>;
+  software: Stamps;
+}
+
+export function HomeEditor({ site, mediaPrefix, stamps }: { site: Site; mediaPrefix: string; stamps: HomeStamps }) {
+  const profile = useProfileEditor(site, mediaPrefix, stamps.profile);
   return (
     <div className={styles.stack} data-testid="home-editor">
       <section className={styles.homeSection} aria-label="Top of the home page">
@@ -77,13 +86,18 @@ export function HomeEditor({ site, mediaPrefix }: { site: Site; mediaPrefix: str
       <HomeSection heading={labelText(site, "selectedWork")} fallback="Selected Work">
         <div className={styles.homeCards}>
           {site.experiences.map((experience) => (
-            <CardEditor key={experience.slug} experience={experience} mediaPrefix={mediaPrefix} />
+            <CardEditor
+              key={experience.slug}
+              experience={experience}
+              mediaPrefix={mediaPrefix}
+              stamps={stamps.cards[experience.slug] ?? {}}
+            />
           ))}
         </div>
       </HomeSection>
 
       <HomeSection heading={labelText(site, "softwareHeading")} fallback="Software">
-        <SoftwareEditor initial={site.software} mediaPrefix={mediaPrefix} />
+        <SoftwareEditor initial={site.software} mediaPrefix={mediaPrefix} stamps={stamps.software} />
       </HomeSection>
 
       <HomeSection heading={labelText(site, "aboutHeading")} fallback="About">

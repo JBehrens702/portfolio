@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { saveSoftware } from "@/app/admin/actions";
 import { move, slugify, unique } from "@/lib/content/order";
+import type { Stamps } from "@/lib/content/parts";
 import type { SoftwareCard } from "@/lib/content/schema";
 import { AltTextField } from "./AltTextField";
 import { useConfirm } from "./ConfirmDialog";
@@ -18,8 +19,17 @@ import styles from "./admin.module.css";
 // cards, and edit each card's name, overview, screenshot, and link. A card has
 // no full page (0.1.5).
 
-export function SoftwareEditor({ initial, mediaPrefix }: { initial: SoftwareCard[]; mediaPrefix: string }) {
-  const editor = useDraftEditor(initial, saveSoftware);
+export function SoftwareEditor({
+  initial,
+  mediaPrefix,
+  stamps,
+}: {
+  initial: SoftwareCard[];
+  mediaPrefix: string;
+  /** The stamp of the part `software` (KTD1). */
+  stamps: Stamps;
+}) {
+  const editor = useDraftEditor(initial, saveSoftware, { stamps });
   const { value, update } = editor;
   const { confirm, dialog } = useConfirm();
   const [newName, setNewName] = useState("");

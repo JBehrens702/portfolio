@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { resetExperience, saveExperience } from "@/app/admin/actions";
 import { layoutIds } from "@/lib/content/layout";
 import { newBlock, newCarousel, newRow } from "@/lib/content/order";
+import type { Stamps } from "@/lib/content/parts";
 import type { BlockType, Experience, LayoutItem, Site } from "@/lib/content/schema";
 import { withLayout, type LayoutEdit } from "@/lib/content/layout-edit";
 import { visibleSite } from "@/lib/content/visibility";
@@ -49,10 +50,21 @@ function newItem(type: BlockType, layout: LayoutItem[]): LayoutItem {
   return { ...row, cells: [[newBlock(type, [...taken, row.id])]] } as LayoutItem;
 }
 
-export function ExperienceEditor({ initial, site, mediaPrefix }: { initial: Experience; site: Site; mediaPrefix: string }) {
+export function ExperienceEditor({
+  initial,
+  site,
+  mediaPrefix,
+  stamps,
+}: {
+  initial: Experience;
+  site: Site;
+  mediaPrefix: string;
+  /** The stamps of the experience's card and page parts (KTD1). */
+  stamps: Stamps;
+}) {
   const slug = initial.slug;
-  const persist = useCallback((value: Experience) => saveExperience(slug, forSave(value)), [slug]);
-  const editor = useDraftEditor(initial, persist);
+  const persist = useCallback((value: Experience, base: Stamps) => saveExperience(slug, forSave(value), base), [slug]);
+  const editor = useDraftEditor(initial, persist, { stamps });
   const { value, update, undo, redo } = editor;
   const { confirm, dialog } = useConfirm();
   const [newType, setNewType] = useState<BlockType>("text");
@@ -66,7 +78,7 @@ export function ExperienceEditor({ initial, site, mediaPrefix }: { initial: Expe
     setResetError(null);
     try {
       const result = await resetExperience(slug);
-      if (result.ok) editor.replace(result.experience);
+      if (result.ok) editor.replace(result.experience, result.stamps);
       else setResetError(result.message);
     } catch {
       setResetError("Not reset: the connection failed. Your draft is unchanged.");

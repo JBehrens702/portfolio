@@ -1,6 +1,8 @@
 "use client";
 
 import { IssueList } from "./IssueList";
+import { useStale } from "./StaleProvider";
+import { refusalAction } from "./stamps";
 import type { DraftEditor } from "./useDraftEditor";
 import { useHydrated } from "./useHydrated";
 import styles from "./admin.module.css";
@@ -32,6 +34,7 @@ export function SaveBar<T>({ editor }: { editor: DraftEditor<T> }) {
 
 export function SaveStatusText<T>({ editor }: { editor: DraftEditor<T> }) {
   const { status } = editor;
+  const { reload } = useStale();
   switch (status.kind) {
     case "idle":
       return null;
@@ -47,13 +50,37 @@ export function SaveStatusText<T>({ editor }: { editor: DraftEditor<T> }) {
           Saved at {new Date(status.at).toLocaleTimeString()}.
         </span>
       );
-    case "refused":
+    case "refused": {
+      // The owner's edits stay on screen after every refusal (2.4.34).
+      const action = refusalAction(status.reason);
       return (
         <div role="alert" className={styles.error} data-testid="save-error">
           {status.message}
+          {action === "reload" && (
+            <>
+              {" "}
+              <button
+                type="button"
+                className={`${styles.button} ${styles.small}`}
+                onClick={() => void reload()}
+                data-testid="save-reload"
+              >
+                Reload
+              </button>
+            </>
+          )}
+          {action === "retry" && (
+            <>
+              {" "}
+              <button type="button" className={`${styles.button} ${styles.small}`} onClick={() => void editor.retry()}>
+                Retry
+              </button>
+            </>
+          )}
           <IssueList issues={status.issues} />
         </div>
       );
+    }
     case "failed":
       return (
         <span role="alert" className={styles.error} data-testid="save-error">
