@@ -8,6 +8,7 @@ test("robots.txt disallows /admin and /preview", async ({ request }) => {
   const body = await response.text();
   expect(body).toMatch(/^Disallow: \/admin$/m);
   expect(body).toMatch(/^Disallow: \/preview$/m);
+  expect(body).toMatch(/^Sitemap: https:\/\/www\.jonathanbehrens\.space\/sitemap\.xml$/m);
 });
 
 test("the site title is the title of the Google Site", async ({ page }) => {

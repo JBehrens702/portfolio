@@ -193,6 +193,18 @@ test("an unknown experience slug gives a 404 page", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Back to home" })).toHaveAttribute("href", "/");
 });
 
+test("sitemap.xml lists the home page and each published experience page, and no admin page", async ({
+  request,
+}) => {
+  const response = await request.get("/sitemap.xml");
+  expect(response.ok()).toBe(true);
+  const locs = [...(await response.text()).matchAll(/<loc>([^<]*)<\/loc>/g)].map((match) => match[1]);
+  expect(locs).toEqual([
+    "https://www.jonathanbehrens.space",
+    ...SLUGS.map((slug) => `https://www.jonathanbehrens.space/experiences/${slug}`),
+  ]);
+});
+
 test("the Tab key moves through the home page links in reading order, each with a visible outline", async ({
   page,
 }) => {
