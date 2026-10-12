@@ -1,4 +1,4 @@
-import { del } from "@vercel/blob";
+import { BlobNotFoundError, del, head } from "@vercel/blob";
 import type { Media, Site } from "./schema";
 import { blobCredentialsFromEnv, contentSourceFromEnv, listAllBlobs, type BlobCredentials, type ContentStore } from "./store";
 
@@ -37,10 +37,15 @@ export interface StoredMedia {
   uploadedAt: Date;
 }
 
-/** The media files of a store: list by prefix, delete by URL. */
+/** The media files of a store: list by prefix, delete by URL, check one by URL. */
 export interface MediaStorage {
   list(prefix: string): Promise<StoredMedia[]>;
   delete(urls: string[]): Promise<void>;
+  /**
+   * True when the file is still stored. A save checks each file that is new
+   * to the draft with it, so a file that Publish deleted never comes back (KTD4).
+   */
+  exists(url: string): Promise<boolean>;
 }
 
 /**
@@ -145,6 +150,16 @@ export function createBlobMediaStorage(credentials: BlobCredentials): MediaStora
     async delete(urls) {
       for (let i = 0; i < urls.length; i += 100) {
         await del(urls.slice(i, i + 100), credentials);
+      }
+    },
+    async exists(url) {
+      try {
+        await head(url, credentials);
+        return true;
+      } catch (error) {
+        // Only "not found" means missing; any other error (an outage) is passed on.
+        if (error instanceof BlobNotFoundError) return false;
+        throw error;
       }
     },
   };

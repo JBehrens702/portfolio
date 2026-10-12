@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { layoutBlocks, upgradeBlocks } from "@/lib/content/layout";
+import { cardKey, experienceKeys, pageKey, stampParts, type Stamps } from "@/lib/content/parts";
 import { createMemoryContentStore, type ContentStore, type MemoryBackend } from "@/lib/content/store";
 import { experience, headingBlock, makeSite, media, software, textBlock } from "@/lib/content/test-fixtures";
 import type { MediaStorage, StoredMedia } from "@/lib/content/media-gc";
@@ -37,6 +38,7 @@ vi.mock("@/lib/content/media-gc", async (importOriginal) => {
 import {
   addExperience,
   approveLabel,
+  checkParts,
   moveExperience,
   publishSite,
   removeExperience,
@@ -85,6 +87,11 @@ function draftText(): string | undefined {
   return backend.files.get(store.paths.draft);
 }
 
+/** The stamps of every part of the current draft, as an editor that loads the draft now holds them (KTD1). */
+async function fresh(): Promise<Stamps> {
+  return stampParts(await draft());
+}
+
 beforeEach(async () => {
   owner.refuse = false;
   updateTag.mockClear();
@@ -98,7 +105,7 @@ describe("saves keep the draft valid", () => {
   it("refuses an experience without a title, and the draft is unchanged", async () => {
     const before = draftText();
     const current = (await draft()).experiences[0];
-    const result = await saveExperience(current.slug, { ...current, homeTitle: "   " });
+    const result = await saveExperience(current.slug, { ...current, homeTitle: "   " }, await fresh());
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.message).toMatch(/not valid/);
@@ -113,9 +120,9 @@ describe("saves keep the draft valid", () => {
     const profile = await saveProfile({
       ...site.profile,
       contact: { ...site.contact, linkedin: "javascript:alert(1)" },
-    });
+    }, await fresh());
     expect(profile.ok).toBe(false);
-    const cards = await saveSoftware([...site.software, { id: "Bad Id", name: "" }]);
+    const cards = await saveSoftware([...site.software, { id: "Bad Id", name: "" }], await fresh());
     expect(cards.ok).toBe(false);
     expect(draftText()).toBe(before);
   });
@@ -127,7 +134,7 @@ describe("saves keep the draft valid", () => {
       slug: "changed-by-the-browser",
       pageTitle: "New page title",
       layout: upgradeBlocks([headingBlock("h1", "Summary"), textBlock("t1", "The owner's summary.")]),
-    });
+    }, await fresh());
     expect(result.ok).toBe(true);
     const saved = (await draft()).experiences[1];
     expect(saved.slug).toBe(current.slug);
@@ -137,14 +144,14 @@ describe("saves keep the draft valid", () => {
 
   it("adds the carousel labels, unapproved, when the first carousel is saved (KTD9)", async () => {
     const current = (await draft()).experiences[0];
-    const plain = await saveExperience(current.slug, { ...current, layout: upgradeBlocks([textBlock("t", "No carousel.")]) });
+    const plain = await saveExperience(current.slug, { ...current, layout: upgradeBlocks([textBlock("t", "No carousel.")]) }, await fresh());
     expect(plain.ok).toBe(true);
     expect(Object.keys((await draft()).labels).filter((key) => key.startsWith("carousel"))).toEqual([]);
 
     const result = await saveExperience(current.slug, {
       ...current,
       layout: [{ id: "c", type: "carousel", slides: [{ id: "s", text: "Version 1." }] }],
-    });
+    }, await fresh());
     expect(result.ok).toBe(true);
     const labels = (await draft()).labels;
     expect(labels.carouselPrevious).toEqual({ text: "Previous", approved: false });
@@ -156,16 +163,16 @@ describe("saves keep the draft valid", () => {
     const site = await draft();
     await store.writeDraft({ ...site, labels: { ...site.labels, carouselNext: { text: "Weiter", approved: true } } });
     const current = (await draft()).experiences[0];
-    await saveExperience(current.slug, { ...current, layout: [{ id: "c", type: "carousel", slides: [] }] });
+    await saveExperience(current.slug, { ...current, layout: [{ id: "c", type: "carousel", slides: [] }] }, await fresh());
     expect((await draft()).labels.carouselNext).toEqual({ text: "Weiter", approved: true });
   });
 
   it("removes the unapproved carousel proposals when the last carousel is removed, so Publish is not blocked", async () => {
     const current = (await draft()).experiences[0];
-    await saveExperience(current.slug, { ...current, layout: [{ id: "c", type: "carousel", slides: [] }] });
+    await saveExperience(current.slug, { ...current, layout: [{ id: "c", type: "carousel", slides: [] }] }, await fresh());
     expect(Object.keys((await draft()).labels).filter((key) => key.startsWith("carousel"))).toHaveLength(3);
 
-    const result = await saveExperience(current.slug, { ...current, layout: upgradeBlocks([textBlock("t", "No carousel.")]) });
+    const result = await saveExperience(current.slug, { ...current, layout: upgradeBlocks([textBlock("t", "No carousel.")]) }, await fresh());
     expect(result.ok).toBe(true);
     expect(Object.keys((await draft()).labels).filter((key) => key.startsWith("carousel"))).toEqual([]);
     expect((await publishSite()).ok).toBe(true);
@@ -173,7 +180,7 @@ describe("saves keep the draft valid", () => {
 
   it("removes the unapproved carousel proposals when the experience with the last carousel is removed", async () => {
     const current = (await draft()).experiences[0];
-    await saveExperience(current.slug, { ...current, layout: [{ id: "c", type: "carousel", slides: [] }] });
+    await saveExperience(current.slug, { ...current, layout: [{ id: "c", type: "carousel", slides: [] }] }, await fresh());
     const site = await draft();
     await store.writeDraft({ ...site, labels: { ...site.labels, carouselNext: { text: "Next", approved: true } } });
 
@@ -188,7 +195,7 @@ describe("saves keep the draft valid", () => {
     const good = await saveExperience(current.slug, {
       ...current,
       layout: upgradeBlocks([{ id: "f1", type: "file", label: "Report", file: uploaded("report-a1b2.pdf", { fileName: "Report.pdf" }) }]),
-    });
+    }, await fresh());
     expect(good.ok).toBe(true);
 
     const before = draftText();
@@ -197,7 +204,7 @@ describe("saves keep the draft valid", () => {
       uploaded("x.jpg", { pathname: "other-root/media/x.jpg", url: "https://s.public.blob.vercel-storage.com/other-root/media/x.jpg" }),
       uploaded("x.svg", { contentType: "image/svg+xml" }),
     ]) {
-      const result = await saveExperience(current.slug, { ...current, cardImage: bad });
+      const result = await saveExperience(current.slug, { ...current, cardImage: bad }, await fresh());
       expect(result.ok).toBe(false);
     }
     expect(draftText()).toBe(before);
@@ -206,7 +213,7 @@ describe("saves keep the draft valid", () => {
   it("keeps a file that the draft already holds, even outside the media prefix (seed files)", async () => {
     const current = (await draft()).experiences[0];
     // test-fixtures media sit under site/media/, not memory/media/.
-    const result = await saveExperience(current.slug, { ...current, homeText: "Changed." });
+    const result = await saveExperience(current.slug, { ...current, homeText: "Changed." }, await fresh());
     expect(result.ok).toBe(true);
   });
 
@@ -219,7 +226,7 @@ describe("saves keep the draft valid", () => {
       introParagraphs: ["One.", "Two with a [link](https://example.com)."],
       heroPhoto: uploaded("hero.jpg", { alt: "The owner", width: 800, height: 600 }),
       contact: { ...site.contact, email: "new@example.com" },
-    });
+    }, await fresh());
     expect(result.ok).toBe(true);
     const saved = await draft();
     expect(saved.profile.tagline).toBe("New tagline");
@@ -241,7 +248,7 @@ describe("order (2.4.5)", () => {
 
   it("reorders, removes, and adds software cards with one save", async () => {
     const site = await draft();
-    const result = await saveSoftware([site.software[1], software("new-card", { name: "New card" })]);
+    const result = await saveSoftware([site.software[1], software("new-card", { name: "New card" })], await fresh());
     expect(result.ok).toBe(true);
     expect((await draft()).software.map((c) => c.id)).toEqual(["unquotable", "new-card"]);
   });
@@ -279,7 +286,7 @@ describe("add and remove an experience (2.4.4)", () => {
       skills: ["CFD", "Fabrication"],
       homeText: "I built a wind tunnel rig.",
       layout: upgradeBlocks([textBlock("t1", "The full story.")]),
-    });
+    }, await fresh());
     expect(saved.ok).toBe(true);
     expect((await store.readPublished())!.experiences.map((e) => e.slug)).not.toContain(added.slug);
 
@@ -421,7 +428,7 @@ describe("malformed arguments are refused and change nothing", () => {
   it("saveSoftware with a value that is not a list", async () => {
     const before = draftText();
     for (const cards of [null, "dashboard", { 0: software("dashboard"), length: 1 }]) {
-      expect((await saveSoftware(untyped<SoftwareCard[]>(cards))).ok).toBe(false);
+      expect((await saveSoftware(untyped<SoftwareCard[]>(cards), await fresh())).ok).toBe(false);
     }
     expect(draftText()).toBe(before);
   });
@@ -429,7 +436,7 @@ describe("malformed arguments are refused and change nothing", () => {
   it("saveProfile with a value that is not an object", async () => {
     const before = draftText();
     for (const input of [null, "profile", ["Jonathan Behrens"], 42]) {
-      expect((await saveProfile(untyped<ProfileInput>(input))).ok).toBe(false);
+      expect((await saveProfile(untyped<ProfileInput>(input), await fresh())).ok).toBe(false);
     }
     expect(draftText()).toBe(before);
   });
@@ -439,7 +446,7 @@ describe("AE2 at module level: a saved draft change is public only after Publish
   it("the published document keeps the old text until Publish", async () => {
     await store.writePublished(await draft());
     const current = (await draft()).experiences[0];
-    await saveExperience(current.slug, { ...current, layout: upgradeBlocks([textBlock("s", "Victaulic summary.")]) });
+    await saveExperience(current.slug, { ...current, layout: upgradeBlocks([textBlock("s", "Victaulic summary.")]) }, await fresh());
     expect(JSON.stringify(await store.readPublished())).not.toContain("Victaulic summary.");
     expect((await publishSite()).ok).toBe(true);
     expect(JSON.stringify(await store.readPublished())).toContain("Victaulic summary.");
@@ -450,13 +457,13 @@ describe("AE2 at module level: a saved draft change is public only after Publish
 describe("saveExperienceCard (KTD12)", () => {
   it("saves the card fields and keeps the page layout of the draft", async () => {
     const current = (await draft()).experiences[0];
-    await saveExperience(current.slug, { ...current, layout: upgradeBlocks([textBlock("keep", "Layout to keep.")]) });
+    await saveExperience(current.slug, { ...current, layout: upgradeBlocks([textBlock("keep", "Layout to keep.")]) }, await fresh());
     const result = await saveExperienceCard(current.slug, {
       homeTitle: "New card title",
       homeText: "New card text.",
       skills: ["FEA"],
       cardImage: uploaded("card-new.jpg", { alt: "New card" }),
-    });
+    }, await fresh());
     expect(result.ok).toBe(true);
     const saved = (await draft()).experiences[0];
     expect(saved).toMatchObject({ homeTitle: "New card title", homeText: "New card text.", skills: ["FEA"] });
@@ -466,9 +473,9 @@ describe("saveExperienceCard (KTD12)", () => {
 
   it("removes the card image when none is sent, and refuses an unknown slug", async () => {
     const current = (await draft()).experiences[0];
-    await saveExperienceCard(current.slug, { homeTitle: current.homeTitle, homeText: "", skills: [] });
+    await saveExperienceCard(current.slug, { homeTitle: current.homeTitle, homeText: "", skills: [] }, await fresh());
     expect((await draft()).experiences[0].cardImage).toBeUndefined();
-    expect((await saveExperienceCard("no-such", { homeTitle: "x", homeText: "", skills: [] })).ok).toBe(false);
+    expect((await saveExperienceCard("no-such", { homeTitle: "x", homeText: "", skills: [] }, { "card:no-such": "x" })).ok).toBe(false);
   });
 });
 
@@ -476,8 +483,8 @@ describe("resetExperience (2.4.15, KTD11)", () => {
   it("replaces the draft of one page with its published version (AE4)", async () => {
     await store.writePublished(await draft());
     const [current, other] = (await draft()).experiences;
-    await saveExperience(current.slug, { ...current, pageTitle: "Unpublished title", layout: upgradeBlocks([textBlock("x", "Draft only.")]) });
-    await saveExperience(other.slug, { ...other, pageTitle: "Other draft title" });
+    await saveExperience(current.slug, { ...current, pageTitle: "Unpublished title", layout: upgradeBlocks([textBlock("x", "Draft only.")]) }, await fresh());
+    await saveExperience(other.slug, { ...other, pageTitle: "Other draft title" }, await fresh());
 
     const result = await resetExperience(current.slug);
     expect(result.ok).toBe(true);
@@ -485,6 +492,8 @@ describe("resetExperience (2.4.15, KTD11)", () => {
     const published = (await store.readPublished())!.experiences[0];
     expect(result.experience).toEqual(published);
     const after = await draft();
+    // The editor takes the stamps of the reset page, so its next save is not refused.
+    expect(result.stamps).toEqual(stampParts(after, experienceKeys(current.slug)));
     expect(after.experiences[0]).toEqual(published);
     // Only this page goes back; the other page keeps its draft.
     expect(after.experiences[1].pageTitle).toBe("Other draft title");
@@ -512,17 +521,18 @@ describe("the owner check comes first (3.4.1)", () => {
     const before = draftText();
     const site = await draft();
     const calls = [
-      saveProfile({ ...site.profile, contact: site.contact }),
+      saveProfile({ ...site.profile, contact: site.contact }, stampParts(site)),
       saveLabels(asLoaded(site.labels)),
       approveLabel("selectedWork"),
       addExperience("New"),
       removeExperience("first"),
       moveExperience("first", "down"),
-      saveExperience("first", site.experiences[0]),
+      saveExperience("first", site.experiences[0], stampParts(site)),
       resetExperience("first"),
-      saveExperienceCard("first", site.experiences[0]),
-      saveSoftware(site.software),
+      saveExperienceCard("first", site.experiences[0], stampParts(site)),
+      saveSoftware(site.software, stampParts(site)),
       publishSite(),
+      checkParts(stampParts(site)),
     ];
     for (const call of calls) await expect(call).rejects.toMatchObject({ name: "OwnerRefusedError", status: 403 });
     expect(draftText()).toBe(before);
@@ -542,6 +552,9 @@ describe("media cleanup after Publish (U6 step 4)", () => {
       async delete(urls) {
         deleted.push(...urls);
       },
+      async exists(url) {
+        return files.some((f) => f.url === url) && !deleted.includes(url);
+      },
     };
     return { storage, deleted };
   }
@@ -557,7 +570,7 @@ describe("media cleanup after Publish (U6 step 4)", () => {
     const v1 = makeSite({ experiences: [experience("first", { cardImage: uploaded("history.jpg") })] });
     await store.writePublished(v1);
     const current = (await draft()).experiences[0];
-    await saveExperience(current.slug, { ...current, cardImage: uploaded("live.jpg") });
+    await saveExperience(current.slug, { ...current, cardImage: uploaded("live.jpg") }, await fresh());
     const { storage, deleted } = fakeStorage([
       file("history.jpg"),
       file("live.jpg"),
@@ -571,7 +584,7 @@ describe("media cleanup after Publish (U6 step 4)", () => {
     await saveExperience(second.slug, {
       ...second,
       layout: upgradeBlocks([textBlock("t", `See [the PDF](https://store123.public.blob.vercel-storage.com/${PREFIX}linked.pdf).`)]),
-    });
+    }, await fresh());
 
     const result = await publishSite();
     expect(result).toMatchObject({ ok: true, cleanup: { deleted: 1 } });
@@ -580,7 +593,7 @@ describe("media cleanup after Publish (U6 step 4)", () => {
 
   it("a file removed from the draft stays reachable until the next Publish, and then stays for history", async () => {
     const withFile = (await draft()).experiences[0];
-    await saveExperience(withFile.slug, { ...withFile, cardImage: uploaded("old-card.jpg") });
+    await saveExperience(withFile.slug, { ...withFile, cardImage: uploaded("old-card.jpg") }, await fresh());
     const { storage, deleted } = fakeStorage([file("old-card.jpg")]);
     mediaRef.current = storage;
     expect((await publishSite()).ok).toBe(true);
@@ -590,7 +603,7 @@ describe("media cleanup after Publish (U6 step 4)", () => {
     const current = (await draft()).experiences[0];
     const { cardImage: _removed, ...withoutCard } = current;
     void _removed;
-    await saveExperience(current.slug, withoutCard);
+    await saveExperience(current.slug, withoutCard, await fresh());
     expect(JSON.stringify(await store.readPublished())).toContain("old-card.jpg");
 
     // After the next Publish only the history copy uses it, so it stays (KTD4).
@@ -613,11 +626,259 @@ describe("media cleanup after Publish (U6 step 4)", () => {
         throw new Error("Blob is down");
       },
       delete: async () => undefined,
+      exists: async () => true,
     };
     const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const result = await publishSite();
     error.mockRestore();
     expect(result).toMatchObject({ ok: true, cleanup: { error: expect.stringMatching(/cleanup/) } });
     expect(await store.readPublished()).not.toBeNull();
+  });
+});
+
+describe("out-of-date tabs (U3: 2.4.32, 2.4.33, 0.4.36; KTD2, KTD3, KTD4)", () => {
+  const OTHER_TAB =
+    "Not saved: another tab changed this part after you opened it. Reload the page to see the newer version. Your edits stay on this page until you reload.";
+  const BUSY = "Not saved: another save ran at the same moment. Save again.";
+  const RELOAD = "Not saved: this page is out of date. Reload the page.";
+
+  const page = (site: Site, slug: string) => site.experiences.find((e) => e.slug === slug)!;
+  const untyped = (value: unknown) => value as Stamps;
+
+  /**
+   * Puts a store in place whose first `times` conditional draft writes each
+   * lose a race: another save lands just before them, so they meet a newer
+   * version (KTD3). `otherSave` is that other save.
+   */
+  function raceWith(times: number, otherSave: (site: Site, call: number) => Site) {
+    let calls = 0;
+    storeRef.current = {
+      ...store,
+      async writeDraftIfCurrent(site, version) {
+        calls++;
+        if (calls <= times) await store.writeDraft(otherSave(await draft(), calls));
+        return store.writeDraftIfCurrent(site, version);
+      },
+    };
+    return { calls: () => calls };
+  }
+
+  const retitle = (slug: string) => (site: Site, call: number) => ({
+    ...site,
+    experiences: site.experiences.map((e) => (e.slug === slug ? { ...e, pageTitle: `Other save ${call}` } : e)),
+  });
+
+  function fakeMedia(exists: (url: string) => Promise<boolean>): MediaStorage {
+    return { list: async () => [], delete: async () => undefined, exists };
+  }
+
+  it("AE1: a second save of the same page from the same base is refused, and the draft holds the first", async () => {
+    const loaded = await draft();
+    const tab = stampParts(loaded);
+    const windaid = page(loaded, "first");
+
+    const a = await saveExperience("first", { ...windaid, layout: upgradeBlocks([textBlock("a", "Tab A paragraph.")]) }, tab);
+    expect(a).toEqual({ ok: true, savedAt: expect.any(String), stamps: stampParts(await draft(), experienceKeys("first")) });
+
+    const before = draftText();
+    const b = await saveExperience("first", { ...windaid, pageTitle: "Tab B title" }, tab);
+    expect(b).toEqual({ ok: false, reason: "other-tab", message: OTHER_TAB });
+    expect(draftText()).toBe(before);
+    expect(layoutBlocks(page(await draft(), "first").layout).map((block) => block.id)).toEqual(["a"]);
+  });
+
+  it("AE2: saves of two different pages from the same base both succeed", async () => {
+    const loaded = await draft();
+    const tab = stampParts(loaded);
+    const a = await saveExperience("first", { ...page(loaded, "first"), pageTitle: "WindAid page" }, tab);
+    const b = await saveExperience("second", { ...page(loaded, "second"), pageTitle: "Victaulic page" }, tab);
+    expect(a.ok).toBe(true);
+    expect(b.ok).toBe(true);
+    const saved = await draft();
+    expect(page(saved, "first").pageTitle).toBe("WindAid page");
+    expect(page(saved, "second").pageTitle).toBe("Victaulic page");
+    // The profile and the software cards are parts of their own: an old base still saves them.
+    const profile = await saveProfile({ ...loaded.profile, tagline: "New tagline", contact: loaded.contact }, tab);
+    expect(profile).toEqual({ ok: true, savedAt: expect.any(String), stamps: stampParts(await draft(), ["profile"]) });
+    expect((await saveSoftware(loaded.software.slice(1), tab)).ok).toBe(true);
+  });
+
+  it("a home-card save and layout-only saves from an older experience tab all land, and the card stays", async () => {
+    const loaded = await draft();
+    const windaid = page(loaded, "first");
+    let experienceTab = stampParts(loaded, experienceKeys("first"));
+
+    const card = { homeTitle: "Home card title", homeText: "Home card text.", skills: ["CFD"], cardImage: windaid.cardImage };
+    const home = await saveExperienceCard("first", card, stampParts(loaded, [cardKey("first")]));
+    expect(home).toEqual({ ok: true, savedAt: expect.any(String), stamps: stampParts(await draft(), [cardKey("first")]) });
+
+    // The first save uses the stamps the tab loaded; each later one the stamps the previous save returned.
+    for (const [i, text] of ["Layout one.", "Layout two.", "Layout three."].entries()) {
+      const result = await saveExperience("first", { ...windaid, layout: upgradeBlocks([textBlock(`t${i}`, text)]) }, experienceTab);
+      if (!result.ok) throw new Error(result.message);
+      const saved = await draft();
+      // The tab did not change the card, so it gets its own base stamp back for it (KTD2).
+      expect(result.stamps).toEqual({
+        [cardKey("first")]: experienceTab[cardKey("first")],
+        [pageKey("first")]: stampParts(saved, [pageKey("first")])[pageKey("first")],
+      });
+      experienceTab = { ...experienceTab, ...result.stamps };
+      expect(page(saved, "first")).toMatchObject({ homeTitle: "Home card title", homeText: "Home card text.", skills: ["CFD"] });
+      expect(layoutBlocks(page(saved, "first").layout).map((block) => block.id)).toEqual([`t${i}`]);
+    }
+  });
+
+  it("a retry of a save that already succeeded succeeds and writes nothing new", async () => {
+    const loaded = await draft();
+    const tab = stampParts(loaded);
+    const input = { ...page(loaded, "first"), pageTitle: "Saved once" };
+    const first = await saveExperience("first", input, tab);
+    if (!first.ok) throw new Error(first.message);
+
+    const writes = backend.writes.length;
+    const before = draftText();
+    const retry = await saveExperience("first", input, tab);
+    expect(retry).toEqual({ ok: true, savedAt: expect.any(String), stamps: first.stamps });
+    expect(backend.writes.length).toBe(writes);
+    expect(draftText()).toBe(before);
+  });
+
+  it("a store conflict on the first write is retried once from a fresh read, and the save succeeds", async () => {
+    const loaded = await draft();
+    const race = raceWith(1, retitle("second"));
+    const result = await saveExperience("first", { ...page(loaded, "first"), pageTitle: "Mine" }, stampParts(loaded));
+    expect(result.ok).toBe(true);
+    expect(race.calls()).toBe(2);
+    const saved = await draft();
+    expect(page(saved, "first").pageTitle).toBe("Mine");
+    expect(page(saved, "second").pageTitle).toBe("Other save 1");
+  });
+
+  it("a store conflict on both writes refuses the save with the save-again message", async () => {
+    const loaded = await draft();
+    const race = raceWith(Infinity, retitle("second"));
+    const result = await saveExperience("first", { ...page(loaded, "first"), pageTitle: "Mine" }, stampParts(loaded));
+    expect(result).toEqual({ ok: false, reason: "busy", message: BUSY });
+    expect(race.calls()).toBe(2);
+    const saved = await draft();
+    expect(page(saved, "first").pageTitle).toBe("Page first");
+    expect(page(saved, "second").pageTitle).toBe("Other save 2");
+  });
+
+  it("the retry after a store conflict merges again, so a race on the same part is an other-tab refusal", async () => {
+    const loaded = await draft();
+    raceWith(1, retitle("first"));
+    const result = await saveExperience("first", { ...page(loaded, "first"), pageTitle: "Mine" }, stampParts(loaded));
+    expect(result).toEqual({ ok: false, reason: "other-tab", message: OTHER_TAB });
+    expect(page(await draft(), "first").pageTitle).toBe("Other save 1");
+  });
+
+  it("an action without stamps is retried from a fresh read too, and keeps the other save", async () => {
+    raceWith(1, retitle("second"));
+    expect((await moveExperience("third", "up")).ok).toBe(true);
+    const saved = await draft();
+    expect(saved.experiences.map((e) => e.slug)).toEqual(["first", "third", "second"]);
+    expect(page(saved, "second").pageTitle).toBe("Other save 1");
+  });
+
+  it("AE3: a save that adds a file that is no longer stored is refused with the upload-again message", async () => {
+    const exists = vi.fn<(url: string) => Promise<boolean>>(async () => false);
+    mediaRef.current = fakeMedia(exists);
+    const loaded = await draft();
+    const gone = uploaded("gone.jpg");
+    const input = { ...page(loaded, "first"), cardImage: gone };
+    const before = draftText();
+
+    const result = await saveExperience("first", input, stampParts(loaded));
+    expect(result).toEqual({
+      ok: false,
+      reason: "missing-file",
+      message: 'Not saved: the file "gone.jpg" is no longer stored. Upload it again.',
+    });
+    expect(exists).toHaveBeenCalledWith(gone.url);
+    expect(draftText()).toBe(before);
+
+    // The same save passes once the file is stored.
+    exists.mockResolvedValue(true);
+    expect((await saveExperience("first", input, stampParts(loaded))).ok).toBe(true);
+  });
+
+  it("a save that keeps a file the draft already holds does not ask the media store", async () => {
+    const exists = vi.fn<(url: string) => Promise<boolean>>(async () => false);
+    mediaRef.current = fakeMedia(exists);
+    const loaded = await draft();
+    const result = await saveExperience("first", { ...page(loaded, "first"), homeText: "Changed." }, stampParts(loaded));
+    expect(result.ok).toBe(true);
+    expect(exists).not.toHaveBeenCalled();
+  });
+
+  it("a save with no base, a malformed base, or a base without the saved part is refused with the reload message", async () => {
+    const loaded = await draft();
+    const windaid = { ...page(loaded, "first"), pageTitle: "Changed" };
+    const refusal = { ok: false, reason: "out-of-date", message: RELOAD };
+    const before = draftText();
+    const bases = [
+      undefined,
+      null,
+      "stamps",
+      [],
+      { ...stampParts(loaded), [pageKey("first")]: 1 },
+      { ...stampParts(loaded), "not a part": "x" },
+      stampParts(loaded, [pageKey("first")]),
+    ];
+    for (const base of bases) expect(await saveExperience("first", windaid, untyped(base))).toEqual(refusal);
+    expect(await saveProfile({ ...loaded.profile, contact: loaded.contact })).toEqual(refusal);
+    expect(await saveExperienceCard("first", windaid)).toEqual(refusal);
+    expect(await saveSoftware(loaded.software)).toEqual(refusal);
+    expect(draftText()).toBe(before);
+  });
+
+  it("checkParts returns only the parts that changed since the given stamps, and writes nothing", async () => {
+    const loaded = await draft();
+    const tab = stampParts(loaded);
+    expect(await checkParts(tab)).toEqual({ ok: true, changed: [] });
+
+    expect((await saveExperience("second", { ...page(loaded, "second"), pageTitle: "Changed in another tab" }, tab)).ok).toBe(true);
+    expect((await removeExperience("third")).ok).toBe(true);
+    const writes = backend.writes.length;
+    // A part whose experience is gone counts as changed.
+    expect(await checkParts(tab)).toEqual({ ok: true, changed: [pageKey("second"), cardKey("third"), pageKey("third")] });
+    expect(await checkParts(stampParts(loaded, ["profile"]))).toEqual({ ok: true, changed: [] });
+    for (const base of [undefined, "x", { "not a part": "x" }, { profile: 1 }]) {
+      expect((await checkParts(untyped(base))).ok).toBe(false);
+    }
+    expect(backend.writes.length).toBe(writes);
+  });
+
+  it("checkParts refuses a caller who is not the owner", async () => {
+    owner.refuse = true;
+    await expect(checkParts(stampParts(makeSite()))).rejects.toMatchObject({ name: "OwnerRefusedError", status: 403 });
+  });
+
+  it("every action that writes the draft uses the conditional write (KTD3)", async () => {
+    await setDraft(makeSite({ labels: { ...makeSite().labels, readMore: { text: "Read more", approved: false } } }));
+    await store.writePublished(await draft());
+    const unconditional = vi.fn(async (): Promise<Site> => {
+      throw new Error("unconditional draft write");
+    });
+    storeRef.current = { ...store, writeDraft: unconditional };
+    const site = await draft();
+    const labels = asLoaded(site.labels);
+    labels.selectedWork = { ...labels.selectedWork, text: "Projects" };
+
+    const results = [
+      await saveProfile({ ...site.profile, tagline: "Changed", contact: site.contact }, await fresh()),
+      await saveLabels(labels),
+      await approveLabel("readMore"),
+      await addExperience("Added"),
+      await moveExperience("added", "up"),
+      await removeExperience("added"),
+      await saveExperience("first", { ...page(site, "first"), pageTitle: "Changed" }, await fresh()),
+      await saveExperienceCard("second", { homeTitle: "Changed", homeText: "", skills: [] }, await fresh()),
+      await saveSoftware(site.software.slice(1), await fresh()),
+      await resetExperience("first"),
+    ];
+    expect(results.map((result) => (result.ok ? "ok" : result.message))).toEqual(Array(10).fill("ok"));
+    expect(unconditional).not.toHaveBeenCalled();
   });
 });

@@ -1,10 +1,22 @@
-import { describe, expect, it } from "vitest";
-import { collectMediaGarbage, createMediaStorageFromEnv, siteMedia, type MediaStorage, type StoredMedia } from "./media-gc";
+import { BlobNotFoundError, BlobServiceNotAvailable } from "@vercel/blob";
+import { describe, expect, it, vi } from "vitest";
+import {
+  collectMediaGarbage,
+  createBlobMediaStorage,
+  createMediaStorageFromEnv,
+  siteMedia,
+  type MediaStorage,
+  type StoredMedia,
+} from "./media-gc";
 import { createMemoryContentStore } from "./store";
 import { experience, makeSite, media, software } from "./test-fixtures";
 
 // U6 step 4: after a Publish, delete only the media files under the content
 // root's media prefix that no draft, published, or history document uses.
+
+// Only `head` is replaced; every other Blob call keeps the real SDK.
+const blob = vi.hoisted(() => ({ head: vi.fn() }));
+vi.mock("@vercel/blob", async (importOriginal) => ({ ...(await importOriginal<typeof import("@vercel/blob")>()), head: blob.head }));
 
 const ROOT = { root: "site", secret: "memory-secret-segment" };
 const NOW = new Date("2026-10-09T12:00:00Z");
@@ -25,6 +37,9 @@ function storage(files: StoredMedia[]) {
     },
     async delete(urls) {
       deleted.push(...urls);
+    },
+    async exists(url) {
+      return files.some((file) => file.url === url);
     },
   };
   return { value, deleted, prefixes };
@@ -178,5 +193,24 @@ describe("createMediaStorageFromEnv", () => {
     expect(createMediaStorageFromEnv({ CONTENT_SOURCE: "file:e2e/fixtures/content", DEV_READ_WRITE_TOKEN: "x" })).toBeNull();
     expect(createMediaStorageFromEnv({})).toBeNull();
     expect(createMediaStorageFromEnv({ CONTENT_SOURCE: "blob", DEV_STORE_ID: "store_x" })).not.toBeNull();
+  });
+});
+
+describe("createBlobMediaStorage().exists (KTD4)", () => {
+  const FILE_URL = "https://s.public.blob.vercel-storage.com/site/media/photo.jpg";
+
+  it("asks Blob for the file's metadata: a stored file is true, a missing file is false", async () => {
+    const storage = createBlobMediaStorage({ token: "token_x" });
+    blob.head.mockResolvedValueOnce({ url: FILE_URL, pathname: "site/media/photo.jpg" });
+    expect(await storage.exists(FILE_URL)).toBe(true);
+    expect(blob.head).toHaveBeenLastCalledWith(FILE_URL, { token: "token_x" });
+    blob.head.mockRejectedValueOnce(new BlobNotFoundError());
+    expect(await storage.exists(FILE_URL)).toBe(false);
+  });
+
+  it("passes any other Blob error on, so an outage never counts as a missing file", async () => {
+    const storage = createBlobMediaStorage({ storeId: "store_x" });
+    blob.head.mockRejectedValueOnce(new BlobServiceNotAvailable());
+    await expect(storage.exists(FILE_URL)).rejects.toBeInstanceOf(BlobServiceNotAvailable);
   });
 });
