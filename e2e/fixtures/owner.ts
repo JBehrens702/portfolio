@@ -1,6 +1,6 @@
 import { clerk, clerkSetup, setupClerkTestingToken } from "@clerk/testing/playwright";
 import type { Page } from "@playwright/test";
-import { del } from "@vercel/blob";
+import { createBlobMediaStorage } from "../../src/lib/content/media-gc";
 import { listAllBlobs, type BlobCredentials } from "../../src/lib/content/store";
 
 // Shared steps of the signed-in admin specs: the owner's Clerk sign-in with the
@@ -42,6 +42,9 @@ async function waitForClerk(target: Page) {
 export async function signInOwner(page: Page): Promise<void> {
   await clerkSetup({ publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, secretKey: process.env.CLERK_SECRET_KEY });
   await setupClerkTestingToken({ page });
+  // Clerk's development handshake can reload the sign-in page once, which
+  // removes window.Clerk between the two waits inside clerk.signIn. Wait until
+  // Clerk is loaded on a settled page, and try the sign-in again on failure.
   const emailAddress = await ownerEmail();
   for (let attempt = 1; ; attempt++) {
     try {
@@ -50,6 +53,7 @@ export async function signInOwner(page: Page): Promise<void> {
       await clerk.signIn({ page, emailAddress });
       return;
     } catch (error) {
+      console.log(`Clerk sign-in attempt ${attempt} failed at ${page.url()}: ${(error as Error).message.split("\n")[0]}`);
       if (attempt >= 3) throw error;
     }
   }
@@ -58,5 +62,5 @@ export async function signInOwner(page: Page): Promise<void> {
 /** Deletes everything under the test root from one store. */
 export async function deleteRoot(root: string, credentials: BlobCredentials): Promise<void> {
   const urls = (await listAllBlobs(`${root}/`, credentials)).map((b) => b.url);
-  for (let i = 0; i < urls.length; i += 100) await del(urls.slice(i, i + 100), credentials);
+  await createBlobMediaStorage(credentials).delete(urls);
 }

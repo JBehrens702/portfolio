@@ -82,7 +82,7 @@ describe("dropBeside and dropBetween", () => {
 
   it("puts a box between two items as a new one-column row", () => {
     const items = [one("r1", t("a"), t("b")), headingBlock("h", "H")];
-    const result = dropBetween(items, { row: "r1", cell: 0, index: 1 }, 2, ["row-x"]);
+    const result = dropBetween(items, { row: "r1", cell: 0, index: 1 }, 2);
     expect(shape(result)).toEqual(["one:a", "h:h", "one:b"]);
     expect(result[2].id).not.toBe("r1");
   });
@@ -137,7 +137,7 @@ describe("slides", () => {
   };
 
   it("adds, moves, and removes slides", () => {
-    const added = addSlide([carousel], "c", ["s3"]);
+    const added = addSlide([carousel], "c");
     expect(shape(added)[0]).toMatch(/^car:s1,s2,s-/);
     expect(shape(moveSlide([carousel], "c", 1, "up"))).toEqual(["car:s2,s1"]);
     expect(shape(removeSlide([carousel], "c", "s1"))).toEqual(["car:s2"]);

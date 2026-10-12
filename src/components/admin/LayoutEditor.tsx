@@ -28,8 +28,10 @@ import {
   moveItem,
   removeBoxAt,
   removeItem,
+  rowAt,
   setRowLayout,
   type BoxRef,
+  type LayoutEdit,
 } from "@/lib/content/layout-edit";
 import { move, newBlock } from "@/lib/content/order";
 import { ROW_LAYOUTS, type Block, type ContentBlock, type ContentBlockType, type LayoutItem, type Row, type RowLayout } from "@/lib/content/schema";
@@ -37,7 +39,7 @@ import { cellFrameProps, cellKind, rowClassName } from "@/components/site/Layout
 import { sectionItems } from "@/components/site/segments";
 import siteStyles from "@/components/site/Experience.module.css";
 import { BLOCK_TYPES, BlockFields, blockHoldsContent, blockName, blockTypeName } from "./BlockEditor";
-import { CarouselEditor, type LayoutEdit } from "./CarouselEditor";
+import { CarouselEditor } from "./CarouselEditor";
 import { OrderButtons } from "./OrderButtons";
 import styles from "./admin.module.css";
 
@@ -94,7 +96,6 @@ export function LayoutEditor(props: LayoutEditorProps) {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
   const index = new Map(layout.map((item, i) => [item.id, i]));
-  const ids = layoutIds(layout);
   // The boxes in reading order, for the Up and Down buttons.
   const boxOrder = layout.flatMap((item) => (item.type === "row" ? item.cells.flat().map((b) => b.id) : []));
 
@@ -129,11 +130,11 @@ export function LayoutEditor(props: LayoutEditorProps) {
         const rest = restOf(over.id);
         const row = rest.slice(0, rest.lastIndexOf(":"));
         const cell = Number(rest.slice(rest.lastIndexOf(":") + 1));
-        const size = (items.find((item) => item.id === row) as Row | undefined)?.cells[cell]?.length ?? 0;
+        const size = rowAt(items, row)?.cells[cell]?.length ?? 0;
         return moveBox(items, from, { row, cell, index: size });
       }
       if (target === "beside") return dropBeside(items, from, restOf(over.id));
-      if (target === "between") return dropBetween(items, from, Number(restOf(over.id)), layoutIds(items));
+      if (target === "between") return dropBetween(items, from, Number(restOf(over.id)));
       return items;
     });
   };
@@ -203,7 +204,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
                     <div key={item.id} className={styles.stackTight}>
                       {item.type === "row"
                         ? frame(item, <RowEditor dragging={dragging} {...boxProps(item)} />, <RowLayoutPicker row={item} edit={edit} name={names.get(item.id)!} />)
-                        : frame(item, <CarouselEditor carousel={item} takenIds={ids} {...props} />)}
+                        : frame(item, <CarouselEditor carousel={item} {...props} />)}
                       {zone(index.get(item.id)! + 1)}
                     </div>
                   ))}

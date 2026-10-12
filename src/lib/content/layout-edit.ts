@@ -1,9 +1,13 @@
+import { layoutIds } from "./layout";
 import { move, newId, newSlide, type Direction } from "./order";
 import { ROW_COLUMNS, type Block, type ContentBlock, type Carousel, type LayoutItem, type Row, type RowLayout, type Slide } from "./schema";
 
 // Pure edits of a page layout for the editor (U4, KTD7). Each returns a new
 // layout and leaves its input unchanged. A box is one block in a cell, found by
 // its row id, cell index, and place in the cell.
+
+/** Applies a change to the layout in the editor; `key` joins a burst of typing into one undo step. */
+export type LayoutEdit = (change: (items: LayoutItem[]) => LayoutItem[], key?: string) => void;
 
 export interface BoxRef {
   row: string;
@@ -15,7 +19,7 @@ function rowIndex(items: LayoutItem[], id: string): number {
   return items.findIndex((item) => item.type === "row" && item.id === id);
 }
 
-function rowAt(items: LayoutItem[], id: string): Row | undefined {
+export function rowAt(items: LayoutItem[], id: string): Row | undefined {
   const index = rowIndex(items, id);
   return index < 0 ? undefined : (items[index] as Row);
 }
@@ -28,7 +32,7 @@ function boxAt(items: LayoutItem[], ref: BoxRef): ContentBlock | undefined {
   return rowAt(items, ref.row)?.cells[ref.cell]?.[ref.index];
 }
 
-/** True when the row should go after a box left it: a one-column row with no box, or a row whose cells are all empty. */
+/** True when no cell of the row holds a box, so the row goes after a box left it. */
 function emptied(row: Row): boolean {
   return row.cells.every((cell) => cell.length === 0);
 }
@@ -88,10 +92,10 @@ export function dropBeside(items: LayoutItem[], from: BoxRef, rowId: string): La
 }
 
 /** Drops a box between two items: a new one-column row at `at` (an index in the layout before the drop). */
-export function dropBetween(items: LayoutItem[], from: BoxRef, at: number, takenIds: Iterable<string>): LayoutItem[] {
+export function dropBetween(items: LayoutItem[], from: BoxRef, at: number): LayoutItem[] {
   const block = boxAt(items, from);
   if (!block || at < 0 || at > items.length) return items;
-  const row: Row = { id: newId("row", [...takenIds, ...items.map((item) => item.id)]), type: "row", layout: "one", cells: [[block]] };
+  const row: Row = { id: newId("row", layoutIds(items)), type: "row", layout: "one", cells: [[block]] };
   const inserted = [...items.slice(0, at), row, ...items.slice(at)];
   return dropIfEmpty(removeBox(inserted, from), from.row);
 }
@@ -139,8 +143,9 @@ function withCarousel(items: LayoutItem[], id: string, change: (carousel: Carous
   return items.map((item) => (item.type === "carousel" && item.id === id ? change(item) : item));
 }
 
-export function addSlide(items: LayoutItem[], carouselId: string, takenIds: Iterable<string>): LayoutItem[] {
-  return withCarousel(items, carouselId, (c) => ({ ...c, slides: [...c.slides, newSlide([...takenIds, ...c.slides.map((s) => s.id)])] }));
+export function addSlide(items: LayoutItem[], carouselId: string): LayoutItem[] {
+  const taken = layoutIds(items);
+  return withCarousel(items, carouselId, (c) => ({ ...c, slides: [...c.slides, newSlide(taken)] }));
 }
 
 export function removeSlide(items: LayoutItem[], carouselId: string, slideId: string): LayoutItem[] {

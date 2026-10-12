@@ -1,18 +1,16 @@
 import { expect as baseExpect, test, type BrowserContext, type Page } from "@playwright/test";
-import { clerk, clerkSetup, setupClerkTestingToken } from "@clerk/testing/playwright";
 import { loadEnvConfig } from "@next/env";
-import { del } from "@vercel/blob";
 import {
   blobCredentialsFromEnv,
   createBlobContentStore,
   docsCredentialsFromEnv,
-  listAllBlobs,
   type BlobCredentials,
   type ContentStore,
 } from "../src/lib/content/store";
 import { layoutBlocks } from "../src/lib/content/layout";
 import { assertSite, type Site } from "../src/lib/content/schema";
 import { exifSegments, hasGps, withGpsExif } from "./fixtures/exif";
+import { deleteRoot, signInOwner } from "./fixtures/owner";
 
 // U6 scenarios in a real browser, signed in as the owner with Clerk's testing
 // token, against the DEVELOPMENT Blob stores under a test-only content root, so
@@ -84,44 +82,6 @@ let mediaCredentials: BlobCredentials;
 let context: BrowserContext;
 let page: Page;
 
-async function ownerEmail(): Promise<string> {
-  const response = await fetch(`https://api.clerk.com/v1/users/${encodeURIComponent(process.env.ADMIN_USER_ID ?? "")}`, {
-    headers: { authorization: `Bearer ${process.env.CLERK_SECRET_KEY}` },
-  });
-  if (!response.ok) throw new Error(`Clerk user lookup failed with status ${response.status}`);
-  const user = (await response.json()) as {
-    primary_email_address_id: string | null;
-    email_addresses: { id: string; email_address: string }[];
-  };
-  const email = user.email_addresses.find((e) => e.id === user.primary_email_address_id) ?? user.email_addresses[0];
-  if (!email) throw new Error("The owner's Clerk user has no email address");
-  return email.email_address;
-}
-
-async function waitForClerk(target: Page) {
-  for (let attempt = 1; ; attempt++) {
-    try {
-      await target.waitForLoadState("load");
-      await target.waitForFunction(() => (window as { Clerk?: { loaded?: boolean } }).Clerk?.loaded === true, null, {
-        timeout: 20_000,
-      });
-      // A dev server that is still compiling reloads the page; the marker shows that it stayed put.
-      await target.evaluate(() => ((window as { e2eStable?: boolean }).e2eStable = true));
-      await target.waitForTimeout(1500);
-      if (await target.evaluate(() => (window as { e2eStable?: boolean }).e2eStable === true)) return;
-      throw new Error("the page reloaded");
-    } catch (error) {
-      if (attempt >= 5) throw error;
-    }
-  }
-}
-
-/** Deletes everything under the test root from one store. */
-async function deleteRoot(credentials: BlobCredentials) {
-  const urls = (await listAllBlobs(`${ROOT}/`, credentials)).map((b) => b.url);
-  for (let i = 0; i < urls.length; i += 100) await del(urls.slice(i, i + 100), credentials);
-}
-
 async function draft(): Promise<Site> {
   const site = await store.readDraft();
   if (!site) throw new Error("no draft");
@@ -168,29 +128,13 @@ test.beforeAll(async ({ browser, baseURL }, testInfo) => {
   await store.writeDraft(site);
   await store.writePublished({ ...site, labels: { ...site.labels, softwareHeading: { text: "Software projects", approved: true } } });
 
-  await clerkSetup({ publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, secretKey: process.env.CLERK_SECRET_KEY });
   context = await browser.newContext({ baseURL });
   visitors = await browser.newContext({ baseURL });
   // A page load can wait for the dev server to compile the route (see the top).
   context.setDefaultNavigationTimeout(180_000);
   visitors.setDefaultNavigationTimeout(180_000);
   page = await context.newPage();
-  await setupClerkTestingToken({ page });
-  // Clerk's development handshake can reload the sign-in page once, which
-  // removes window.Clerk between the two waits inside clerk.signIn. Wait until
-  // Clerk is loaded on a settled page, and try the sign-in once more on failure.
-  const emailAddress = await ownerEmail();
-  for (let attempt = 1; ; attempt++) {
-    try {
-      await page.goto("/sign-in", { waitUntil: "commit" });
-      await waitForClerk(page);
-      await clerk.signIn({ page, emailAddress });
-      break;
-    } catch (error) {
-      console.log(`Clerk sign-in attempt ${attempt} failed at ${page.url()}: ${(error as Error).message.split("\n")[0]}`);
-      if (attempt >= 3) throw error;
-    }
-  }
+  await signInOwner(page);
   await page.goto("/admin", { waitUntil: "commit" });
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByTestId("admin-home")).toBeVisible({ timeout: 60_000 });
@@ -200,8 +144,8 @@ test.afterAll(async () => {
   await context?.close();
   await visitors?.close();
   if (ENABLED && /^e2e-[a-z0-9-]+$/.test(ROOT)) {
-    if (docsCredentials) await deleteRoot(docsCredentials);
-    if (mediaCredentials) await deleteRoot(mediaCredentials);
+    if (docsCredentials) await deleteRoot(ROOT, docsCredentials);
+    if (mediaCredentials) await deleteRoot(ROOT, mediaCredentials);
   }
 });
 
@@ -280,12 +224,16 @@ test("Cancel in a remove confirmation leaves the draft unchanged", async () => {
   await expect(page.getByTestId("experience-row")).toHaveCount(2);
 
   await open(`/admin/experiences/${VICTAULIC}`, "Save draft");
+  // The layout editor shows the two text blocks as boxes and the heading as its own item.
   const blocks = page.getByTestId("block");
-  await expect(blocks).toHaveCount(3);
+  const headings = page.locator('[data-testid="layout-item"][data-item-type="heading"]');
+  await expect(blocks).toHaveCount(2);
+  await expect(headings).toHaveCount(1);
   await page.getByRole("button", { name: /Remove the Text block "A paragraph that must survive/ }).click();
   await expect(page.getByTestId("confirm-dialog")).toContainText('Remove the Text block "A paragraph that must survive');
   await page.getByTestId("confirm-dialog").getByRole("button", { name: "Cancel" }).click();
-  await expect(blocks).toHaveCount(3);
+  await expect(blocks).toHaveCount(2);
+  await expect(headings).toHaveCount(1);
   await expect(page.getByTestId("unsaved")).toHaveCount(0);
 
   expect(JSON.stringify(await draft())).toBe(before);

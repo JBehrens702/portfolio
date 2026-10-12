@@ -1,30 +1,21 @@
 "use client";
 
 import { addSlide, mapSlide, moveSlide, removeSlide } from "@/lib/content/layout-edit";
-import type { Carousel, LayoutItem } from "@/lib/content/schema";
+import type { Carousel } from "@/lib/content/schema";
 import { AltTextField } from "./AltTextField";
 import { MediaField } from "./MediaField";
 import { withCurrentAlt } from "./media-merge";
 import { omit } from "./omit";
 import { OrderButtons } from "./OrderButtons";
+import type { LayoutEditorProps } from "./LayoutEditor";
 import styles from "./admin.module.css";
 
 // The fields of one carousel (2.4.12): its slides in order, each with an image,
 // the image's alt text, and a description. An upload or a removed image saves
 // the page at once, as other files do; text waits for "Save draft".
 
-export type LayoutEdit = (change: (items: LayoutItem[]) => LayoutItem[], key?: string) => void;
-
-export interface CarouselEditorProps {
+export interface CarouselEditorProps extends Omit<LayoutEditorProps, "layout"> {
   carousel: Carousel;
-  /** Every id in the page layout, so a new slide gets a free one. */
-  takenIds: string[];
-  edit: LayoutEdit;
-  editAndSave: LayoutEdit;
-  mediaPrefix: string;
-  confirm: (question: string) => Promise<boolean>;
-  beginUpload: () => void;
-  endUpload: () => void;
 }
 
 export function CarouselEditor(props: CarouselEditorProps) {
@@ -90,7 +81,7 @@ export function CarouselEditor(props: CarouselEditorProps) {
         <button
           type="button"
           className={`${styles.button} ${styles.small}`}
-          onClick={() => edit((items) => addSlide(items, carousel.id, props.takenIds))}
+          onClick={() => edit((items) => addSlide(items, carousel.id))}
         >
           Add slide
         </button>

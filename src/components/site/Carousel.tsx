@@ -93,7 +93,7 @@ export function Carousel({ carousel, linkBase, labels }: CarouselProps) {
   // One slide: a plain image with its text; nothing to pin (KTD8).
   if (count === 1) {
     return (
-      <figure className={`${styles.slideStatic}`} data-reveal="">
+      <figure className={styles.slideStatic} data-reveal="">
         <SlideBody slide={slides[0]} linkBase={linkBase} />
       </figure>
     );

@@ -5,17 +5,14 @@ import { resetExperience, saveExperience } from "@/app/admin/actions";
 import { layoutIds } from "@/lib/content/layout";
 import { newBlock, newCarousel, newRow } from "@/lib/content/order";
 import type { BlockType, Experience, LayoutItem, Site } from "@/lib/content/schema";
+import type { LayoutEdit } from "@/lib/content/layout-edit";
 import { visibleSite } from "@/lib/content/visibility";
 import { ExperiencePage } from "@/components/site/ExperiencePage";
 import { MotionObserver } from "@/components/site/MotionObserver";
-import { AltTextField } from "./AltTextField";
 import { BLOCK_TYPES } from "./BlockEditor";
-import type { LayoutEdit } from "./CarouselEditor";
+import { CardFields, trimSkills } from "./CardFields";
 import { useConfirm } from "./ConfirmDialog";
 import { LayoutEditor } from "./LayoutEditor";
-import { MediaField } from "./MediaField";
-import { withCurrentAlt } from "./media-merge";
-import { omit } from "./omit";
 import { SaveBar } from "./SaveBar";
 import { useDraftEditor } from "./useDraftEditor";
 import styles from "./admin.module.css";
@@ -27,9 +24,8 @@ import styles from "./admin.module.css";
 // the changes of this visit; "Show as visitors see it" renders the real page from
 // the unsaved value (2.4.13).
 
-/** The skills as the owner typed them: one per line, blank lines dropped on save. */
 function forSave(experience: Experience): Experience {
-  return { ...experience, skills: experience.skills.map((s) => s.trim()).filter((s) => s !== "") };
+  return { ...experience, skills: trimSkills(experience.skills) };
 }
 
 /** True when a key press belongs to a text field, which keeps the browser's own undo. */
@@ -107,45 +103,7 @@ export function ExperienceEditor({ initial, site, mediaPrefix }: { initial: Expe
         <h2 id="home-block" className={styles.cardTitle}>
           Home page block
         </h2>
-        <label className={styles.field}>
-          <span>Title on the home page</span>
-          <input className={styles.input} name="homeTitle" value={value.homeTitle} onChange={(e) => set("homeTitle", e.target.value)} />
-        </label>
-        <MediaField
-          label="the card image"
-          kind="image"
-          value={value.cardImage}
-          mediaPrefix={mediaPrefix}
-          confirm={confirm}
-          beginUpload={editor.beginUpload}
-          endUpload={editor.endUpload}
-          onUploaded={(cardImage) => {
-            update((e) => ({ ...e, cardImage: withCurrentAlt(cardImage, e.cardImage) }));
-            void editor.save();
-          }}
-          onRemove={() => {
-            update((e) => omit(e, "cardImage"));
-            void editor.save();
-          }}
-        />
-        <AltTextField
-          label="Card image alt text (what the image shows, for screen readers)"
-          media={value.cardImage}
-          onChange={(alt) => update((x) => (x.cardImage ? { ...x, cardImage: { ...x.cardImage, alt } } : x), "field:cardAlt")}
-        />
-        <label className={styles.field}>
-          <span>Skills (one per line)</span>
-          <textarea
-            className={styles.textarea}
-            name="skills"
-            value={value.skills.join("\n")}
-            onChange={(e) => set("skills", e.target.value.split("\n"))}
-          />
-        </label>
-        <label className={styles.field}>
-          <span>First paragraph (shown on the home page)</span>
-          <textarea className={styles.textarea} name="homeText" value={value.homeText} onChange={(e) => set("homeText", e.target.value)} />
-        </label>
+        <CardFields editor={editor} imageLabel="the card image" mediaPrefix={mediaPrefix} confirm={confirm} />
       </section>
 
       <section className={styles.card} aria-labelledby="full-page">
