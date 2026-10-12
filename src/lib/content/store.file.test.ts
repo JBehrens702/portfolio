@@ -1,10 +1,11 @@
-import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { publish } from "./publish";
 import { parseSite } from "./schema";
 import {
+  ContentConflictError,
   contentSourceFromEnv,
   createContentStore,
   createContentStoreFromEnv,
@@ -72,6 +73,88 @@ describe("file backend", () => {
     const value = await fixtures.read("e2e/published.json");
     const result = parseSite(value);
     expect(result.ok ? [] : result.issues).toEqual([]);
+  });
+
+  it("reads a version that changes when the file's bytes change", async () => {
+    expect(await backend.readVersioned("local/doc.json")).toBeNull();
+    const first = await backend.write("local/doc.json", { n: 1 });
+    const read = await backend.readVersioned("local/doc.json");
+    expect(read).toEqual({ value: { n: 1 }, version: first });
+    const second = await backend.write("local/doc.json", { n: 2 });
+    expect(second).not.toBe(first);
+    expect((await backend.readVersioned("local/doc.json"))?.version).toBe(second);
+  });
+});
+
+describe("conditional draft writes, file store (KTD3)", () => {
+  let folder: string;
+  let backend: JsonBackend;
+
+  beforeEach(async () => {
+    folder = await mkdtemp(path.join(os.tmpdir(), "content-"));
+    backend = createFileBackend(folder);
+  });
+
+  afterEach(async () => {
+    await rm(folder, { recursive: true, force: true });
+  });
+
+  function withTagline(tagline: string) {
+    const site = makeSite();
+    site.profile.tagline = tagline;
+    return site;
+  }
+
+  it("writes with the version from the last read, and returns a new version that the next read gives", async () => {
+    const store = createContentStore(backend, config);
+    await store.writeDraft(withTagline("First"));
+    const read = await store.readDraftVersioned();
+    const written = await store.writeDraftIfCurrent(withTagline("Second"), read!.version);
+    expect(written.version).not.toBe(read!.version);
+    expect(await store.readDraftVersioned()).toEqual(written);
+  });
+
+  it("refuses a write with an old version with ContentConflictError, and leaves the draft file unchanged", async () => {
+    const store = createContentStore(backend, config);
+    await store.writeDraft(withTagline("First"));
+    const tabA = await store.readDraftVersioned();
+    const tabB = await store.readDraftVersioned();
+    await store.writeDraftIfCurrent(withTagline("Tab A"), tabA!.version);
+    const file = path.join(folder, ...store.paths.draft.split("/"));
+    const before = await readFile(file, "utf8");
+    await expect(store.writeDraftIfCurrent(withTagline("Tab B"), tabB!.version)).rejects.toBeInstanceOf(
+      ContentConflictError,
+    );
+    expect(await readFile(file, "utf8")).toBe(before);
+    expect(await readdir(path.dirname(file))).toEqual(["draft.json"]);
+  });
+
+  it("lets only one of two concurrent writes with the same version succeed", async () => {
+    const store = createContentStore(backend, config);
+    await store.writeDraft(withTagline("First"));
+    const read = await store.readDraftVersioned();
+    const results = await Promise.allSettled([
+      store.writeDraftIfCurrent(withTagline("Tab A"), read!.version),
+      store.writeDraftIfCurrent(withTagline("Tab B"), read!.version),
+    ]);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    const rejected = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
+    expect(rejected.reason).toBeInstanceOf(ContentConflictError);
+  });
+
+  it("still overwrites with no expected version (writeDraft keeps working)", async () => {
+    const store = createContentStore(backend, config);
+    await store.writeDraft(withTagline("First"));
+    await store.readDraftVersioned();
+    await store.writeDraft(withTagline("Unconditional"));
+    expect((await store.readDraft())?.profile.tagline).toBe("Unconditional");
+  });
+
+  it("with the version null, creates the draft only when none exists", async () => {
+    const store = createContentStore(backend, config);
+    await store.writeDraftIfCurrent(withTagline("Created"), null);
+    await expect(store.writeDraftIfCurrent(withTagline("Again"), null)).rejects.toBeInstanceOf(ContentConflictError);
+    expect((await store.readDraft())?.profile.tagline).toBe("Created");
   });
 });
 

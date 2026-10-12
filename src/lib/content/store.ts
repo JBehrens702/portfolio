@@ -1,4 +1,5 @@
-import { get, list, put, type ListBlobResultBlob } from "@vercel/blob";
+import { BlobPreconditionFailedError, get, list, put, type ListBlobResultBlob } from "@vercel/blob";
+import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { assertSite, type Site } from "./schema";
@@ -50,20 +51,70 @@ export function contentPaths(config: ContentConfig): ContentPaths {
   };
 }
 
+/**
+ * A conditional write found a different version than the one it expected:
+ * another save landed after the read (KTD3). Every backend throws this one
+ * class, so a caller catches one type. Nothing was written.
+ */
+export class ContentConflictError extends Error {
+  readonly pathname: string;
+  constructor(pathname: string) {
+    super(`The document at ${pathname} changed after it was read. Read it again, then write.`);
+    this.name = "ContentConflictError";
+    this.pathname = pathname;
+  }
+}
+
+/** A document as stored, with the version that a conditional write checks. */
+export interface VersionedValue {
+  value: unknown;
+  /** Opaque: compare it only for equality, and only pass it back to the same backend. */
+  version: string;
+}
+
+export interface WriteOptions {
+  /**
+   * Leave it out to overwrite. A string: write only when the stored version is
+   * still this one. Null: write only when no document exists. On a mismatch
+   * the write throws ContentConflictError.
+   */
+  ifVersion?: string | null;
+}
+
 /** The raw storage under the content store: JSON values by pathname. */
 export interface JsonBackend {
   /** An uncached read. Null when no document exists at the pathname. */
   read(pathname: string): Promise<unknown | null>;
-  /** Writes or overwrites the document at the pathname. */
-  write(pathname: string, value: unknown): Promise<void>;
+  /** An uncached read with the document's version. Null when no document exists. */
+  readVersioned(pathname: string): Promise<VersionedValue | null>;
+  /** Writes the document at the pathname, and returns its new version. See WriteOptions for the condition. */
+  write(pathname: string, value: unknown, options?: WriteOptions): Promise<string>;
   /** The pathnames that start with the prefix. */
   list(prefix: string): Promise<string[]>;
+}
+
+/** A validated site with the version of the stored document it came from or went to. */
+export interface VersionedSite {
+  site: Site;
+  version: string;
 }
 
 export interface ContentStore {
   readonly paths: ContentPaths;
   /** The draft, validated. Null when none exists. Throws ContentValidationError when it is invalid. */
   readDraft(): Promise<Site | null>;
+  /**
+   * The draft, validated, with its version for writeDraftIfCurrent (KTD3).
+   * Null when none exists. Throws ContentValidationError when it is invalid.
+   */
+  readDraftVersioned(): Promise<VersionedSite | null>;
+  /**
+   * Validates the draft, then writes it only when the stored draft still has
+   * the version given (null: only when no draft exists). Returns the written
+   * site and its new version. Throws ContentValidationError, or
+   * ContentConflictError when another save landed first; both write nothing.
+   */
+  writeDraftIfCurrent(site: unknown, version: string | null): Promise<VersionedSite>;
   /** The published document, validated, read uncached. Null when none exists. */
   readPublished(): Promise<Site | null>;
   /** Validates and writes the draft. Throws ContentValidationError and writes nothing when invalid. */
@@ -111,6 +162,16 @@ export function createContentStore(
   return {
     paths,
     readDraft: () => readSite(paths.draft, "draft"),
+    async readDraftVersioned() {
+      const found = await backend.readVersioned(paths.draft);
+      return found === null ? null : { site: assertSite(found.value, "draft"), version: found.version };
+    },
+    async writeDraftIfCurrent(input, version) {
+      // An undefined version from an untyped caller would turn the check off; refuse it.
+      if (version === undefined) throw new Error("writeDraftIfCurrent needs a version, or null for a new draft.");
+      const site = assertSite(input, "draft");
+      return { site, version: await backend.write(paths.draft, site, { ifVersion: version }) };
+    },
     readPublished: () => readSite(paths.published, "published document"),
     writeDraft: (site) => writeSite(paths.draft, site, "draft"),
     writePublished: (site) => writeSite(paths.published, site, "published document"),
@@ -145,6 +206,9 @@ export interface MemoryBackend extends JsonBackend {
 export function createMemoryBackend(): MemoryBackend {
   const files = new Map<string, string>();
   const writes: string[] = [];
+  // The version is a write counter per pathname (KTD3).
+  const counters = new Map<string, number>();
+  const versionOf = (pathname: string) => (files.has(pathname) ? String(counters.get(pathname) ?? 0) : null);
   return {
     files,
     writes,
@@ -152,9 +216,20 @@ export function createMemoryBackend(): MemoryBackend {
       const text = files.get(pathname);
       return text === undefined ? null : JSON.parse(text);
     },
-    async write(pathname, value) {
+    async readVersioned(pathname) {
+      const text = files.get(pathname);
+      return text === undefined ? null : { value: JSON.parse(text), version: versionOf(pathname)! };
+    },
+    async write(pathname, value, options = {}) {
+      // No await between the check and the write, so the pair cannot interleave with another write.
+      if (options.ifVersion !== undefined && options.ifVersion !== versionOf(pathname)) {
+        throw new ContentConflictError(pathname);
+      }
+      const next = (counters.get(pathname) ?? 0) + 1;
+      counters.set(pathname, next);
       files.set(pathname, JSON.stringify(value));
       writes.push(pathname);
+      return String(next);
     },
     async list(prefix) {
       return [...files.keys()].filter((key) => key.startsWith(prefix));
@@ -251,20 +326,49 @@ export function createBlobBackend(options: BlobBackendOptions = {}): JsonBackend
       "No Blob documents store given and none for this environment: pass credentials, or set DEVDOCS_STORE_ID / DEVDOCS_READ_WRITE_TOKEN (DOCS_* on Production).",
     );
   }
+  async function readVersioned(pathname: string): Promise<VersionedValue | null> {
+    const result = await get(pathname, { access: "private", useCache: false, ...auth });
+    if (result === null || result.statusCode !== 200) return null;
+    // A compressed response (seen with Brotli on documents of about 1.5 KB) carries
+    // a weak ETag, W/"<hash>", with the same hash as the strong ETag that `put`
+    // returns. `ifMatch` accepts only the strong form, so drop the prefix.
+    const version = result.blob.etag.replace(/^W\//, "");
+    return { value: JSON.parse(await new Response(result.stream).text()), version };
+  }
+
   return {
     async read(pathname) {
       const result = await get(pathname, { access: "private", useCache: false, ...auth });
       if (result === null || result.statusCode !== 200) return null;
       return JSON.parse(await new Response(result.stream).text());
     },
-    async write(pathname, value) {
-      await put(pathname, JSON.stringify(value), {
-        access: "private",
-        ...auth,
-        contentType: "application/json",
-        addRandomSuffix: false,
-        allowOverwrite: true,
-      });
+    readVersioned,
+    async write(pathname, value, options = {}) {
+      // The version is the blob's ETag (KTD3). `ifMatch` makes the store refuse
+      // the write when another write changed the ETag; `allowOverwrite: false`
+      // refuses it when a blob already exists.
+      const { ifVersion } = options;
+      const condition =
+        ifVersion === undefined
+          ? { allowOverwrite: true }
+          : ifVersion === null
+            ? { allowOverwrite: false }
+            : { allowOverwrite: true, ifMatch: ifVersion };
+      try {
+        const result = await put(pathname, JSON.stringify(value), {
+          access: "private",
+          ...auth,
+          contentType: "application/json",
+          addRandomSuffix: false,
+          ...condition,
+        });
+        return result.etag;
+      } catch (error) {
+        if (error instanceof BlobPreconditionFailedError) throw new ContentConflictError(pathname);
+        // The SDK has no error class for "the blob already exists", so look.
+        if (ifVersion === null && (await readVersioned(pathname)) !== null) throw new ContentConflictError(pathname);
+        throw error;
+      }
     },
     async list(prefix) {
       return (await listAllBlobs(prefix, auth)).map((blob) => blob.pathname);
@@ -311,6 +415,40 @@ async function walk(folder: string, relative: string[] = []): Promise<string[]> 
   return found;
 }
 
+/** The version of a file document: a SHA-256 hash of its bytes (KTD3). */
+function bytesVersion(bytes: Buffer): string {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+async function readBytes(file: string): Promise<Buffer | null> {
+  try {
+    return await readFile(file);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+// One queue of writes per file, shared by every file backend in this process,
+// so a version check and its write cannot interleave with another write to
+// the same file. Two processes on one folder are not covered; the file
+// backend serves local work and tests, which run one server.
+const fileQueues = new Map<string, Promise<void>>();
+
+async function inFileQueue<T>(file: string, task: () => Promise<T>): Promise<T> {
+  const run = (fileQueues.get(file) ?? Promise.resolve()).then(task);
+  const settled = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  fileQueues.set(file, settled);
+  try {
+    return await run;
+  } finally {
+    if (fileQueues.get(file) === settled) fileQueues.delete(file);
+  }
+}
+
 /**
  * JSON documents as files under one folder: the pathname "site/published.json"
  * is the file "<folder>/site/published.json". Reads are never cached.
@@ -319,20 +457,30 @@ export function createFileBackend(folder: string): JsonBackend {
   const root = path.resolve(folder);
   return {
     async read(pathname) {
-      try {
-        return JSON.parse(await readFile(path.join(root, ...safeSegments(pathname)), "utf8"));
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
-        throw error;
-      }
+      const bytes = await readBytes(path.join(root, ...safeSegments(pathname)));
+      return bytes === null ? null : JSON.parse(bytes.toString("utf8"));
     },
-    async write(pathname, value) {
+    async readVersioned(pathname) {
+      const bytes = await readBytes(path.join(root, ...safeSegments(pathname)));
+      return bytes === null ? null : { value: JSON.parse(bytes.toString("utf8")), version: bytesVersion(bytes) };
+    },
+    async write(pathname, value, options = {}) {
       const file = path.join(root, ...safeSegments(pathname));
-      await mkdir(path.dirname(file), { recursive: true });
-      // Write a temporary file, then rename it, so a reader never sees half a document.
-      const temporary = `${file}.${crypto.randomUUID().slice(0, 8)}.tmp`;
-      await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, "utf8");
-      await rename(temporary, file);
+      const bytes = Buffer.from(`${JSON.stringify(value, null, 2)}\n`, "utf8");
+      return inFileQueue(file, async () => {
+        if (options.ifVersion !== undefined) {
+          const current = await readBytes(file);
+          if (options.ifVersion !== (current === null ? null : bytesVersion(current))) {
+            throw new ContentConflictError(pathname);
+          }
+        }
+        await mkdir(path.dirname(file), { recursive: true });
+        // Write a temporary file, then rename it, so a reader never sees half a document.
+        const temporary = `${file}.${crypto.randomUUID().slice(0, 8)}.tmp`;
+        await writeFile(temporary, bytes);
+        await rename(temporary, file);
+        return bytesVersion(bytes);
+      });
     },
     async list(prefix) {
       return (await walk(root)).filter((pathname) => pathname.startsWith(prefix));

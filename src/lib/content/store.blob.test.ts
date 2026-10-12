@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { del, list } from "@vercel/blob";
 import { afterAll, describe, expect, it } from "vitest";
 import { publish } from "./publish";
-import { createBlobContentStore, docsCredentialsFromEnv } from "./store";
+import { ContentConflictError, createBlobContentStore, docsCredentialsFromEnv } from "./store";
 import { makeSite } from "./test-fixtures";
 
 // Integration check against the private development documents store (U2, KTD2). It is skipped
@@ -52,5 +52,31 @@ describe.skipIf(!usable)("Vercel Blob content store (Development store)", () => 
     const history = await store.listHistory();
     expect(history).toHaveLength(1);
     expect(await store.readHistory(history[0])).toEqual(before);
+  }, 30_000);
+
+  // KTD3 on the real private store: the version is the ETag, and a write passes it as `ifMatch`.
+  it("refuses a second write with the first ETag, and keeps the first write", async () => {
+    const start = makeSite();
+    start.profile.tagline = "Before both tabs";
+    await store.writeDraft(start);
+    const stale = await store.readDraftVersioned();
+    expect(stale?.version).toBeTruthy();
+
+    const tabA = makeSite();
+    tabA.profile.tagline = "Tab A";
+    const written = await store.writeDraftIfCurrent(tabA, stale!.version);
+    expect(written.version).not.toBe(stale!.version);
+
+    const tabB = makeSite();
+    tabB.profile.tagline = "Tab B";
+    await expect(store.writeDraftIfCurrent(tabB, stale!.version)).rejects.toBeInstanceOf(ContentConflictError);
+    expect((await store.readDraft())?.profile.tagline).toBe("Tab A");
+  }, 30_000);
+
+  it("returns from a conditional write the same version that the next read gives", async () => {
+    await store.writeDraft(makeSite());
+    const read = await store.readDraftVersioned();
+    const written = await store.writeDraftIfCurrent(makeSite({ software: [] }), read!.version);
+    expect((await store.readDraftVersioned())?.version).toBe(written.version);
   }, 30_000);
 });
