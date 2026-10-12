@@ -37,6 +37,9 @@ export default async function AdminHome() {
             <h2 id="more-heading">More to edit</h2>
             <ul>
               <li>
+                <a href="/admin/home">Home page</a> (each home section in its place: profile, cards, software, about)
+              </li>
+              <li>
                 <a href="/admin/profile">Profile and contact links</a> (name, intro, photo, resume)
               </li>
               <li>
