@@ -219,7 +219,8 @@ export async function removeExperience(slug: string): Promise<ActionResult> {
   if (!loaded.ok) return loaded;
   const { draft, store } = loaded;
   if (!draft.experiences.some((e) => e.slug === slug)) return refused("Not saved: unknown experience.");
-  return commit(store, draft, removeExperienceFrom(draft, slug));
+  // The last carousel can go with the experience: its unapproved proposals go too (KTD9).
+  return commit(store, draft, withCarouselLabels(removeExperienceFrom(draft, slug)));
 }
 
 /** Moves an experience one place up or down (2.4.5). */
@@ -246,7 +247,8 @@ export async function saveExperience(slug: string, input: Experience): Promise<A
   if (index < 0) return refused("Not saved: unknown experience. It may have been removed.");
   if (!isRecord(input)) return refused("Not saved: no experience was sent.");
   const experiences = draft.experiences.map((e, i) => (i === index ? { ...input, slug } : e));
-  // The first carousel brings its button labels, unapproved, for the owner (KTD9).
+  // The first carousel brings its button labels, unapproved, for the owner; the
+  // last one removed takes back the proposals that nobody approved (KTD9).
   return commit(store, draft, withCarouselLabels({ ...draft, experiences }));
 }
 

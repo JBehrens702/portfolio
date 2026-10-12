@@ -130,6 +130,9 @@ export function LayoutEditor(props: LayoutEditorProps) {
         const rest = restOf(over.id);
         const row = rest.slice(0, rest.lastIndexOf(":"));
         const cell = Number(rest.slice(rest.lastIndexOf(":") + 1));
+        // The collision skips the box's own target, so a box let go on its own
+        // place lands on its cell: keep it there. A drop on the last box moves it to the end.
+        if (row === from.row && cell === from.cell) return items;
         const size = rowAt(items, row)?.cells[cell]?.length ?? 0;
         return moveBox(items, from, { row, cell, index: size });
       }

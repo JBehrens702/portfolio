@@ -5,7 +5,7 @@ import { resetExperience, saveExperience } from "@/app/admin/actions";
 import { layoutIds } from "@/lib/content/layout";
 import { newBlock, newCarousel, newRow } from "@/lib/content/order";
 import type { BlockType, Experience, LayoutItem, Site } from "@/lib/content/schema";
-import type { LayoutEdit } from "@/lib/content/layout-edit";
+import { withLayout, type LayoutEdit } from "@/lib/content/layout-edit";
 import { visibleSite } from "@/lib/content/visibility";
 import { ExperiencePage } from "@/components/site/ExperiencePage";
 import { MotionObserver } from "@/components/site/MotionObserver";
@@ -31,6 +31,14 @@ function forSave(experience: Experience): Experience {
 /** True when a key press belongs to a text field, which keeps the browser's own undo. */
 function inTextField(target: EventTarget | null): boolean {
   return target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
+}
+
+/**
+ * True when a dialog is open. A confirm question covers the page, so undo must
+ * not change the page behind it, wherever the focus is.
+ */
+function dialogOpen(): boolean {
+  return document.querySelector("dialog[open]") !== null;
 }
 
 /** A new layout item for "Add block": a heading item, or a one-column row with the block. */
@@ -66,16 +74,23 @@ export function ExperienceEditor({ initial, site, mediaPrefix }: { initial: Expe
   }
 
   const set = <K extends keyof Experience>(key: K, v: Experience[K]) => update((e) => ({ ...e, [key]: v }), `field:${String(key)}`);
-  const edit: LayoutEdit = (change, key) => update((e) => ({ ...e, layout: change(e.layout) }), key);
+  const edit: LayoutEdit = (change, key) => update((e) => withLayout(e, change), key);
+  // An upload or removal that changes the layout saves at once; a change that
+  // leaves the layout as it was starts no save.
   const editAndSave: LayoutEdit = (change) => {
-    update((e) => ({ ...e, layout: change(e.layout) }));
-    void editor.save();
+    let changed = false;
+    update((e) => {
+      const next = withLayout(e, change);
+      changed = next !== e;
+      return next;
+    });
+    if (changed) void editor.save();
   };
 
-  // Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y outside text fields (2.4.14).
+  // Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y outside text fields and dialogs (2.4.14).
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (!(event.ctrlKey || event.metaKey) || inTextField(event.target)) return;
+      if (!(event.ctrlKey || event.metaKey) || inTextField(event.target) || dialogOpen()) return;
       const key = event.key.toLowerCase();
       if (key === "z") {
         event.preventDefault();

@@ -160,6 +160,29 @@ describe("saves keep the draft valid", () => {
     expect((await draft()).labels.carouselNext).toEqual({ text: "Weiter", approved: true });
   });
 
+  it("removes the unapproved carousel proposals when the last carousel is removed, so Publish is not blocked", async () => {
+    const current = (await draft()).experiences[0];
+    await saveExperience(current.slug, { ...current, layout: [{ id: "c", type: "carousel", slides: [] }] });
+    expect(Object.keys((await draft()).labels).filter((key) => key.startsWith("carousel"))).toHaveLength(3);
+
+    const result = await saveExperience(current.slug, { ...current, layout: upgradeBlocks([textBlock("t", "No carousel.")]) });
+    expect(result.ok).toBe(true);
+    expect(Object.keys((await draft()).labels).filter((key) => key.startsWith("carousel"))).toEqual([]);
+    expect((await publishSite()).ok).toBe(true);
+  });
+
+  it("removes the unapproved carousel proposals when the experience with the last carousel is removed", async () => {
+    const current = (await draft()).experiences[0];
+    await saveExperience(current.slug, { ...current, layout: [{ id: "c", type: "carousel", slides: [] }] });
+    const site = await draft();
+    await store.writeDraft({ ...site, labels: { ...site.labels, carouselNext: { text: "Next", approved: true } } });
+
+    expect((await removeExperience(current.slug)).ok).toBe(true);
+    const labels = (await draft()).labels;
+    expect(Object.keys(labels).filter((key) => key.startsWith("carousel"))).toEqual(["carouselNext"]);
+    expect(labels.carouselNext).toEqual({ text: "Next", approved: true });
+  });
+
   it("accepts an uploaded file, and refuses a file that this site did not upload", async () => {
     const current = (await draft()).experiences[0];
     const good = await saveExperience(current.slug, {

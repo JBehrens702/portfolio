@@ -15,6 +15,7 @@ import {
   moveSlide,
   removeSlide,
   setRowLayout,
+  withLayout,
 } from "./layout-edit";
 import type { ContentBlock, LayoutItem, Row } from "./schema";
 import { headingBlock, media } from "./test-fixtures";
@@ -167,5 +168,21 @@ describe("block edits", () => {
   it("adds a block at the end of a cell, and removes an item", () => {
     expect(shape(addBlockToCell(items, "r", 1, t("d")))).toEqual(["h:h", "halves:a|b,d", "one:c"]);
     expect(shape(removeItem(items, "h"))).toEqual(["halves:a|b", "one:c"]);
+  });
+});
+
+describe("withLayout", () => {
+  const page = { slug: "p", layout: [one("r", t("a"))] as LayoutItem[] };
+
+  it("returns the same value when the change leaves the layout unchanged", () => {
+    expect(withLayout(page, (items) => items)).toBe(page);
+  });
+
+  it("returns a new value with the new layout and leaves the input unchanged", () => {
+    const next = withLayout(page, (items) => addBlockToCell(items, "r", 0, t("b")));
+    expect(next).not.toBe(page);
+    expect(next.slug).toBe("p");
+    expect(shape(next.layout)).toEqual(["one:a,b"]);
+    expect(shape(page.layout)).toEqual(["one:a"]);
   });
 });

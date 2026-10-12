@@ -216,6 +216,23 @@ test("on a phone the editor shows one column, and the move buttons move a box ac
   await page.setViewportSize({ width: 1280, height: 720 });
 });
 
+test("a box let go on its own place keeps its place in a cell of two boxes", async () => {
+  // The step before leaves the right cell of row 1 with "t-first" above "t-second".
+  await openEditor();
+  const handle = page.getByRole("button", { name: 'Drag the Text block "First box text."' });
+  await handle.scrollIntoViewIfNeeded();
+  const from = (await handle.boundingBox({ timeout: 10_000 }))!;
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  // Past the drag sensor's 6 px, but still over the box itself.
+  await page.mouse.move(from.x + from.width / 2 + 10, from.y + from.height / 2, { steps: 5 });
+  await expect(box("First box text.")).toHaveAttribute("data-lifted", "");
+  await page.mouse.up();
+  await save();
+  const [, row] = await draftLayout();
+  expect(row.type === "row" && row.cells.map((cell) => cell.map((b) => b.id))).toEqual([[], ["t-first", "t-second"]]);
+});
+
 test("AE4: reset brings back the published page, and cancel changes nothing (2.4.15)", async () => {
   await openEditor();
   await page.getByRole("button", { name: "Reset this page", exact: true }).click();

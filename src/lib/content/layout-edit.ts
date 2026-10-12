@@ -9,6 +9,16 @@ import { ROW_COLUMNS, type Block, type ContentBlock, type Carousel, type LayoutI
 /** Applies a change to the layout in the editor; `key` joins a burst of typing into one undo step. */
 export type LayoutEdit = (change: (items: LayoutItem[]) => LayoutItem[], key?: string) => void;
 
+/**
+ * Applies a layout change to the value that holds the layout. A change that
+ * returns the same layout returns the same value, so the editor records no
+ * undo step and does not mark the page unsaved.
+ */
+export function withLayout<T extends { layout: LayoutItem[] }>(value: T, change: (items: LayoutItem[]) => LayoutItem[]): T {
+  const layout = change(value.layout);
+  return layout === value.layout ? value : { ...value, layout };
+}
+
 export interface BoxRef {
   row: string;
   cell: number;
