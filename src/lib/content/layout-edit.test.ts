@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  addBlockToCell,
   addSlide,
+  findBox,
+  mapBlock,
+  mapSlide,
+  removeBoxAt,
+  removeItem,
   dropBeside,
   dropBetween,
   moveBox,
@@ -135,5 +141,31 @@ describe("slides", () => {
     expect(shape(added)[0]).toMatch(/^car:s1,s2,s-/);
     expect(shape(moveSlide([carousel], "c", 1, "up"))).toEqual(["car:s2,s1"]);
     expect(shape(removeSlide([carousel], "c", "s1"))).toEqual(["car:s2"]);
+    const described = mapSlide([carousel], "c", "s2", (s) => ({ ...s, text: "Version 2." }));
+    expect(described[0]).toMatchObject({ slides: [{ id: "s1", text: "" }, { id: "s2", text: "Version 2." }] });
+  });
+});
+
+describe("block edits", () => {
+  const items = [headingBlock("h", "Old"), halves("r", [t("a")], [t("b")]), one("r2", t("c"))];
+
+  it("changes a block in a cell or a heading item by id", () => {
+    const renamed = mapBlock(items, "b", (b) => (b.type === "text" ? { ...b, text: "new" } : b));
+    expect(renamed[1]).toMatchObject({ cells: [[{ text: "a" }], [{ text: "new" }]] });
+    const heading = mapBlock(items, "h", (b) => (b.type === "heading" ? { ...b, text: "New" } : b));
+    expect(heading[0]).toMatchObject({ text: "New" });
+    expect(heading[1]).toBe(items[1]);
+  });
+
+  it("finds a box, removes it, and removes a one-column row it leaves empty", () => {
+    expect(findBox(items, "b")).toEqual({ row: "r", cell: 1, index: 0 });
+    expect(findBox(items, "h")).toBeNull();
+    expect(shape(removeBoxAt(items, { row: "r", cell: 1, index: 0 }))).toEqual(["h:h", "halves:a|", "one:c"]);
+    expect(shape(removeBoxAt(items, { row: "r2", cell: 0, index: 0 }))).toEqual(["h:h", "halves:a|b"]);
+  });
+
+  it("adds a block at the end of a cell, and removes an item", () => {
+    expect(shape(addBlockToCell(items, "r", 1, t("d")))).toEqual(["h:h", "halves:a|b,d", "one:c"]);
+    expect(shape(removeItem(items, "h"))).toEqual(["halves:a|b", "one:c"]);
   });
 });

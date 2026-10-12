@@ -34,7 +34,7 @@ export default async function AdminExperience({ params }: Props) {
         <a href="/admin">Back to Admin</a>
       </p>
       <h1>{experience.pageTitle}</h1>
-      <ExperienceEditor initial={experience} mediaPrefix={state.mediaPrefix} />
+      <ExperienceEditor initial={experience} site={state.site} mediaPrefix={state.mediaPrefix} />
     </main>
   );
 }

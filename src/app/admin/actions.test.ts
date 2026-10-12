@@ -40,7 +40,9 @@ import {
   moveExperience,
   publishSite,
   removeExperience,
+  resetExperience,
   saveExperience,
+  saveExperienceCard,
   saveLabels,
   saveProfile,
   saveSoftware,
@@ -131,6 +133,31 @@ describe("saves keep the draft valid", () => {
     expect(saved.slug).toBe(current.slug);
     expect(saved.pageTitle).toBe("New page title");
     expect(layoutBlocks(saved.layout).map((b) => b.id)).toEqual(["h1", "t1"]);
+  });
+
+  it("adds the carousel labels, unapproved, when the first carousel is saved (KTD9)", async () => {
+    const current = (await draft()).experiences[0];
+    const plain = await saveExperience(current.slug, { ...current, layout: upgradeBlocks([textBlock("t", "No carousel.")]) });
+    expect(plain.ok).toBe(true);
+    expect(Object.keys((await draft()).labels).filter((key) => key.startsWith("carousel"))).toEqual([]);
+
+    const result = await saveExperience(current.slug, {
+      ...current,
+      layout: [{ id: "c", type: "carousel", slides: [{ id: "s", text: "Version 1." }] }],
+    });
+    expect(result.ok).toBe(true);
+    const labels = (await draft()).labels;
+    expect(labels.carouselPrevious).toEqual({ text: "Previous", approved: false });
+    expect(labels.carouselNext).toEqual({ text: "Next", approved: false });
+    expect(labels.carouselSkip).toEqual({ text: "Skip the slides", approved: false });
+  });
+
+  it("keeps the owner's carousel labels when a page with a carousel is saved again", async () => {
+    const site = await draft();
+    await store.writeDraft({ ...site, labels: { ...site.labels, carouselNext: { text: "Weiter", approved: true } } });
+    const current = (await draft()).experiences[0];
+    await saveExperience(current.slug, { ...current, layout: [{ id: "c", type: "carousel", slides: [] }] });
+    expect((await draft()).labels.carouselNext).toEqual({ text: "Weiter", approved: true });
   });
 
   it("accepts an uploaded file, and refuses a file that this site did not upload", async () => {
@@ -397,6 +424,65 @@ describe("AE2 at module level: a saved draft change is public only after Publish
   });
 });
 
+describe("saveExperienceCard (KTD12)", () => {
+  it("saves the card fields and keeps the page layout of the draft", async () => {
+    const current = (await draft()).experiences[0];
+    await saveExperience(current.slug, { ...current, layout: upgradeBlocks([textBlock("keep", "Layout to keep.")]) });
+    const result = await saveExperienceCard(current.slug, {
+      homeTitle: "New card title",
+      homeText: "New card text.",
+      skills: ["FEA"],
+      cardImage: uploaded("card-new.jpg", { alt: "New card" }),
+    });
+    expect(result.ok).toBe(true);
+    const saved = (await draft()).experiences[0];
+    expect(saved).toMatchObject({ homeTitle: "New card title", homeText: "New card text.", skills: ["FEA"] });
+    expect(saved.cardImage?.alt).toBe("New card");
+    expect(layoutBlocks(saved.layout).map((b) => b.id)).toEqual(["keep"]);
+  });
+
+  it("removes the card image when none is sent, and refuses an unknown slug", async () => {
+    const current = (await draft()).experiences[0];
+    await saveExperienceCard(current.slug, { homeTitle: current.homeTitle, homeText: "", skills: [] });
+    expect((await draft()).experiences[0].cardImage).toBeUndefined();
+    expect((await saveExperienceCard("no-such", { homeTitle: "x", homeText: "", skills: [] })).ok).toBe(false);
+  });
+});
+
+describe("resetExperience (2.4.15, KTD11)", () => {
+  it("replaces the draft of one page with its published version (AE4)", async () => {
+    await store.writePublished(await draft());
+    const [current, other] = (await draft()).experiences;
+    await saveExperience(current.slug, { ...current, pageTitle: "Unpublished title", layout: upgradeBlocks([textBlock("x", "Draft only.")]) });
+    await saveExperience(other.slug, { ...other, pageTitle: "Other draft title" });
+
+    const result = await resetExperience(current.slug);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const published = (await store.readPublished())!.experiences[0];
+    expect(result.experience).toEqual(published);
+    const after = await draft();
+    expect(after.experiences[0]).toEqual(published);
+    // Only this page goes back; the other page keeps its draft.
+    expect(after.experiences[1].pageTitle).toBe("Other draft title");
+  });
+
+  it("refuses a page that is not published yet, and the draft is unchanged", async () => {
+    await store.writePublished(await draft());
+    const added = await addExperience("Brand New Page");
+    expect(added.ok).toBe(true);
+    const before = draftText();
+    const result = await resetExperience("brand-new-page");
+    expect(result).toMatchObject({ ok: false, message: expect.stringContaining("not published yet") });
+    expect(draftText()).toBe(before);
+  });
+
+  it("refuses when nothing is published at all", async () => {
+    const result = await resetExperience((await draft()).experiences[0].slug);
+    expect(result.ok).toBe(false);
+  });
+});
+
 describe("the owner check comes first (3.4.1)", () => {
   it("refuses every action for a user who is not the owner, and the draft is unchanged", async () => {
     owner.refuse = true;
@@ -410,6 +496,8 @@ describe("the owner check comes first (3.4.1)", () => {
       removeExperience("first"),
       moveExperience("first", "down"),
       saveExperience("first", site.experiences[0]),
+      resetExperience("first"),
+      saveExperienceCard("first", site.experiences[0]),
       saveSoftware(site.software),
       publishSite(),
     ];

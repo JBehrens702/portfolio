@@ -64,20 +64,24 @@ export function blockName(block: Block): string {
  */
 export type BlockChange = (update: (block: Block) => Block) => void;
 
-export interface BlockEditorProps {
+/** What the fields of one block need: the block, its two kinds of change, and the upload hooks. */
+export interface BlockFieldsProps {
   block: Block;
-  index: number;
-  count: number;
   /** A text change: marks the page unsaved. */
   onChange: BlockChange;
   /** A file change: saved into the draft at once. */
   onFileChange: BlockChange;
-  onMove: (direction: Direction) => void;
-  onRemove: () => void;
   mediaPrefix: string;
   confirm: (question: string) => Promise<boolean>;
   beginUpload: () => void;
   endUpload: () => void;
+}
+
+export interface BlockEditorProps extends BlockFieldsProps {
+  index: number;
+  count: number;
+  onMove: (direction: Direction) => void;
+  onRemove: () => void;
 }
 
 /** Applies `f` only when the latest block still has this block's type. */
@@ -114,7 +118,7 @@ export function BlockEditor(props: BlockEditorProps) {
   );
 }
 
-function BlockFields(props: BlockEditorProps) {
+export function BlockFields(props: BlockFieldsProps) {
   const { block, onChange } = props;
   switch (block.type) {
     case "heading":
@@ -171,7 +175,7 @@ function BlockFields(props: BlockEditorProps) {
   }
 }
 
-function FileFields(props: BlockEditorProps & { block: FileBlock }) {
+function FileFields(props: BlockFieldsProps & { block: FileBlock }) {
   const { block, onChange, onFileChange } = props;
   const label = block.label.trim();
   return (
@@ -202,7 +206,7 @@ function FileFields(props: BlockEditorProps & { block: FileBlock }) {
   );
 }
 
-function FactsFields(props: BlockEditorProps & { block: FactsBlock }) {
+function FactsFields(props: BlockFieldsProps & { block: FactsBlock }) {
   const { block, onChange, confirm } = props;
   const items = (f: (list: FactsBlock["items"]) => FactsBlock["items"]) =>
     onChange(typed<FactsBlock>("facts", (b) => ({ ...b, items: f(b.items) })));
@@ -268,7 +272,7 @@ function FactsFields(props: BlockEditorProps & { block: FactsBlock }) {
   );
 }
 
-function ImagesFields(props: BlockEditorProps & { block: ImagesBlock }) {
+function ImagesFields(props: BlockFieldsProps & { block: ImagesBlock }) {
   const { block, onChange, onFileChange } = props;
   const items = (save: boolean, f: (list: ImagesBlock["items"]) => ImagesBlock["items"]) =>
     (save ? onFileChange : onChange)(typed<ImagesBlock>("images", (b) => ({ ...b, items: f(b.items) })));

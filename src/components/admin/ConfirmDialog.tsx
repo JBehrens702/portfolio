@@ -9,13 +9,15 @@ import styles from "./admin.module.css";
 
 interface Request {
   question: string;
+  /** The text of the button that answers yes. */
+  yesText: string;
   resolve: (yes: boolean) => void;
 }
 
-export function useConfirm(): { confirm: (question: string) => Promise<boolean>; dialog: ReactNode } {
+export function useConfirm(): { confirm: (question: string, yesText?: string) => Promise<boolean>; dialog: ReactNode } {
   const [request, setRequest] = useState<Request | null>(null);
   const confirm = useCallback(
-    (question: string) => new Promise<boolean>((resolve) => setRequest({ question, resolve })),
+    (question: string, yesText = "Remove") => new Promise<boolean>((resolve) => setRequest({ question, yesText, resolve })),
     [],
   );
   const answer = useCallback(
@@ -25,11 +27,11 @@ export function useConfirm(): { confirm: (question: string) => Promise<boolean>;
     },
     [request],
   );
-  const dialog = request ? <ConfirmDialog question={request.question} onAnswer={answer} /> : null;
+  const dialog = request ? <ConfirmDialog question={request.question} yesText={request.yesText} onAnswer={answer} /> : null;
   return { confirm, dialog };
 }
 
-function ConfirmDialog({ question, onAnswer }: { question: string; onAnswer: (yes: boolean) => void }) {
+function ConfirmDialog({ question, yesText, onAnswer }: { question: string; yesText: string; onAnswer: (yes: boolean) => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const dialog = ref.current;
@@ -49,7 +51,7 @@ function ConfirmDialog({ question, onAnswer }: { question: string; onAnswer: (ye
       <p id="confirm-question">{question}</p>
       <div className={styles.row}>
         <button type="button" className={`${styles.button} ${styles.danger}`} onClick={() => onAnswer(true)}>
-          Remove
+          {yesText}
         </button>
         <button type="button" className={styles.button} onClick={() => onAnswer(false)} autoFocus>
           Cancel

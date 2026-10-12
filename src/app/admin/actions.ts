@@ -2,6 +2,7 @@
 
 import { updateTag } from "next/cache";
 import { requireOwner } from "@/lib/auth/owner";
+import { withCarouselLabels } from "@/lib/content/carousel-labels";
 import { collectMediaGarbage, createMediaStorageFromEnv, siteMedia } from "@/lib/content/media-gc";
 import {
   addExperience as addExperienceTo,
@@ -245,7 +246,55 @@ export async function saveExperience(slug: string, input: Experience): Promise<A
   if (index < 0) return refused("Not saved: unknown experience. It may have been removed.");
   if (!isRecord(input)) return refused("Not saved: no experience was sent.");
   const experiences = draft.experiences.map((e, i) => (i === index ? { ...input, slug } : e));
+  // The first carousel brings its button labels, unapproved, for the owner (KTD9).
+  return commit(store, draft, withCarouselLabels({ ...draft, experiences }));
+}
+
+/** The fields of an experience that its home-page card shows. */
+export type ExperienceCardInput = Pick<Experience, "homeTitle" | "homeText" | "skills" | "cardImage">;
+
+/**
+ * Saves the home-card fields of one experience and leaves its page layout as it
+ * is in the draft (the home editor, KTD12), so a card edit never overwrites the
+ * layout with an older copy.
+ */
+export async function saveExperienceCard(slug: string, input: ExperienceCardInput): Promise<ActionResult> {
+  await requireOwner();
+  const loaded = await loadDraft();
+  if (!loaded.ok) return loaded;
+  const { draft, store } = loaded;
+  const index = draft.experiences.findIndex((e) => e.slug === slug);
+  if (index < 0) return refused("Not saved: unknown experience. It may have been removed.");
+  if (!isRecord(input)) return refused("Not saved: no card was sent.");
+  const { cardImage, homeTitle, homeText, skills } = input;
+  const experiences = draft.experiences.map((e, i) => {
+    if (i !== index) return e;
+    const next: Experience = { ...e, homeTitle, homeText, skills };
+    if (cardImage) next.cardImage = cardImage;
+    else delete next.cardImage;
+    return next;
+  });
   return commit(store, draft, { ...draft, experiences });
+}
+
+export type ResetResult = { ok: true; savedAt: string; experience: Experience } | Refusal;
+
+/**
+ * Replaces the draft of one experience with its published version (2.4.15,
+ * KTD11). Refused for a page that is not published yet; the draft is then unchanged.
+ */
+export async function resetExperience(slug: string): Promise<ResetResult> {
+  await requireOwner();
+  const loaded = await loadDraft();
+  if (!loaded.ok) return loaded;
+  const { draft, store } = loaded;
+  const index = draft.experiences.findIndex((e) => e.slug === slug);
+  if (index < 0) return refused("Not reset: unknown experience. It may have been removed.");
+  const published = (await store.readPublished())?.experiences.find((e) => e.slug === slug);
+  if (!published) return refused("Not reset: this page is not published yet, so there is no published version to go back to.");
+  const experiences = draft.experiences.map((e, i) => (i === index ? published : e));
+  const result = await commitSite(store, draft, withCarouselLabels({ ...draft, experiences }));
+  return result.ok ? { ok: true, savedAt: result.savedAt, experience: published } : result;
 }
 
 // ---- Software cards ----

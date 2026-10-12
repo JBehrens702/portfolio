@@ -176,3 +176,187 @@
 .progress {
   width: 10rem;
 }
+
+/* ---------- Layout editor (2.4.9-2.4.16): the page body in its real structure ---------- */
+
+/* The canvas uses the site's page body; the graph paper of the site shows through. */
+.layoutCanvas {
+  padding-inline: 0;
+}
+
+.railEdit {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.stackTight {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.itemFrame,
+.box {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+}
+
+.box {
+  background: var(--color-surface);
+  border-style: solid;
+}
+
+.itemFrame[data-lifted],
+.box[data-lifted] {
+  position: relative;
+  z-index: 10;
+  opacity: 0.85;
+  border-color: var(--color-orange);
+  box-shadow: 0 0.75rem 2rem rgb(0 0 0 / 0.35);
+}
+
+.itemBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.itemName {
+  flex: 1 1 auto;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-lavender);
+}
+
+.dragHandle {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--color-orange);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: grab;
+  touch-action: none;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+/* A phone moves boxes with the Up and Down buttons (2.4.16). */
+@media (max-width: 639.98px) {
+  .dragHandle {
+    display: none;
+  }
+}
+
+.rowEdit {
+  position: relative;
+}
+
+.cellEdit {
+  min-height: 4rem;
+  outline: 1px dashed transparent;
+  outline-offset: 2px;
+}
+
+.cellEdit[data-over] {
+  outline-color: var(--color-orange);
+}
+
+.cellEmpty {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.cellAdd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+/* Drop targets show only while a drag runs. */
+.betweenZone {
+  height: 0.5rem;
+  border-radius: var(--radius);
+}
+
+.betweenZone[data-active] {
+  height: 1.5rem;
+  border: 1px dashed var(--color-border);
+}
+
+.betweenZone[data-over] {
+  background: var(--color-orange);
+  border-color: var(--color-orange);
+}
+
+.besideZone {
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 30%;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-orange);
+  background: color-mix(in srgb, var(--color-surface) 85%, transparent);
+  border: 2px dashed var(--color-orange);
+  border-radius: var(--radius);
+}
+
+.besideZone[data-over] {
+  color: var(--color-on-orange);
+  background: var(--color-orange);
+}
+
+/* The bar of page-wide editor tools at the top: undo, redo, and the visitor view. */
+.editTools {
+  position: sticky;
+  top: calc(var(--header-height) + var(--space-2));
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.visitorView {
+  border: 1px dashed var(--color-orange);
+  border-radius: var(--radius);
+}
+
+/* ---------- Home editor (2.4.8): the home sections in their real order ---------- */
+
+.homeSection {
+  display: grid;
+  gap: var(--space-4);
+  margin-block: var(--space-6);
+}
+
+.homeHero {
+  border-color: var(--color-purple-bright);
+}
+
+.homeCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: var(--space-4);
+}

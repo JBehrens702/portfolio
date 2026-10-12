@@ -1,5 +1,5 @@
 import { move, newId, newSlide, type Direction } from "./order";
-import { ROW_COLUMNS, type ContentBlock, type Carousel, type LayoutItem, type Row, type RowLayout } from "./schema";
+import { ROW_COLUMNS, type Block, type ContentBlock, type Carousel, type LayoutItem, type Row, type RowLayout, type Slide } from "./schema";
 
 // Pure edits of a page layout for the editor (U4, KTD7). Each returns a new
 // layout and leaves its input unchanged. A box is one block in a cell, found by
@@ -147,6 +147,53 @@ export function removeSlide(items: LayoutItem[], carouselId: string, slideId: st
   return withCarousel(items, carouselId, (c) => ({ ...c, slides: c.slides.filter((s) => s.id !== slideId) }));
 }
 
+/** The layout with one slide changed. */
+export function mapSlide(items: LayoutItem[], carouselId: string, slideId: string, change: (slide: Slide) => Slide): LayoutItem[] {
+  return withCarousel(items, carouselId, (c) => ({ ...c, slides: c.slides.map((s) => (s.id === slideId ? change(s) : s)) }));
+}
+
 export function moveSlide(items: LayoutItem[], carouselId: string, index: number, direction: Direction): LayoutItem[] {
   return withCarousel(items, carouselId, (c) => ({ ...c, slides: move(c.slides, index, direction) }));
+}
+
+/** The layout with the block `id` (a heading item or a block in a cell) changed by `change`. */
+export function mapBlock(items: LayoutItem[], id: string, change: (block: Block) => Block): LayoutItem[] {
+  return items.map((item) => {
+    if (item.type === "heading") return item.id === id ? (change(item) as typeof item) : item;
+    if (item.type !== "row" || !item.cells.some((cell) => cell.some((b) => b.id === id))) return item;
+    return {
+      ...item,
+      cells: item.cells.map((cell) => cell.map((b) => (b.id === id ? (change(b) as ContentBlock) : b))),
+    };
+  });
+}
+
+/** Removes a box; its row goes when it becomes empty, as after a move. */
+export function removeBoxAt(items: LayoutItem[], ref: BoxRef): LayoutItem[] {
+  if (!boxAt(items, ref)) return items;
+  return dropIfEmpty(removeBox(items, ref), ref.row);
+}
+
+/** Adds a block at the end of a cell. */
+export function addBlockToCell(items: LayoutItem[], rowId: string, cell: number, block: ContentBlock): LayoutItem[] {
+  const row = rowAt(items, rowId);
+  if (!row?.cells[cell]) return items;
+  return insertBox(items, { row: rowId, cell, index: row.cells[cell].length }, block);
+}
+
+/** Removes a heading, row, or carousel. */
+export function removeItem(items: LayoutItem[], id: string): LayoutItem[] {
+  return items.filter((item) => item.id !== id);
+}
+
+/** Where a block sits: its box in a cell, or null for a heading item or an unknown id. */
+export function findBox(items: LayoutItem[], blockId: string): BoxRef | null {
+  for (const item of items) {
+    if (item.type !== "row") continue;
+    for (let c = 0; c < item.cells.length; c++) {
+      const index = item.cells[c].findIndex((b) => b.id === blockId);
+      if (index >= 0) return { row: item.id, cell: c, index };
+    }
+  }
+  return null;
 }
