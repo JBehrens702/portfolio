@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   applyPart,
@@ -365,5 +366,35 @@ describe("stampsAfterSave", () => {
       "card:windaid": bases["card:windaid"],
       "page:windaid": stampParts(saved)["page:windaid"],
     });
+  });
+});
+
+// A save returns the stamps of the value as the server stored it, and the editor
+// keeps the value that it sent. The two agree only while parsing changes no part
+// (no trimming, defaults, or dropped fields). If the schema ever starts to change
+// values, an untouched part would no longer match its stamp, and a save beside
+// another tab's change would be refused instead of kept. This test guards that.
+describe("parsing a stored site changes no part", () => {
+  const read = (path: string): unknown => JSON.parse(readFileSync(path, "utf8"));
+  const parsed = (input: unknown): Site => {
+    const result = parseSite(input);
+    if (!result.ok) throw new Error(result.issues.join("; "));
+    return result.site;
+  };
+
+  it("keeps every part stamp of a stored site (format 2)", () => {
+    const stored = read("e2e/fixtures/content/e2e/published.json") as Site;
+    expect(stampParts(parsed(stored))).toEqual(stampParts(stored));
+  });
+
+  it("sees a change when parsing does change a part (an unknown field is dropped)", () => {
+    const stored = read("e2e/fixtures/content/e2e/published.json") as Site;
+    const withExtra = { ...stored, profile: { ...stored.profile, notInSchema: "x" } } as Site;
+    expect(stampParts(parsed(withExtra)).profile).not.toBe(stampParts(withExtra).profile);
+  });
+
+  it("keeps every part stamp when a site upgraded from format 1 is parsed again", () => {
+    const upgraded = parsed(read("e2e/fixtures/content/layout/published.json"));
+    expect(stampParts(parsed(JSON.parse(JSON.stringify(upgraded))))).toEqual(stampParts(upgraded));
   });
 });
