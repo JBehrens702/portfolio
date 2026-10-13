@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { EMPTY_HISTORY, record, redo, undo, type History } from "./history";
 import type { Refusal, RefusalReason } from "@/app/admin/actions";
 import type { Stamps } from "@/lib/content/parts";
+import { saveQueue } from "./save-queue";
 import { settleSave } from "./stamps";
 import { useStale } from "./StaleProvider";
 
@@ -151,31 +152,37 @@ export function useDraftEditor<T>(initial: T, persist: Persist<T>, options: Draf
     [show, hold],
   );
 
+  // A save that starts while another runs waits for it, so it sends the stamps
+  // that the first one returned (two uploads in a row each start a save).
+  const [enqueue] = useState(saveQueue);
+
   const send = useCallback(
-    async (target: T) => {
-      lastAttempt.current = target;
-      setStatus({ kind: "saving" });
-      try {
-        const result = await persist(target, heldStamps.current);
-        const outcome = settleSave(result, target, latest.current, heldStamps.current, adopt);
-        setStatus(outcome.status);
-        if (outcome.value !== latest.current) {
-          latest.current = outcome.value;
-          setValue(outcome.value);
+    (pick: () => T) =>
+      enqueue(async () => {
+        const target = pick();
+        lastAttempt.current = target;
+        setStatus({ kind: "saving" });
+        try {
+          const result = await persist(target, heldStamps.current);
+          const outcome = settleSave(result, target, latest.current, heldStamps.current, adopt);
+          setStatus(outcome.status);
+          if (outcome.value !== latest.current) {
+            latest.current = outcome.value;
+            setValue(outcome.value);
+          }
+          if (outcome.stamps !== heldStamps.current) hold(outcome.stamps);
+          if (outcome.markSaved) setDirty(false);
+          return result.ok;
+        } catch {
+          setStatus({ kind: "failed", message: NETWORK_FAILURE });
         }
-        if (outcome.stamps !== heldStamps.current) hold(outcome.stamps);
-        if (outcome.markSaved) setDirty(false);
-        return result.ok;
-      } catch {
-        setStatus({ kind: "failed", message: NETWORK_FAILURE });
-      }
-      return false;
-    },
-    [persist, adopt, hold],
+        return false;
+      }),
+    [enqueue, persist, adopt, hold],
   );
 
-  const save = useCallback(() => send(latest.current), [send]);
-  const retry = useCallback(() => send(lastAttempt.current), [send]);
+  const save = useCallback(() => send(() => latest.current), [send]);
+  const retry = useCallback(() => send(() => lastAttempt.current), [send]);
   const beginUpload = useCallback(() => setUploads((n) => n + 1), []);
   const endUpload = useCallback(() => setUploads((n) => Math.max(0, n - 1)), []);
 
