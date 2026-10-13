@@ -329,9 +329,9 @@ export function createBlobBackend(options: BlobBackendOptions = {}): JsonBackend
   async function readVersioned(pathname: string): Promise<VersionedValue | null> {
     const result = await get(pathname, { access: "private", useCache: false, ...auth });
     if (result === null || result.statusCode !== 200) return null;
-    // A compressed response (seen with Brotli on documents of about 1.5 KB) carries
-    // a weak ETag, W/"<hash>", with the same hash as the strong ETag that `put`
-    // returns. `ifMatch` accepts only the strong form, so drop the prefix.
+    // A compressed response carries a weak ETag, W/"<hash>". (This was seen with
+    // Brotli on documents of about 1.5 KB.) Its hash is the same as the strong ETag
+    // that `put` returns. `ifMatch` accepts only the strong form, so drop the prefix.
     const version = result.blob.etag.replace(/^W\//, "");
     return { value: JSON.parse(await new Response(result.stream).text()), version };
   }

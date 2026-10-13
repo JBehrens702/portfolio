@@ -61,6 +61,11 @@ export interface DraftEditorOptions<T> {
 
 const NO_STAMPS: Stamps = {};
 
+// Every save on the admin page waits for the save before it, from this editor or
+// another one. A save then sends the stamps that the last save of its part
+// returned, and two editors never race for the same draft version.
+const enqueue = saveQueue();
+
 export interface DraftEditor<T> {
   value: T;
   /**
@@ -152,10 +157,6 @@ export function useDraftEditor<T>(initial: T, persist: Persist<T>, options: Draf
     [show, hold],
   );
 
-  // A save that starts while another runs waits for it, so it sends the stamps
-  // that the first one returned (two uploads in a row each start a save).
-  const [enqueue] = useState(saveQueue);
-
   const send = useCallback(
     (pick: () => T) =>
       enqueue(async () => {
@@ -178,7 +179,7 @@ export function useDraftEditor<T>(initial: T, persist: Persist<T>, options: Draf
         }
         return false;
       }),
-    [enqueue, persist, adopt, hold],
+    [persist, adopt, hold],
   );
 
   const save = useCallback(() => send(() => latest.current), [send]);

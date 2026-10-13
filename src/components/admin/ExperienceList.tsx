@@ -6,6 +6,7 @@ import { addExperience, moveExperience, removeExperience, type ActionResult } fr
 import { useConfirm } from "./ConfirmDialog";
 import { IssueList } from "./IssueList";
 import { OrderButtons } from "./OrderButtons";
+import { editHref } from "./page-bar-model";
 import { isPlainClick, NARROW_QUERY, nextRowIndex, openHref, selectHref, type MapRow } from "./site-map-model";
 import { NETWORK_FAILURE } from "./useDraftEditor";
 import { useHydrated } from "./useHydrated";
@@ -54,8 +55,6 @@ export function ExperienceList({
   const home = rows.filter((row) => row.kind === "home");
   const experiences = rows.filter((row) => row.kind === "experience");
   const removed = rows.filter((row) => row.kind === "removed");
-  // The rows in the order that the list shows them, for the arrow keys.
-  const shown = [...home, ...experiences, ...removed];
 
   function run(action: () => Promise<ActionResult | { ok: true; slug: string; savedAt: string }>, done?: (slug?: string) => void) {
     startTransition(async () => {
@@ -82,15 +81,15 @@ export function ExperienceList({
   }
 
   function onTitleKey(event: KeyboardEvent<HTMLAnchorElement>, index: number) {
-    const next = nextRowIndex(index, event.key, shown.length);
+    const next = nextRowIndex(index, event.key, rows.length);
     if (next === null) return;
     event.preventDefault();
     listRef.current?.querySelectorAll<HTMLAnchorElement>("[data-map-title]")[next]?.focus();
-    onSelect(shown[next]);
+    onSelect(rows[next]);
   }
 
   function titleLink(row: MapRow) {
-    const index = shown.indexOf(row);
+    const index = rows.indexOf(row);
     const isSelected = row.page === selected;
     return (
       <a
@@ -205,7 +204,7 @@ export function ExperienceList({
           run(
             () => addExperience(name),
             (slug) => {
-              if (slug) router.push(`/admin/experiences/${encodeURIComponent(slug)}`);
+              if (slug) router.push(editHref(slug));
             },
           );
         }}
