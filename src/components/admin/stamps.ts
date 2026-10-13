@@ -67,6 +67,9 @@ export type SendResult<T> =
  * from before it. Then the next save would look like another tab's change and
  * be refused. So the lost value goes again first: the server accepts an
  * identical resend (or stores it now), and its stamps make the new save current.
+ * A refused resend stored nothing, so the held stamps still fit the new save. A
+ * resend that fails again is given up, so one bad value cannot block every later
+ * save. Use it only in editors that hold part stamps (see useDraftEditor).
  */
 export async function sendSave<T>(
   persist: (value: T, base: Stamps) => Promise<SaveResult<T>>,
@@ -76,14 +79,12 @@ export async function sendSave<T>(
 ): Promise<SendResult<T>> {
   let base = held;
   if (lost !== null && lost !== target) {
-    let resent: SaveResult<T>;
     try {
-      resent = await persist(lost, base);
+      const resent = await persist(lost, base);
+      if (resent.ok && resent.stamps) base = mergeStamps(base, resent.stamps);
     } catch {
-      return { kind: "failed", lost, base };
+      // Given up: the new save goes with the held stamps.
     }
-    if (!resent.ok) return { kind: "done", result: resent, base };
-    if (resent.stamps) base = mergeStamps(base, resent.stamps);
   }
   try {
     return { kind: "done", result: await persist(target, base), base };

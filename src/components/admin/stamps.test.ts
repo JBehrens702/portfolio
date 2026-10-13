@@ -196,16 +196,26 @@ describe("the save after a network failure sends the lost value first", () => {
     expect(calls).toHaveLength(1);
   });
 
-  it("stops with the refusal when the lost value is refused, and does not send the new value", async () => {
-    const { calls, persist } = server([otherTab]);
+  it("sends the new value with the held stamps when the resend is refused (a refusal stores nothing)", async () => {
+    const { calls, persist } = server([otherTab, saved("S2")]);
     const sent = await sendSave(persist, "X2", held, "X1");
-    expect(calls).toHaveLength(1);
-    expect(sent).toEqual({ kind: "done", result: otherTab, base: held });
+    expect(calls).toEqual([
+      { value: "X1", base: held },
+      { value: "X2", base: held },
+    ]);
+    expect(sent).toEqual({ kind: "done", result: saved("S2"), base: held });
   });
 
-  it("keeps the first lost value when its resend fails again", async () => {
-    const { persist } = server(["network"]);
-    expect(await sendSave(persist, "X2", held, "X1")).toEqual({ kind: "failed", lost: "X1", base: held });
+  it("gives up the lost value when its resend fails again, so one bad value cannot block every later save", async () => {
+    const { calls, persist } = server(["network", saved("S2")]);
+    const sent = await sendSave(persist, "X2", held, "X1");
+    expect(calls.map((c) => c.value)).toEqual(["X1", "X2"]);
+    expect(sent).toEqual({ kind: "done", result: saved("S2"), base: held });
+  });
+
+  it("reports the new value as lost when both the resend and the new save fail", async () => {
+    const { persist } = server(["network", "network"]);
+    expect(await sendSave(persist, "X2", held, "X1")).toEqual({ kind: "failed", lost: "X2", base: held });
   });
 
   it("keeps the stamps of a resend that landed when the new value is then lost", async () => {
