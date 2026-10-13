@@ -65,8 +65,8 @@ function changes(before: MotionState, after: MotionState): string[] {
  * the baseline is never read while the box is already hovered; the box is read
  * once while a transition still runs and once after the longest effect (0.9 s).
  */
-async function hoverChanges(page: Page, box: Locator): Promise<string[]> {
-  await page.mouse.move(0, 0);
+async function hoverChanges(page: Page, box: Locator, away = { x: 0, y: 0 }): Promise<string[]> {
+  await page.mouse.move(away.x, away.y);
   await box.scrollIntoViewIfNeeded();
   let before = await motionState(box);
   for (let i = 0; i < 20; i++) {
@@ -183,6 +183,25 @@ test.describe("hover motion", () => {
     const link = page.locator("a:has(> .corner-marks)");
     await expect(link).toHaveCount(1);
     expect(await hoverChanges(page, link)).not.toEqual([]);
+  });
+
+  // 0.1.19 (MAY): the header logo is a link home, so it now reacts like the menu links.
+  const logoLink = (page: Page) => page.locator("header").first().locator("a").first();
+  const bottomLeft = (page: Page) => ({ x: 0, y: (page.viewportSize()?.height ?? 720) - 1 });
+  const barOpacity = (link: Locator) => link.evaluate((el) => getComputedStyle(el, "::after").opacity);
+
+  test("positive control: the header logo link reacts to the pointer", async ({ page }) => {
+    await page.goto("/");
+    expect(await hoverChanges(page, logoLink(page), bottomLeft(page))).not.toEqual([]);
+    expect(await barOpacity(logoLink(page))).toBe("1");
+  });
+
+  test("with reduced motion, the header logo bar appears without moving", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    expect(await barOpacity(logoLink(page))).toBe("0");
+    expect(await hoverChanges(page, logoLink(page), bottomLeft(page))).toEqual([]);
+    expect(await barOpacity(logoLink(page))).toBe("1");
   });
 
   // The sweep: every box that could look clickable but is not (KTD5).

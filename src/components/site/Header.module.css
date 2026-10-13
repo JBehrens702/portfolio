@@ -48,11 +48,32 @@
 }
 
 .logoLink {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   min-height: var(--tap-size);
   flex-shrink: 0;
+}
+
+/* The logo is a link home, so it reacts to the pointer like the menu links: the
+   same angled orange bar shows under it. It slides in only without reduced
+   motion; with reduced motion it just appears. */
+.logoLink::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0.25rem;
+  width: 100%;
+  height: 2px;
+  background: var(--color-orange);
+  clip-path: polygon(0.25rem 0, 100% 0, calc(100% - 0.25rem) 100%, 0 100%);
+  opacity: 0;
+}
+
+.logoLink:hover::after,
+.logoLink:focus-visible::after {
+  opacity: 1;
 }
 
 .markSpin {
@@ -330,6 +351,19 @@
 @media (prefers-reduced-motion: no-preference) {
   .markSpin {
     animation: spin-in 1.1s var(--ease-out) both;
+  }
+
+  .logoLink::after {
+    transform: scaleX(0);
+    transform-origin: right center;
+    transition:
+      transform 0.3s var(--ease-out),
+      opacity 0.3s var(--ease-out);
+  }
+
+  .logoLink:hover::after,
+  .logoLink:focus-visible::after {
+    transform: scaleX(1);
   }
 
   .slashes {
