@@ -5,7 +5,7 @@ import { EMPTY_HISTORY, record, redo, undo, type History } from "./history";
 import type { Refusal, RefusalReason } from "@/app/admin/actions";
 import type { Stamps } from "@/lib/content/parts";
 import { saveQueue } from "./save-queue";
-import { settleSave } from "./stamps";
+import { sendSave, settleSave } from "./stamps";
 import { useStale } from "./StaleProvider";
 
 // The state of one admin editor (U6 step 6): the value being edited, the
@@ -107,6 +107,8 @@ export function useDraftEditor<T>(initial: T, persist: Persist<T>, options: Draf
   const lastAttempt = useRef(initial);
   // The stamps that the next save sends; `stamps` is their copy for rendering and registration.
   const heldStamps = useRef(initialStamps);
+  // The value of a save whose response was lost, or null (sendSave).
+  const lost = useRef<T | null>(null);
   const history = useRef<History<T>>(EMPTY_HISTORY);
   const [steps, setSteps] = useState({ canUndo: false, canRedo: false });
   const { register, unregister, leaving } = useStale();
@@ -153,6 +155,8 @@ export function useDraftEditor<T>(initial: T, persist: Persist<T>, options: Draf
       show(stored);
       setDirty(false);
       if (storedStamps) hold(storedStamps);
+      // A save lost before a Reset must never be resent over the stored value.
+      lost.current = null;
     },
     [show, hold],
   );
@@ -163,21 +167,24 @@ export function useDraftEditor<T>(initial: T, persist: Persist<T>, options: Draf
         const target = pick();
         lastAttempt.current = target;
         setStatus({ kind: "saving" });
-        try {
-          const result = await persist(target, heldStamps.current);
-          const outcome = settleSave(result, target, latest.current, heldStamps.current, adopt);
-          setStatus(outcome.status);
-          if (outcome.value !== latest.current) {
-            latest.current = outcome.value;
-            setValue(outcome.value);
-          }
-          if (outcome.stamps !== heldStamps.current) hold(outcome.stamps);
-          if (outcome.markSaved) setDirty(false);
-          return result.ok;
-        } catch {
+        // After a network failure the lost value goes again first (sendSave).
+        const sent = await sendSave(persist, target, heldStamps.current, lost.current);
+        if (sent.base !== heldStamps.current) hold(sent.base);
+        if (sent.kind === "failed") {
+          lost.current = sent.lost;
           setStatus({ kind: "failed", message: NETWORK_FAILURE });
+          return false;
         }
-        return false;
+        lost.current = null;
+        const outcome = settleSave(sent.result, target, latest.current, sent.base, adopt);
+        setStatus(outcome.status);
+        if (outcome.value !== latest.current) {
+          latest.current = outcome.value;
+          setValue(outcome.value);
+        }
+        if (outcome.stamps !== heldStamps.current) hold(outcome.stamps);
+        if (outcome.markSaved) setDirty(false);
+        return sent.result.ok;
       }),
     [persist, adopt, hold],
   );

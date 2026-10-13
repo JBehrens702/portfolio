@@ -276,3 +276,30 @@ test("AE3: a save that brings back a file no longer in the media store is refuse
   await tab.close();
   await fresh.close();
 });
+
+test("a save whose response was lost does not block the next save with new edits (lost-response fix)", async () => {
+  const tab = await openEditor(TURBINE);
+  await tab.getByLabel(TEXT_LABEL).fill("Turbine text that reached the server.");
+
+  // The server stores this save, but its response never reaches the page:
+  // the request goes through, then the page sees a network failure.
+  let dropped = false;
+  await tab.route(`**/admin/experiences/${TURBINE}`, async (route) => {
+    if (dropped || route.request().method() !== "POST") return route.fallback();
+    dropped = true;
+    await route.fetch();
+    await route.abort("failed");
+  });
+  await tab.getByRole("button", { name: "Save draft", exact: true }).click();
+  await expect(tab.getByTestId("save-error")).toContainText("the connection failed");
+  expect(await draftText(TURBINE)).toBe("Turbine text that reached the server.");
+  await tab.unroute(`**/admin/experiences/${TURBINE}`);
+
+  // The owner edits more and saves, instead of pressing Retry.
+  await tab.getByLabel("Subtitle (optional)").fill("Subtitle after the lost save");
+  await saveAndExpectSaved(tab);
+  const saved = await draftExperience(TURBINE);
+  expect(saved.subtitle).toBe("Subtitle after the lost save");
+  expect(await draftText(TURBINE)).toBe("Turbine text that reached the server.");
+  await tab.close();
+});

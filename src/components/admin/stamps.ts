@@ -51,6 +51,47 @@ export function settleSave<T>(result: SaveResult<T>, sent: T, latest: T, stamps:
   };
 }
 
+/**
+ * The result of `sendSave`. "done" holds the server's answer and the stamps the
+ * save was sent with. "failed" means the network failed: `lost` is the value
+ * that the server may or may not have stored, and `base` holds the stamps to
+ * keep (a resend that landed first has already moved them on).
+ */
+export type SendResult<T> =
+  | { kind: "done"; result: SaveResult<T>; base: Stamps }
+  | { kind: "failed"; lost: T; base: Stamps };
+
+/**
+ * Sends a save. `lost` is the value of an earlier save whose response never
+ * came: the server may have stored it, and the editor still holds the stamps
+ * from before it. Then the next save would look like another tab's change and
+ * be refused. So the lost value goes again first: the server accepts an
+ * identical resend (or stores it now), and its stamps make the new save current.
+ */
+export async function sendSave<T>(
+  persist: (value: T, base: Stamps) => Promise<SaveResult<T>>,
+  target: T,
+  held: Stamps,
+  lost: T | null,
+): Promise<SendResult<T>> {
+  let base = held;
+  if (lost !== null && lost !== target) {
+    let resent: SaveResult<T>;
+    try {
+      resent = await persist(lost, base);
+    } catch {
+      return { kind: "failed", lost, base };
+    }
+    if (!resent.ok) return { kind: "done", result: resent, base };
+    if (resent.stamps) base = mergeStamps(base, resent.stamps);
+  }
+  try {
+    return { kind: "done", result: await persist(target, base), base };
+  } catch {
+    return { kind: "failed", lost: target, base };
+  }
+}
+
 /** One set of stamps for the return check, from the stamps of each editor on the page. */
 export function combineStamps(sets: Iterable<Stamps>): Stamps {
   let combined: Stamps = {};

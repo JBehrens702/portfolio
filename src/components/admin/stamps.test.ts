@@ -6,6 +6,7 @@ import {
   describeParts,
   mergeStamps,
   refusalAction,
+  sendSave,
   settleSave,
   staleMessage,
 } from "./stamps";
@@ -149,5 +150,66 @@ describe("the banner text", () => {
     expect(staleMessage(["profile", "card:windaid", "software"], titles)).toBe(
       "Another tab saved a newer version of the profile, the WindAid card, and the software cards. Reload this page before you edit it.",
     );
+  });
+});
+
+// A save whose response was lost (the network failed after the server stored
+// it) leaves the editor with the stamps from before that save. The next save
+// would then be refused as "another tab changed this part", so it first sends
+// the lost value again: the server accepts an identical resend.
+describe("the save after a network failure sends the lost value first", () => {
+  type Call = { value: string; base: Stamps };
+  function server(answers: Array<SaveResult<string> | "network">) {
+    const calls: Call[] = [];
+    const persist = async (value: string, base: Stamps): Promise<SaveResult<string>> => {
+      calls.push({ value, base });
+      const answer = answers.shift();
+      if (answer === undefined || answer === "network") throw new Error("network");
+      return answer;
+    };
+    return { calls, persist };
+  }
+  const saved = (stamp: string): SaveResult<string> => ({ ok: true, savedAt: "now", stamps: { "page:a": stamp } });
+  const otherTab: SaveResult<string> = { ok: false, message: "other tab", reason: "other-tab" };
+  const held: Stamps = { "page:a": "S0" };
+
+  it("sends only the new value when no save was lost", async () => {
+    const { calls, persist } = server([saved("S1")]);
+    const sent = await sendSave(persist, "X", held, null);
+    expect(calls).toEqual([{ value: "X", base: held }]);
+    expect(sent).toEqual({ kind: "done", result: saved("S1"), base: held });
+  });
+
+  it("resends the lost value first, then sends the new value with the stamps it returned", async () => {
+    const { calls, persist } = server([saved("S1"), saved("S2")]);
+    const sent = await sendSave(persist, "X2", held, "X1");
+    expect(calls).toEqual([
+      { value: "X1", base: held },
+      { value: "X2", base: { "page:a": "S1" } },
+    ]);
+    expect(sent).toEqual({ kind: "done", result: saved("S2"), base: { "page:a": "S1" } });
+  });
+
+  it("sends once when the new value is the lost value (Retry)", async () => {
+    const { calls, persist } = server([saved("S1")]);
+    await sendSave(persist, "X1", held, "X1");
+    expect(calls).toHaveLength(1);
+  });
+
+  it("stops with the refusal when the lost value is refused, and does not send the new value", async () => {
+    const { calls, persist } = server([otherTab]);
+    const sent = await sendSave(persist, "X2", held, "X1");
+    expect(calls).toHaveLength(1);
+    expect(sent).toEqual({ kind: "done", result: otherTab, base: held });
+  });
+
+  it("keeps the first lost value when its resend fails again", async () => {
+    const { persist } = server(["network"]);
+    expect(await sendSave(persist, "X2", held, "X1")).toEqual({ kind: "failed", lost: "X1", base: held });
+  });
+
+  it("keeps the stamps of a resend that landed when the new value is then lost", async () => {
+    const { persist } = server([saved("S1"), "network"]);
+    expect(await sendSave(persist, "X2", held, "X1")).toEqual({ kind: "failed", lost: "X2", base: { "page:a": "S1" } });
   });
 });
