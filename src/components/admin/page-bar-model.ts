@@ -1,3 +1,4 @@
+import { experienceHref } from "@/components/site/links";
 import type { Site } from "@/lib/content/schema";
 
 // The page bar on every editor and preview page (KTD10, 2.4.31): the map, the
@@ -8,6 +9,9 @@ import type { Site } from "@/lib/content/schema";
 
 /** The id of the home page in the bar. A slug is never empty. */
 export const HOME_ID = "";
+
+/** The name of the home page in the bar and on the admin map. */
+export const HOME_TITLE = "Home";
 
 export type BarMode = "edit" | "preview";
 
@@ -24,18 +28,20 @@ export interface BarLink {
   other: { href: string; label: string; name: string };
 }
 
+/** The editor of a page; the one rule for these addresses, shared with the admin map. */
 export function editHref(id: string): string {
-  return id === HOME_ID ? "/admin/home" : `/admin/experiences/${encodeURIComponent(id)}`;
+  return id === HOME_ID ? "/admin/home" : experienceHref("/admin", id);
 }
 
+/** The draft preview of a page; shared with the admin map. */
 export function previewHref(id: string): string {
-  return id === HOME_ID ? "/preview" : `/preview/experiences/${encodeURIComponent(id)}`;
+  return id === HOME_ID ? "/preview" : experienceHref("/preview", id);
 }
 
 /** The home page, then each experience in site order, named as the map names it. */
 export function barPages(site: Pick<Site, "experiences">): BarPage[] {
   return [
-    { id: HOME_ID, title: "Home" },
+    { id: HOME_ID, title: HOME_TITLE },
     ...site.experiences.map((e) => ({ id: e.slug, title: e.homeTitle || e.pageTitle || e.slug })),
   ];
 }

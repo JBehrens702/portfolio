@@ -6,6 +6,7 @@ import type { OutsideKind } from "@/lib/content/site-links";
 import { ExperienceList, MarkText } from "./ExperienceList";
 import {
   frameTitle,
+  isPlainClick,
   openHref,
   PAGE_PARAM,
   readView,
@@ -124,7 +125,7 @@ function LinkList({
               <a
                 href={selectHref(target)}
                 onClick={(event: MouseEvent<HTMLAnchorElement>) => {
-                  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                  if (!isPlainClick(event)) return;
                   event.preventDefault();
                   onSelect(target);
                 }}

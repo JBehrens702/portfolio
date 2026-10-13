@@ -19,23 +19,25 @@ import { readDraftState } from "./draft";
 export const instant = false;
 
 /**
- * The change marks (KTD8), or null when the published document cannot be read:
- * the map then shows no marks, and the page says why.
+ * The published document for the change marks (KTD8). `ok: false` when it
+ * cannot be read: the map then shows no marks, and the page says why. A null
+ * document means nothing is published yet, which is different: every page is new.
  */
-async function readChanges(draft: Site): Promise<PageChanges | null> {
+async function readPublishedForMarks(): Promise<{ ok: true; published: Site | null } | { ok: false }> {
   const store = createContentStoreFromEnv();
-  if (!store) return null;
+  if (!store) return { ok: false };
   try {
-    return pageChanges(draft, await store.readPublished());
+    return { ok: true, published: await store.readPublished() };
   } catch (error) {
     console.error("The admin map could not read the published document:", error);
-    return null;
+    return { ok: false };
   }
 }
 
 export default async function AdminHome() {
   await requireOwnerPage();
-  const state = await readDraftState();
+  // The two reads do not depend on each other, so they run at the same time.
+  const [state, publishedRead] = await Promise.all([readDraftState(), readPublishedForMarks()]);
   if (state.kind !== "ok") {
     return (
       <main id="main" className={`container ${styles.page}`} data-testid="admin-home">
@@ -47,7 +49,7 @@ export default async function AdminHome() {
 
   const site = state.site;
   const unapproved = unapprovedLabels(site).length;
-  const changes = await readChanges(site);
+  const changes: PageChanges | null = publishedRead.ok ? pageChanges(site, publishedRead.published) : null;
   const rows = mapRows({
     homePage: HOME_PAGE,
     experiences: site.experiences.map((e) => ({ slug: e.slug, title: e.homeTitle })),

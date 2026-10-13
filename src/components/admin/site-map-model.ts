@@ -1,10 +1,13 @@
+import { experienceHref } from "@/components/site/links";
 import type { PageChanges, PageMark } from "@/lib/content/page-changes";
 import type { LinkReason, PageId, PageLink, SiteLinks } from "@/lib/content/site-links";
+import { editHref, HOME_ID, HOME_TITLE, previewHref } from "./page-bar-model";
 
 // The pure parts of the admin map (U6, KTD9): the page rows with their marks
 // and addresses, the selected page in the address, the list or wall choice,
-// and the link lists in words. Type imports only: the browser code of the map
-// imports this file, and must not pull in the server-only content modules.
+// and the link lists in words. The content modules come in as types only: the
+// browser code of the map imports this file, and must not pull in the
+// server-only content modules. The page addresses follow the page bar's rules.
 
 /** "home": the home page. "experience": an experience page of the draft. "removed": a published page that the draft removed. */
 export type RowKind = "home" | "experience" | "removed";
@@ -28,10 +31,16 @@ export interface MapRow {
   frameHref: string;
 }
 
-/** The title of the home page's row. */
-export const HOME_TITLE = "Home";
+export { HOME_TITLE };
 
-const experienceHref = (base: string, slug: string) => `${base}/experiences/${encodeURIComponent(slug)}`;
+/**
+ * True for an ordinary left click. A click with a modifier key, or with
+ * another button, opens the link in a new tab or window as usual, so the map
+ * must not take it over.
+ */
+export function isPlainClick(event: { button: number; metaKey: boolean; ctrlKey: boolean; shiftKey: boolean; altKey: boolean }): boolean {
+  return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+}
 
 /**
  * The rows of the map, in site order: the home page, each experience of the
@@ -53,20 +62,20 @@ export function mapRows({
     kind: "home",
     title: HOME_TITLE,
     mark: marks.get(homePage) ?? null,
-    editHref: "/admin/home",
-    previewHref: "/preview",
+    editHref: editHref(HOME_ID),
+    previewHref: previewHref(HOME_ID),
     liveHref: null,
-    frameHref: "/preview",
+    frameHref: previewHref(HOME_ID),
   };
   const pages: MapRow[] = experiences.map(({ slug, title }) => ({
     page: slug,
     kind: "experience",
     title,
     mark: marks.get(slug) ?? null,
-    editHref: experienceHref("/admin", slug),
-    previewHref: experienceHref("/preview", slug),
+    editHref: editHref(slug),
+    previewHref: previewHref(slug),
     liveHref: null,
-    frameHref: experienceHref("/preview", slug),
+    frameHref: previewHref(slug),
   }));
   const removed: MapRow[] = (changes?.removed ?? []).map(({ slug, homeTitle }) => ({
     page: slug,
@@ -75,8 +84,8 @@ export function mapRows({
     mark: "removed",
     editHref: null,
     previewHref: null,
-    liveHref: experienceHref("", slug),
-    frameHref: experienceHref("", slug),
+    liveHref: experienceHref("/", slug),
+    frameHref: experienceHref("/", slug),
   }));
   return [home, ...pages, ...removed];
 }

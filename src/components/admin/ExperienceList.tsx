@@ -6,7 +6,7 @@ import { addExperience, moveExperience, removeExperience, type ActionResult } fr
 import { useConfirm } from "./ConfirmDialog";
 import { IssueList } from "./IssueList";
 import { OrderButtons } from "./OrderButtons";
-import { NARROW_QUERY, nextRowIndex, openHref, selectHref, type MapRow } from "./site-map-model";
+import { isPlainClick, NARROW_QUERY, nextRowIndex, openHref, selectHref, type MapRow } from "./site-map-model";
 import { NETWORK_FAILURE } from "./useDraftEditor";
 import { useHydrated } from "./useHydrated";
 import styles from "./admin.module.css";
@@ -75,8 +75,7 @@ export function ExperienceList({
   }
 
   function onTitleClick(event: MouseEvent<HTMLAnchorElement>, row: MapRow) {
-    // A click with a modifier key opens the link in a new tab or window, as usual.
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (!isPlainClick(event)) return;
     event.preventDefault();
     if (window.matchMedia(NARROW_QUERY).matches) window.location.assign(openHref(row));
     else onSelect(row);
