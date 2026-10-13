@@ -4,7 +4,8 @@
 .marker {
   position: fixed;
   right: var(--gutter);
-  bottom: var(--gutter);
+  /* Above the admin page bar when the preview shows it (U7). */
+  bottom: calc(var(--gutter) + var(--page-bar-height, 0px));
   z-index: 20;
   max-width: calc(100vw - 2 * var(--gutter));
   padding: var(--space-2) var(--space-4);

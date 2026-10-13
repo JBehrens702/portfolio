@@ -1,9 +1,12 @@
 import { notFound } from "next/navigation";
+import { PageBar } from "@/components/admin/PageBar";
+import { barPages } from "@/components/admin/page-bar-model";
 import { PreviewMarker } from "@/components/site/PreviewMarker";
 import { ExperienceView } from "@/components/site/SiteView";
 import { readDraftOrNull } from "@/app/admin/draft";
 import { requireOwnerPage } from "@/lib/auth/owner";
 import { visibleSite } from "@/lib/content/visibility";
+import { isFramedRequest } from "../../framed";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -23,6 +26,7 @@ export default async function PreviewExperience({ params }: Props) {
   if (!site || !experience) notFound();
   return (
     <>
+      <PageBar pages={barPages(site)} current={slug} mode="preview" framed={await isFramedRequest()} />
       <PreviewMarker site={site} />
       <ExperienceView site={site} experience={experience} linkBase="/preview" />
     </>

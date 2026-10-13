@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { DraftProblem } from "@/components/admin/DraftProblem";
 import { LabelsEditor } from "@/components/admin/LabelsEditor";
+import { PageBar } from "@/components/admin/PageBar";
+import { barPages, HOME_ID } from "@/components/admin/page-bar-model";
 import styles from "@/components/admin/admin.module.css";
 import { requireOwnerPage } from "@/lib/auth/owner";
 import { readDraftState } from "../draft";
@@ -15,6 +17,7 @@ export default async function AdminLabels() {
   const state = await readDraftState();
   return (
     <main id="main" className={`container ${styles.page}`} data-testid="admin-labels">
+      {state.kind === "ok" ? <PageBar pages={barPages(state.site)} current={HOME_ID} mode="edit" /> : null}
       <p>
         <a href="/admin">Back to Admin</a>
       </p>

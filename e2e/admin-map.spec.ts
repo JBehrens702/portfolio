@@ -261,3 +261,54 @@ test("the map keeps the controls of the admin home: move, the Publish panel, and
   // A reorder is an unpublished change of the home page.
   await expect(page.getByTestId("home-row").getByTestId("page-mark")).toHaveText("changed");
 });
+
+// ---- U7: the page bar on every editor and preview page (KTD10, 2.4.31) ----
+
+test("F1: the page bar opens any page's preview or editor in one click, and the map (2.4.31)", async () => {
+  await page.goto("/admin/experiences/windaid");
+  const editBar = page.getByTestId("page-bar");
+  await expect(editBar.getByRole("link", { name: "WindAid", exact: true })).toHaveAttribute("aria-current", "page");
+  await editBar.getByRole("link", { name: "Preview Victaulic", exact: true }).click();
+  await expect(page).toHaveURL(/\/preview\/experiences\/victaulic$/);
+
+  const previewBar = page.getByTestId("page-bar");
+  await expect(previewBar.getByRole("link", { name: "Victaulic", exact: true })).toHaveAttribute("aria-current", "page");
+  await previewBar.getByRole("link", { name: "Edit Victaulic", exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/experiences\/victaulic$/);
+
+  await page.getByTestId("page-bar").getByRole("link", { name: "Map", exact: true }).click();
+  await expect(page.getByTestId("admin-home")).toBeVisible();
+});
+
+test("on the Profile editor the bar marks the home page as the current page (KTD10)", async () => {
+  await page.goto("/admin/profile");
+  await expect(page.getByTestId("page-bar").getByRole("link", { name: "Home", exact: true })).toHaveAttribute("aria-current", "page");
+});
+
+test("the map's large picture shows no page bar, also after a click inside it (KTD6)", async () => {
+  await openMap();
+  await expect(largeFrame()).toHaveAttribute("src", "/preview");
+  await expect(page.getByTestId("map-picture").getByTestId("frame-placeholder")).toHaveCount(0);
+  const frame = page.frameLocator('[data-testid="map-picture"] iframe');
+  await expect(frame.locator('a[href="/preview/experiences/windaid"]').first()).toBeVisible();
+  await expect(frame.getByTestId("page-bar")).toHaveCount(0);
+
+  // A client navigation inside the frame carries no Sec-Fetch-Dest: iframe; the browser check hides the bar.
+  await frame.locator('a[href="/preview/experiences/windaid"]').first().click();
+  await expect(frame.getByRole("heading", { level: 1, name: "WindAid Page" })).toBeVisible();
+  await expect(frame.getByTestId("page-bar")).toHaveCount(0);
+});
+
+test("at phone width the page bar scrolls inside itself, and the page never scrolls sideways (2.4.31)", async () => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  try {
+    for (const url of ["/admin/experiences/windaid", "/preview/experiences/windaid"]) {
+      await page.goto(url);
+      await expect(page.getByTestId("page-bar")).toBeVisible();
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow, `sideways scroll on ${url}`).toBeLessThanOrEqual(0);
+    }
+  } finally {
+    await page.setViewportSize({ width: 1280, height: 720 });
+  }
+});

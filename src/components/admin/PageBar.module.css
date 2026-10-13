@@ -1,0 +1,87 @@
+/* The page bar (U7, KTD10). One row of links; at phone width it scrolls
+   sideways inside itself, so the page never does. */
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* Editor pages: in the flow, above the page's own heading. */
+.inline {
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius);
+}
+
+/* Preview pages: over the bottom of the window, so the page keeps its layout. */
+.floating {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  border-width: 1px 0 0;
+  box-shadow: 0 -0.25rem 1rem rgb(0 0 0 / 0.4);
+}
+
+/* Keep the end of a preview page and its "Preview" marker clear of the bar. */
+:global(body):has(.floating) {
+  padding-bottom: var(--page-bar-height);
+}
+
+:global(:root):has(.floating) {
+  --page-bar-height: 3.25rem;
+}
+
+.pages {
+  display: flex;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bar a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 var(--space-2);
+  white-space: nowrap;
+  color: var(--color-link);
+}
+
+.map {
+  font-weight: 600;
+}
+
+.current {
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 2px solid var(--color-orange);
+}
+
+/* A page's title link and its small link in the other mode stay together. */
+.page {
+  display: flex;
+  align-items: center;
+  padding-right: var(--space-2);
+  border-right: 1px solid var(--color-border);
+}
+
+.page:last-child {
+  border-right: 0;
+}
+
+.bar .other {
+  padding: 0 var(--space-1);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
