@@ -367,7 +367,7 @@ describe("labels and Publish (1.2.7, KTD9)", () => {
     staleTab.resume = { ...staleTab.resume, text: "Get the resume" };
     staleTab.readMore = { ...staleTab.readMore, approved: true };
     const result = await saveLabels(staleTab);
-    expect(result).toEqual({ ok: false, message: "The labels changed in another tab. Reload the page." });
+    expect(result).toEqual({ ok: false, message: "The labels changed in another tab. Reload the page.", reason: "other-tab" });
     expect(draftText()).toBe(before);
   });
 
@@ -633,6 +633,40 @@ describe("media cleanup after Publish (U6 step 4)", () => {
     error.mockRestore();
     expect(result).toMatchObject({ ok: true, cleanup: { error: expect.stringMatching(/cleanup/) } });
     expect(await store.readPublished()).not.toBeNull();
+  });
+});
+
+// A refusal that asks the owner to reload must carry a reason, or the save bar
+// shows no Reload button (it offers Reload for "other-tab" and "out-of-date").
+describe("refusals that ask for a reload offer the Reload button", () => {
+  it("a labels save whose keys are not the draft's", async () => {
+    const labels = asLoaded((await draft()).labels);
+    const [first] = Object.keys(labels);
+    expect(first).toBeDefined();
+    delete (labels as Record<string, unknown>)[first];
+    const before = draftText();
+    expect(await saveLabels(labels)).toMatchObject({ ok: false, message: /Reload the page/, reason: "out-of-date" });
+    expect(draftText()).toBe(before);
+  });
+
+  it("a page save for an experience that another tab removed", async () => {
+    const current = (await draft()).experiences[0];
+    const stamps = await fresh();
+    expect((await removeExperience(current.slug)).ok).toBe(true);
+    const before = draftText();
+    expect(await saveExperience(current.slug, current, stamps)).toMatchObject({ ok: false, reason: "out-of-date" });
+    expect(draftText()).toBe(before);
+  });
+
+  it("a card save for an experience that another tab removed", async () => {
+    const current = (await draft()).experiences[0];
+    const stamps = await fresh();
+    expect((await removeExperience(current.slug)).ok).toBe(true);
+    const { homeTitle, homeText, skills, cardImage } = current;
+    expect(await saveExperienceCard(current.slug, { homeTitle, homeText, skills, cardImage }, stamps)).toMatchObject({
+      ok: false,
+      reason: "out-of-date",
+    });
   });
 });
 

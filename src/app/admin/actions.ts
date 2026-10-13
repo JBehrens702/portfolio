@@ -45,13 +45,16 @@ import { readStoredDraft } from "./draft";
 
 /** Why an action was refused, where the editor must tell the kinds apart. */
 export type RefusalReason =
-  /** Another tab changed a part that this save changes (KTD2). The editor offers Reload. */
+  /** Another tab changed a part (KTD2) or a label that this save changes. The editor offers Reload. */
   | "other-tab"
   /** A file new to the draft is no longer in the media store (KTD4). */
   | "missing-file"
   /** Two other saves landed during this save (KTD3). Saving again can work. */
   | "busy"
-  /** The save came without valid stamps for its parts. The editor offers Reload. */
+  /**
+   * The page no longer fits the draft: the save came without valid stamps, its
+   * experience was removed, or its label keys are not the draft's. The editor offers Reload.
+   */
   | "out-of-date";
 
 /** A refused action: nothing was written. */
@@ -333,7 +336,7 @@ export async function saveLabels(input: LabelsInput): Promise<LabelsActionResult
   return commitSite((current) => {
     const keys = Object.keys(current.labels).sort();
     const sent = Object.keys(input).sort();
-    if (keys.join("\n") !== sent.join("\n")) return refused("Not saved: the labels do not match the draft. Reload the page.");
+    if (keys.join("\n") !== sent.join("\n")) return refused("Not saved: the labels do not match the draft. Reload the page.", undefined, "out-of-date");
     for (const key of keys) {
       const label = input[key];
       if (
@@ -346,7 +349,7 @@ export async function saveLabels(input: LabelsInput): Promise<LabelsActionResult
       }
     }
     // Another tab saved a different text since this editor loaded it: refuse all, change nothing.
-    if (keys.some((key) => current.labels[key].text !== input[key].baseText)) return refused(STALE_LABELS_MESSAGE);
+    if (keys.some((key) => current.labels[key].text !== input[key].baseText)) return refused(STALE_LABELS_MESSAGE, undefined, "other-tab");
     const labels: Record<string, unknown> = {};
     for (const key of keys) {
       const label = input[key];
@@ -412,7 +415,7 @@ export async function saveExperience(slug: string, input: Experience, base?: Sta
   if (!isRecord(input)) return refused("Not saved: no experience was sent.");
   return commitSite((current) => {
     const index = current.experiences.findIndex((e) => e.slug === slug);
-    if (index < 0) return refused("Not saved: unknown experience. It may have been removed.");
+    if (index < 0) return refused("Not saved: unknown experience. It may have been removed.", undefined, "out-of-date");
     const experiences = current.experiences.map((e, i) => (i === index ? { ...input, slug } : e));
     // The first carousel brings its button labels, unapproved, for the owner; the
     // last one removed takes back the proposals that nobody approved (KTD9). The
@@ -437,7 +440,7 @@ export async function saveExperienceCard(slug: string, input: ExperienceCardInpu
   if (!isRecord(input)) return refused("Not saved: no card was sent.");
   return commitSite((current) => {
     const index = current.experiences.findIndex((e) => e.slug === slug);
-    if (index < 0) return refused("Not saved: unknown experience. It may have been removed.");
+    if (index < 0) return refused("Not saved: unknown experience. It may have been removed.", undefined, "out-of-date");
     const { cardImage, homeTitle, homeText, skills } = input;
     const experiences = current.experiences.map((e, i) => {
       if (i !== index) return e;
