@@ -15,6 +15,7 @@ const PNG = Buffer.from(
   "base64",
 );
 const SLUGS = ["alpha-project", "beta-project", "gamma-project"];
+// The same "clickable" test as the corner-marks hover rule in src/app/globals.css.
 const CLICKABLE = "a[href], button:not(:disabled)";
 
 type MotionState = { styles: string[]; anims: string[] };
@@ -242,7 +243,7 @@ test.describe("hover motion", () => {
 });
 
 test.describe("About Me logo", () => {
-  const logo = (page: Page) => page.locator("#about .corner-marks").locator("..");
+  const logo = (page: Page) => marksBox(page.locator("#about"));
 
   test("it shows only on screens 900 px wide or wider", async ({ page }, testInfo) => {
     await page.goto("/");
