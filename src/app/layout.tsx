@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Michroma, Orbitron } from "next/font/google";
+import { SiteAnalytics } from "@/components/site/SiteAnalytics";
 import { SITE_TITLE } from "@/components/site/site-title";
 import "./globals.css";
 
@@ -28,7 +29,10 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       className={`${orbitron.variable} ${jetbrainsMono.variable} ${michroma.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        {children}
+        <SiteAnalytics />
+      </body>
     </html>
   );
 }
