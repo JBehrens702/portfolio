@@ -290,6 +290,8 @@ test("the map's large picture shows no page bar, also after a click inside it (K
   await expect(largeFrame()).toHaveAttribute("src", "/preview");
   await expect(page.getByTestId("map-picture").getByTestId("frame-placeholder")).toHaveCount(0);
   const frame = page.frameLocator('[data-testid="map-picture"] iframe');
+  // The home page heading is the tagline; seeing it proves the frame shows the loaded preview.
+  await expect(frame.getByRole("heading", { level: 1, name: "E2E tagline" })).toBeVisible();
   await expect(frame.locator('a[href="/preview/experiences/windaid"]').first()).toBeVisible();
   await expect(frame.getByTestId("page-bar")).toHaveCount(0);
 

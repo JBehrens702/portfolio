@@ -12,8 +12,11 @@ import { experience, makeSite, textBlock } from "@/lib/content/test-fixtures";
 
 const requireOwnerPage = vi.hoisted(() => vi.fn());
 const storeRef = vi.hoisted(() => ({ current: null as ContentStore | null }));
+// isFramedRequest reads the request headers, which exist only inside a request.
+const framed = vi.hoisted(() => ({ value: false }));
 
 vi.mock("@/lib/auth/owner", () => ({ requireOwnerPage }));
+vi.mock("./framed", () => ({ isFramedRequest: async () => framed.value }));
 vi.mock("@/lib/content/store", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/lib/content/store")>();
   return { ...original, createContentStoreFromEnv: () => storeRef.current };
@@ -67,6 +70,7 @@ function logoHref(page: string): string | undefined {
 
 beforeEach(async () => {
   requireOwnerPage.mockReset().mockResolvedValue("user_owner");
+  framed.value = false;
   const { store } = createMemoryContentStore();
   await store.writePublished(makeSite({ experiences: [experience("victaulic", { homeText: "" })] }));
   await store.writeDraft(draftSite());
@@ -117,5 +121,22 @@ describe("preview experience page", () => {
     const readDraft = vi.spyOn(storeRef.current!, "readDraft");
     await expect(PreviewExperience({ params: params("victaulic") })).rejects.toThrow("NEXT_REDIRECT sign-in");
     expect(readDraft).not.toHaveBeenCalled();
+  });
+});
+
+describe("page bar on the preview pages (U7, KTD6, KTD10)", () => {
+  const params = (slug: string) => Promise.resolve({ slug });
+
+  it("shows the bar, with the current page marked, on a normal request", async () => {
+    const page = await html(PreviewExperience({ params: params("victaulic") }));
+    expect(page).toContain('data-testid="page-bar"');
+    expect(page).toMatch(/<a href="\/preview\/experiences\/victaulic" aria-current="page"/);
+    expect(page).toContain('href="/admin/experiences/victaulic"');
+  });
+
+  it("leaves the bar out of a framed request, such as a picture on the admin map", async () => {
+    framed.value = true;
+    expect(await html(PreviewHome())).not.toContain('data-testid="page-bar"');
+    expect(await html(PreviewExperience({ params: params("victaulic") }))).not.toContain('data-testid="page-bar"');
   });
 });
