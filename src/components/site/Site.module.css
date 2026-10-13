@@ -11,6 +11,8 @@
 
 /* ---------- Buttons and links ---------- */
 
+/* Hover rules use :not(:disabled): a turned-off button cannot be clicked, so it must not react. */
+
 .buttonPrimary,
 .buttonLight,
 .buttonGhost {
@@ -53,7 +55,7 @@
 
 /* The orange button with dark text: the primary action. */
 .buttonPrimary,
-.buttonPrimary:hover {
+.buttonPrimary:not(:disabled):hover {
   color: var(--color-on-orange);
 }
 
@@ -62,13 +64,13 @@
   box-shadow: 0 0.75rem 1.75rem -0.75rem rgb(0 0 0 / 0.6);
 }
 
-.buttonPrimary:hover::before {
+.buttonPrimary:not(:disabled):hover::before {
   background: #ff8f3d;
 }
 
 /* On a purple panel: white with dark purple text. */
 .buttonLight,
-.buttonLight:hover {
+.buttonLight:not(:disabled):hover {
   color: var(--color-purple-dark);
 }
 
@@ -76,13 +78,13 @@
   background: var(--color-on-purple);
 }
 
-.buttonLight:hover::before {
+.buttonLight:not(:disabled):hover::before {
   background: #f6e3ff;
 }
 
 /* The second button on a purple panel: a white outline. */
 .buttonGhost,
-.buttonGhost:hover {
+.buttonGhost:not(:disabled):hover {
   color: var(--color-on-purple);
 }
 
@@ -91,7 +93,7 @@
   border: 1px solid rgb(255 255 255 / 0.65);
 }
 
-.buttonGhost:hover::before {
+.buttonGhost:not(:disabled):hover::before {
   background: rgb(255 255 255 / 0.14);
   border-color: var(--color-on-purple);
 }
@@ -560,9 +562,10 @@
   );
 }
 
-/* The edge lights orange on hover. */
-.summary:not(.featured):hover,
-.card:hover {
+/* The edge lights orange on hover, but only when the card holds a link: a card
+   without one is not clickable, so nothing in it reacts to the pointer. */
+.summary:not(.featured):has(a[href]):hover,
+.card:has(a[href]):hover {
   background: var(--color-orange);
 }
 
@@ -574,13 +577,13 @@
   --mark-inset: 0.75rem;
 }
 
-.summary:hover :global(.corner-marks)::before,
-.card:hover :global(.corner-marks)::before {
+.summary:has(a[href]):hover :global(.corner-marks)::before,
+.card:has(a[href]):hover :global(.corner-marks)::before {
   translate: -0.375rem -0.375rem;
 }
 
-.summary:hover :global(.corner-marks)::after,
-.card:hover :global(.corner-marks)::after {
+.summary:has(a[href]):hover :global(.corner-marks)::after,
+.card:has(a[href]):hover :global(.corner-marks)::after {
   translate: 0.375rem 0.375rem;
 }
 
@@ -1062,31 +1065,31 @@
     animation: hero-fade 2s ease 0.3s both;
   }
 
-  .buttonPrimary:hover::before,
-  .buttonLight:hover::before,
-  .buttonGhost:hover::before {
+  .buttonPrimary:not(:disabled):hover::before,
+  .buttonLight:not(:disabled):hover::before,
+  .buttonGhost:not(:disabled):hover::before {
     transform: skewX(-20deg) translateX(2px);
   }
 
-  .buttonPrimary:hover .arrow,
-  .buttonLight:hover .arrow,
+  .buttonPrimary:not(:disabled):hover .arrow,
+  .buttonLight:not(:disabled):hover .arrow,
   .arrowLink:hover .arrow {
     transform: translateX(4px);
   }
 
-  .buttonPrimary:hover .buttonIconDown,
-  .buttonGhost:hover .buttonIconDown {
+  .buttonPrimary:not(:disabled):hover .buttonIconDown,
+  .buttonGhost:not(:disabled):hover .buttonIconDown {
     transform: translateY(3px);
   }
 
-  .summary:hover .summaryImage,
-  .card:hover .cardImage {
+  .summary:has(a[href]):hover .summaryImage,
+  .card:has(a[href]):hover .cardImage {
     transform: scale(1.04);
   }
 
-  /* The scan line sweeps again on hover. */
-  .summary:hover .scan,
-  .card:hover .scan {
+  /* The scan line sweeps again on hover (cards with a link only). */
+  .summary:has(a[href]):hover .scan,
+  .card:has(a[href]):hover .scan {
     animation: scan-sweep 0.9s var(--ease-in-out) both;
     animation-timeline: auto;
   }
@@ -1137,8 +1140,8 @@
       animation-name: marquee-right;
     }
 
-    .summary:hover .scan,
-    .card:hover .scan {
+    .summary:has(a[href]):hover .scan,
+    .card:has(a[href]):hover .scan {
       animation: scan-sweep 0.9s var(--ease-in-out) both;
       animation-timeline: auto;
     }

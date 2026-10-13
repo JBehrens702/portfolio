@@ -252,7 +252,9 @@ ol[role="list"] {
  * image or a card, like the crop marks of a technical drawing. Pure graphics:
  * the element is aria-hidden and holds no text. Set --mark-color, --mark-size,
  * and --mark-inset on the element or a parent. On hover of the parent, the
- * brackets move outwards.
+ * brackets move outwards, but only when the parent is, or contains, an enabled
+ * link or button: movement under the pointer says "you can click this", so a
+ * plain image or panel keeps its brackets still.
  * ------------------------------------------------------------------------- */
 
 .corner-marks {
@@ -286,12 +288,13 @@ ol[role="list"] {
   border-bottom-width: 3px;
 }
 
-:hover > .corner-marks::before,
+/* :is() is forgiving: a browser without :has() keeps the link and button cases. */
+:is(a[href], button:not(:disabled), :has(a[href], button:not(:disabled))):hover > .corner-marks::before,
 :focus-visible > .corner-marks::before {
   translate: calc(-1 * var(--mark-travel, 0.375rem)) calc(-1 * var(--mark-travel, 0.375rem));
 }
 
-:hover > .corner-marks::after,
+:is(a[href], button:not(:disabled), :has(a[href], button:not(:disabled))):hover > .corner-marks::after,
 :focus-visible > .corner-marks::after {
   translate: var(--mark-travel, 0.375rem) var(--mark-travel, 0.375rem);
 }

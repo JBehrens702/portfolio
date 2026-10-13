@@ -956,11 +956,7 @@
     transform: translateX(6px);
   }
 
-  .galleryItem:hover .scan {
-    animation: scan-sweep 0.9s var(--ease-in-out) both;
-    animation-timeline: auto;
-  }
-
+  /* A photo is not clickable, so its scan line runs with the scroll only, never on hover. */
   @supports (animation-timeline: view()) {
     .bandMark {
       animation: band-turn linear both;
@@ -983,11 +979,6 @@
       animation: scan-sweep linear both;
       animation-timeline: --frame;
       animation-range: entry 40% cover 55%;
-    }
-
-    .galleryItem:hover .scan {
-      animation: scan-sweep 0.9s var(--ease-in-out) both;
-      animation-timeline: auto;
     }
   }
 
