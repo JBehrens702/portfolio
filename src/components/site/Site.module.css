@@ -814,8 +814,11 @@
   );
 }
 
-/* The aperture of the logo inside orange crop marks: a pure graphic. */
+/* The aperture of the logo inside orange crop marks: a pure graphic. It shows only
+   in the two-column layout (900 px and wider); in one column it sat alone above
+   the text, too small to read as the logo. */
 .aboutAside {
+  display: none;
   position: relative;
   z-index: 1;
   width: clamp(6rem, 4rem + 8vw, 13rem);
@@ -1005,6 +1008,7 @@
   }
 
   .aboutAside {
+    display: block;
     position: sticky;
     top: calc(var(--header-height) + var(--space-8));
   }
