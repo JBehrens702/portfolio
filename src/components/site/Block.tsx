@@ -1,10 +1,11 @@
 import type { CSSProperties } from "react";
 import type { Block as BlockData, ImagesBlock } from "@/lib/content/schema";
 import { isBlank } from "@/lib/content/visibility";
-import { ArrowIcon, FileIcon, QuoteMarkIcon } from "./icons";
+import { ArrowIcon, ExpandIcon, FileIcon, QuoteMarkIcon } from "./icons";
 import { downloadHref } from "./links";
 import { Markdown } from "./Markdown";
 import { MediaImage, mediaSize } from "./MediaImage";
+import { ZoomFigure } from "./ZoomFigure";
 import styles from "./Experience.module.css";
 
 /**
@@ -15,6 +16,12 @@ import styles from "./Experience.module.css";
  */
 export type ImagesVariant = "flow" | "spread" | "logo";
 
+/** The approved labels of the image enlarge view; null where images do not open larger. */
+export interface ZoomLabels {
+  enlarge: string;
+  close: string;
+}
+
 export interface BlockProps {
   block: BlockData;
   /** "/" for the public site, "/preview" for the preview. */
@@ -23,9 +30,11 @@ export interface BlockProps {
   downloadLabel: string | null;
   /** For an images block only. */
   variant?: ImagesVariant;
+  /** For an images block only: the enlarge labels, or null (the editor, a missing label). */
+  zoom?: ZoomLabels | null;
 }
 
-function Images({ block, variant }: { block: ImagesBlock; variant: ImagesVariant }) {
+function Images({ block, variant, zoom }: { block: ImagesBlock; variant: ImagesVariant; zoom: ZoomLabels | null }) {
   const items = block.items.filter((item) => item.image);
   const single = items.length === 1;
   const galleryClass = [
@@ -44,23 +53,61 @@ function Images({ block, variant }: { block: ImagesBlock; variant: ImagesVariant
   // logos only fade in. The marks and the line are aria-hidden graphics without text.
   const reveal = variant === "logo" ? "fade" : "wipe";
   const marked = variant !== "logo";
+  // The whole image is the button; its small tag names the action. On a logo
+  // tile the tag would cover the logo, so there it is for screen readers only.
+  const enlarge = zoom && block.enlarge !== false ? zoom : null;
+  const gallery = (
+    <div className={galleryClass}>
+      {items.map((item, i) => {
+        const { width, height } = mediaSize(item.image!);
+        const style = { "--ar": width / height, "--w": width, "--i": i } as CSSProperties;
+        const content = (
+          <>
+            <MediaImage media={item.image!} sizes={sizes} className={styles.image} />
+            {marked && <span className={styles.scan} aria-hidden="true" />}
+            {marked && <span className="corner-marks" aria-hidden="true" />}
+          </>
+        );
+        return enlarge ? (
+          <button
+            key={i}
+            type="button"
+            className={`${styles.galleryItem} ${styles.zoomable}`}
+            style={style}
+            data-reveal={reveal}
+            data-zoom={i}
+          >
+            {content}
+            <span className={marked ? styles.zoomHint : "visually-hidden"}>
+              {marked && <ExpandIcon className={styles.zoomHintIcon} />}
+              {enlarge.enlarge}
+            </span>
+          </button>
+        ) : (
+          <div key={i} className={styles.galleryItem} style={style} data-reveal={reveal}>
+            {content}
+          </div>
+        );
+      })}
+    </div>
+  );
+  const caption = block.caption && <figcaption className={styles.caption}>{block.caption}</figcaption>;
+  if (!enlarge) {
+    return (
+      <figure className={styles.figure}>
+        {gallery}
+        {caption}
+      </figure>
+    );
+  }
+  const large = items.map((item, i) => (
+    <MediaImage key={i} media={item.image!} sizes="100vw" className={styles.zoomImage} />
+  ));
   return (
-    <figure className={styles.figure}>
-      <div className={galleryClass}>
-        {items.map((item, i) => {
-          const { width, height } = mediaSize(item.image!);
-          const style = { "--ar": width / height, "--w": width, "--i": i } as CSSProperties;
-          return (
-            <div key={i} className={styles.galleryItem} style={style} data-reveal={reveal}>
-              <MediaImage media={item.image!} sizes={sizes} className={styles.image} />
-              {marked && <span className={styles.scan} aria-hidden="true" />}
-              {marked && <span className="corner-marks" aria-hidden="true" />}
-            </div>
-          );
-        })}
-      </div>
-      {block.caption && <figcaption className={styles.caption}>{block.caption}</figcaption>}
-    </figure>
+    <ZoomFigure className={styles.figure} closeLabel={enlarge.close} large={large}>
+      {gallery}
+      {caption}
+    </ZoomFigure>
   );
 }
 
@@ -68,7 +115,7 @@ function Images({ block, variant }: { block: ImagesBlock; variant: ImagesVariant
  * One block of an experience page (KTD6). Pass blocks from visibleSite(): it has
  * already removed the empty ones (KTD7).
  */
-export function Block({ block, linkBase, downloadLabel, variant = "flow" }: BlockProps) {
+export function Block({ block, linkBase, downloadLabel, variant = "flow", zoom = null }: BlockProps) {
   switch (block.type) {
     case "heading":
       return block.level === 2 ? (
@@ -97,7 +144,7 @@ export function Block({ block, linkBase, downloadLabel, variant = "flow" }: Bloc
         </dl>
       );
     case "images":
-      return <Images block={block} variant={variant} />;
+      return <Images block={block} variant={variant} zoom={zoom} />;
     case "file": {
       if (!block.file) return null;
       // The owner's label, else the owner's file name. Never a generated text (1.2.4).

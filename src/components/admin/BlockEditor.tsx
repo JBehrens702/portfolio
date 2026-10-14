@@ -354,6 +354,18 @@ function ImagesFields(props: BlockFieldsProps & { block: ImagesBlock }) {
           }}
         />
       </label>
+      <label className={styles.row}>
+        <input
+          type="checkbox"
+          checked={block.enlarge !== false}
+          onChange={(e) => {
+            const enlarge = e.target.checked;
+            // Store only "off": a block without the field opens larger.
+            onChange(typed<ImagesBlock>("images", (b) => (enlarge ? omit(b, "enlarge") : { ...b, enlarge: false })));
+          }}
+        />
+        <span>Enlarge on click</span>
+      </label>
     </div>
   );
 }

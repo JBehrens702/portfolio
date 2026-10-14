@@ -2,7 +2,7 @@
 
 import { updateTag } from "next/cache";
 import { requireOwner } from "@/lib/auth/owner";
-import { withCarouselLabels } from "@/lib/content/carousel-labels";
+import { withFeatureLabels } from "@/lib/content/feature-labels";
 import { collectMediaGarbage, createMediaStorageFromEnv, siteMedia } from "@/lib/content/media-gc";
 import {
   addExperience as addExperienceTo,
@@ -333,7 +333,10 @@ const STALE_LABELS_MESSAGE = "The labels changed in another tab. Reload the page
 export async function saveLabels(input: LabelsInput): Promise<LabelsActionResult> {
   await requireOwner();
   if (!isRecord(input)) return refused("Not saved: no labels were sent.");
-  return commitSite((current) => {
+  return commitSite((stored) => {
+    // The Labels page also lists the feature labels that the draft does not hold
+    // yet (a draft saved before the feature existed), so the owner can approve them.
+    const current = withFeatureLabels(stored);
     const keys = Object.keys(current.labels).sort();
     const sent = Object.keys(input).sort();
     if (keys.join("\n") !== sent.join("\n")) return refused("Not saved: the labels do not match the draft. Reload the page.", undefined, "out-of-date");
@@ -363,7 +366,8 @@ export async function saveLabels(input: LabelsInput): Promise<LabelsActionResult
 /** Approves one label as it is (AE6). */
 export async function approveLabel(key: string): Promise<ActionResult> {
   await requireOwner();
-  return commitSite((current) => {
+  return commitSite((stored) => {
+    const current = withFeatureLabels(stored);
     if (typeof key !== "string" || !Object.hasOwn(current.labels, key)) return refused("Not saved: unknown label.");
     return plain({ ...current, labels: { ...current.labels, [key]: { ...current.labels[key], approved: true } } });
   });
@@ -386,8 +390,8 @@ export async function removeExperience(slug: string): Promise<ActionResult> {
   await requireOwner();
   return commitSite((current) => {
     if (!current.experiences.some((e) => e.slug === slug)) return refused("Not saved: unknown experience.");
-    // The last carousel can go with the experience: its unapproved proposals go too (KTD9).
-    return plain(withCarouselLabels(removeExperienceFrom(current, slug)));
+    // The last carousel or image can go with the experience: its unapproved proposals go too (KTD9).
+    return plain(withFeatureLabels(removeExperienceFrom(current, slug)));
   });
 }
 
@@ -417,10 +421,10 @@ export async function saveExperience(slug: string, input: Experience, base?: Sta
     const index = current.experiences.findIndex((e) => e.slug === slug);
     if (index < 0) return refused("Not saved: unknown experience. It may have been removed.", undefined, "out-of-date");
     const experiences = current.experiences.map((e, i) => (i === index ? { ...input, slug } : e));
-    // The first carousel brings its button labels, unapproved, for the owner; the
-    // last one removed takes back the proposals that nobody approved (KTD9). The
-    // labels are in no part, so they follow from the merged draft.
-    return merged(current, { ...current, experiences }, keys, bases, withCarouselLabels);
+    // The first carousel or image brings its button labels, unapproved, for the
+    // owner; the last one removed takes back the proposals that nobody approved
+    // (KTD9). The labels are in no part, so they follow from the merged draft.
+    return merged(current, { ...current, experiences }, keys, bases, withFeatureLabels);
   });
 }
 
@@ -470,7 +474,7 @@ export async function resetExperience(slug: string): Promise<ResetResult> {
     const experiences = current.experiences.map((e, i) => (i === index ? published : e));
     return {
       ok: true,
-      next: withCarouselLabels({ ...current, experiences }),
+      next: withFeatureLabels({ ...current, experiences }),
       result: (saved) => ({ experience: published, stamps: stampParts(saved, experienceKeys(slug)) }),
     };
   });

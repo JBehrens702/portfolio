@@ -246,3 +246,33 @@ test("AE4: reset brings back the published page, and cancel changes nothing (2.4
   const ids = layoutBlocks(await draftLayout()).map((b) => b.id);
   expect(ids).toEqual(["h-design", "t-first", "t-second"]);
 });
+
+test("an Images block has 'Enlarge on click' on by default; turning it off saves and the preview follows", async () => {
+  await openEditor();
+  await page.getByLabel("New block").selectOption("images");
+  await page.getByRole("button", { name: "Add block" }).click();
+  await page.getByLabel("Upload a new image").setInputFiles({ name: "zoom.png", mimeType: "image/png", buffer: PNG });
+  await expect(page.getByLabel("Replace image 1")).toBeVisible();
+  const enlarge = page.getByLabel("Enlarge on click");
+  await expect(enlarge).toBeChecked();
+  await save();
+
+  const images = async () => layoutBlocks(await draftLayout()).find((b) => b.type === "images");
+  await expect.poll(async () => (await images())?.type === "images" && (await images())?.items.length).toBe(1);
+  // "On" is not stored: a block without the field opens larger.
+  expect(await images()).not.toHaveProperty("enlarge");
+  expect((await store.readDraft())!.labels.imageEnlarge).toEqual({ text: "Enlarge image", approved: false });
+  const preview = await context.newPage();
+  await preview.goto(`/preview/experiences/${SLUG}`);
+  await expect(preview.locator("main figure button[data-zoom]")).toHaveCount(1);
+
+  await enlarge.uncheck();
+  await save();
+  expect(await images()).toHaveProperty("enlarge", false);
+  // No block opens larger now, so the unapproved proposals go again.
+  expect((await store.readDraft())!.labels.imageEnlarge).toBeUndefined();
+  await preview.reload();
+  await expect(preview.locator("main figure img")).toHaveCount(1);
+  await expect(preview.locator("[data-zoom]")).toHaveCount(0);
+  await preview.close();
+});

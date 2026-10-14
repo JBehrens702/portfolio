@@ -337,6 +337,15 @@ test("reordering the experiences changes the home page order after Publish", asy
 
   const visitor = await visitorPage("/");
   await expect(visitor.locator("#work article h3")).toHaveText(["Turbine Stand", "Victaulic Internship", "Wind Tunnel Rig"]);
+  // The images block of the upload test proposed the two image labels (enlarge
+  // on click): Publish names them, and the owner approves them from the refusal.
+  await page.goto("/admin");
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  const refusal = page.getByTestId("publish-result");
+  await expect(refusal).toContainText("Not published: approve these labels first.", { timeout: 150_000 });
+  await expect(refusal.getByTestId("unapproved-label")).toHaveCount(2);
+  for (const key of ["imageClose", "imageEnlarge"]) await refusal.getByRole("button", { name: `Approve ${key}` }).click();
+  await expect.poll(async () => Object.values((await draft()).labels).every((label) => label.approved)).toBe(true);
   await publishFromAdmin();
   await visitor.goto("/");
   await expect(visitor.locator("#work article h3")).toHaveText(["Turbine Stand", "Wind Tunnel Rig", "Victaulic Internship"]);

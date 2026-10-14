@@ -116,14 +116,23 @@ test.describe("hover motion", () => {
     expect(await edge()).toBe(rest);
   });
 
-  test("project photos and the title band do not move under the pointer", async ({ page }) => {
+  test("the title band and a photo that does not open larger do not move under the pointer", async ({ page }) => {
     await page.goto("/experiences/alpha-project");
     const band = marksBox(page.locator("article > header"));
     await expect(band).toHaveCount(1);
     expect(await hoverChanges(page, band)).toEqual([]);
-    const photos = page.locator("figure [data-reveal='wipe']");
+    // beta-project's image block has "Enlarge on click" turned off.
+    await page.goto("/experiences/beta-project");
+    const photos = page.locator("figure div[data-reveal='wipe']");
     expect(await photos.count()).toBeGreaterThan(0);
     for (const photo of await photos.all()) expect(await hoverChanges(page, photo)).toEqual([]);
+  });
+
+  test("positive control: a photo that opens larger moves its brackets", async ({ page }) => {
+    await page.goto("/experiences/alpha-project");
+    const photos = page.locator("figure button[data-zoom]");
+    expect(await photos.count()).toBeGreaterThan(0);
+    for (const photo of await photos.all()) expect(await hoverChanges(page, photo)).not.toEqual([]);
   });
 
   test("carousel slides and turned-off carousel buttons do not move under the pointer", async ({ page }) => {

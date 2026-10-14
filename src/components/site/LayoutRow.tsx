@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { ContentBlock, Row, RowLayout } from "@/lib/content/schema";
-import { Block, type ImagesVariant } from "./Block";
+import { Block, type ImagesVariant, type ZoomLabels } from "./Block";
 import styles from "./Experience.module.css";
 
 // The parts of a page layout that the site and the editor share (KTD6). The
@@ -45,11 +45,20 @@ interface RowProps {
   row: Row;
   linkBase: string;
   downloadLabel: string | null;
+  /** The image enlarge labels, or null (the editor, or a label that is missing). */
+  zoom?: ZoomLabels | null;
 }
 
-function Blocks({ blocks, kind, linkBase, downloadLabel }: { blocks: ContentBlock[]; kind: CellKind } & Omit<RowProps, "row">) {
+function Blocks({ blocks, kind, linkBase, downloadLabel, zoom }: { blocks: ContentBlock[]; kind: CellKind } & Omit<RowProps, "row">) {
   return blocks.map((block) => (
-    <Block key={block.id} block={block} linkBase={linkBase} downloadLabel={downloadLabel} variant={imagesVariant(kind)} />
+    <Block
+      key={block.id}
+      block={block}
+      linkBase={linkBase}
+      downloadLabel={downloadLabel}
+      variant={imagesVariant(kind)}
+      zoom={zoom}
+    />
   ));
 }
 
@@ -57,15 +66,17 @@ function Blocks({ blocks, kind, linkBase, downloadLabel }: { blocks: ContentBloc
  * One row of an experience page. A one-column row of flowing blocks adds no
  * wrapper, so its blocks sit in the page column exactly as single blocks did.
  */
-export function LayoutRow({ row, linkBase, downloadLabel }: RowProps): ReactNode {
+export function LayoutRow({ row, linkBase, downloadLabel, zoom = null }: RowProps): ReactNode {
   if (row.layout === "one") {
     const [cell] = row.cells;
     const kind = cellKind(row, cell);
-    if (kind === "flow") return <Blocks blocks={cell} kind={kind} linkBase={linkBase} downloadLabel={downloadLabel} />;
+    if (kind === "flow") {
+      return <Blocks blocks={cell} kind={kind} linkBase={linkBase} downloadLabel={downloadLabel} zoom={zoom} />;
+    }
     return (
       <div className={rowClassName(row)}>
         <div {...cellFrameProps(kind)}>
-          <Blocks blocks={cell} kind={kind} linkBase={linkBase} downloadLabel={downloadLabel} />
+          <Blocks blocks={cell} kind={kind} linkBase={linkBase} downloadLabel={downloadLabel} zoom={zoom} />
         </div>
       </div>
     );
@@ -76,7 +87,7 @@ export function LayoutRow({ row, linkBase, downloadLabel }: RowProps): ReactNode
         const kind = cellKind(row, cell);
         return (
           <div key={i} {...cellFrameProps(kind)} data-empty={cell.length === 0 ? "" : undefined}>
-            <Blocks blocks={cell} kind={kind} linkBase={linkBase} downloadLabel={downloadLabel} />
+            <Blocks blocks={cell} kind={kind} linkBase={linkBase} downloadLabel={downloadLabel} zoom={zoom} />
           </div>
         );
       })}

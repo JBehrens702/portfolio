@@ -53,6 +53,8 @@ export const ImagesBlockSchema = z.object({
   type: z.literal("images"),
   items: z.array(ImageItemSchema),
   caption: z.string().optional(),
+  // A click on an image opens it larger. Absent means on; the editor stores only `false`.
+  enlarge: z.boolean().optional(),
 });
 
 export const FileBlockSchema = z.object({

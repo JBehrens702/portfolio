@@ -41,6 +41,10 @@ export function ExperiencePage({ site, experience, linkBase }: ExperiencePagePro
     next: labelText(site, "carouselNext"),
     skip: labelText(site, "carouselSkip"),
   };
+  // Images open larger only when both labels have a text (the site holds only approved ones).
+  const enlargeLabel = labelText(site, "imageEnlarge");
+  const closeLabel = labelText(site, "imageClose");
+  const zoom = enlargeLabel && closeLabel ? { enlarge: enlargeLabel, close: closeLabel } : null;
   const segments = sectionItems(experience.layout);
   const index = site.experiences.findIndex((e) => e.slug === experience.slug);
   // The section number of each segment that starts with a level-2 heading, else null.
@@ -96,7 +100,7 @@ export function ExperiencePage({ site, experience, linkBase }: ExperiencePagePro
             <div className={styles.main}>
               {segment.items.map((item) =>
                 item.type === "row" ? (
-                  <LayoutRow key={item.id} row={item} linkBase={linkBase} downloadLabel={downloadLabel} />
+                  <LayoutRow key={item.id} row={item} linkBase={linkBase} downloadLabel={downloadLabel} zoom={zoom} />
                 ) : (
                   <Carousel key={item.id} carousel={item} linkBase={linkBase} labels={carouselLabels} />
                 ),

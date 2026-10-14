@@ -104,3 +104,21 @@ export function DownArrowIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+/** Four corner arrows pointing out: an image that opens larger. */
+export function ExpandIcon({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <path d="M4 9V4h5M4 4l6 6M20 15v5h-5m5 0-6-6M15 4h5v5m0-5-6 6M9 20H4v-5m0 5 6-6" />
+    </svg>
+  );
+}
+
+/** A cross: a button that closes a view. */
+export function CloseIcon({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <path d="M5 5l14 14M19 5 5 19" />
+    </svg>
+  );
+}

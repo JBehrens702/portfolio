@@ -97,6 +97,14 @@
     "carouselSkip": {
       "text": "Skip the slides",
       "approved": true
+    },
+    "imageEnlarge": {
+      "text": "Enlarge image",
+      "approved": true
+    },
+    "imageClose": {
+      "text": "Close",
+      "approved": true
     }
   },
   "software": [
@@ -397,7 +405,8 @@
                       "alt": "Beta beta-pair.png"
                     }
                   }
-                ]
+                ],
+                "enlarge": false
               }
             ],
             [

@@ -5,6 +5,7 @@ import { PageBar } from "@/components/admin/PageBar";
 import { barPages, HOME_ID } from "@/components/admin/page-bar-model";
 import styles from "@/components/admin/admin.module.css";
 import { requireOwnerPage } from "@/lib/auth/owner";
+import { withFeatureLabels } from "@/lib/content/feature-labels";
 import { readDraftState } from "../draft";
 
 export const metadata: Metadata = { title: "Labels" };
@@ -26,7 +27,7 @@ export default async function AdminLabels() {
         The short texts of the layout, such as buttons and section headings. The site publishes only when every label is
         approved. A label that you rewrite counts as approved.
       </p>
-      {state.kind === "ok" ? <LabelsEditor initial={state.site.labels} /> : <DraftProblem state={state} />}
+      {state.kind === "ok" ? <LabelsEditor initial={withFeatureLabels(state.site).labels} /> : <DraftProblem state={state} />}
     </main>
   );
 }

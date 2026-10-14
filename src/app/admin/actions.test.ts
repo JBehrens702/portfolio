@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { withFeatureLabels } from "@/lib/content/feature-labels";
 import { layoutBlocks, upgradeBlocks } from "@/lib/content/layout";
 import { cardKey, experienceKeys, pageKey, stampParts, type Stamps } from "@/lib/content/parts";
 import { createMemoryContentStore, type ContentStore, type MemoryBackend } from "@/lib/content/store";
@@ -378,6 +379,22 @@ describe("labels and Publish (1.2.7, KTD9)", () => {
     expect(result.ok).toBe(true);
     expect((await draft()).labels.readMore).toEqual({ text: "Read more", approved: true });
     expect((await draft()).labels.resume).toEqual({ text: "Resume", approved: false });
+  });
+
+  it("saves and approves the image labels that the Labels page proposes for a draft saved before them", async () => {
+    const images = { id: "i", type: "images" as const, items: [{ image: media("a.jpg") }] };
+    await setDraft(makeSite({ experiences: [experience("first", { blocks: [images] })] }));
+    expect((await draft()).labels.imageEnlarge).toBeUndefined();
+
+    // The Labels page shows withFeatureLabels(draft).labels; the owner approves one and saves.
+    const labels = asLoaded(withFeatureLabels(await draft()).labels);
+    labels.imageClose = { ...labels.imageClose, approved: true };
+    expect((await saveLabels(labels)).ok).toBe(true);
+    expect((await draft()).labels.imageEnlarge).toEqual({ text: "Enlarge image", approved: false });
+    expect((await draft()).labels.imageClose).toEqual({ text: "Close", approved: true });
+
+    expect((await approveLabel("imageEnlarge")).ok).toBe(true);
+    expect((await draft()).labels.imageEnlarge.approved).toBe(true);
   });
 
   it("refuses a label save that adds or drops a key, or approves an unknown label", async () => {
